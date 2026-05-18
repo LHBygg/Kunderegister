@@ -5,131 +5,65 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>LH Bygg – Kunderegister</title>
 <script src="https://cdn.jsdelivr.net/npm/@azure/msal-browser@3.11.1/lib/msal-browser.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
 
   :root {
-    --bg: #0f1117;
-    --surface: #181c27;
-    --surface2: #1e2334;
-    --border: #2a3148;
-    --accent: #e8b84b;
-    --accent2: #3b82f6;
-    --green: #22c55e;
-    --orange: #f97316;
-    --red: #ef4444;
-    --text: #e8eaf0;
-    --text2: #8b92a8;
-    --text3: #4a5170;
+    --bg: #0f1117; --surface: #181c27; --surface2: #1e2334; --border: #2a3148;
+    --accent: #e8b84b; --accent2: #3b82f6; --green: #22c55e; --orange: #f97316;
+    --red: #ef4444; --text: #e8eaf0; --text2: #8b92a8; --text3: #4a5170;
+  }
+  body.light {
+    --bg: #f4f5f7; --surface: #ffffff; --surface2: #f0f1f4; --border: #dde1ec;
+    --text: #1a1f36; --text2: #5a6282; --text3: #9aa0b8;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; transition: background 0.2s, color 0.2s; }
 
-  /* LOGIN SCREEN */
-  .login-screen {
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: var(--bg);
-  }
-
-  .login-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 48px;
-    text-align: center;
-    width: 360px;
-  }
-
-  .login-logo {
-    width: 64px;
-    height: 64px;
-    background: var(--accent);
-    border-radius: 16px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 24px;
-    font-weight: 800;
-    color: #0f1117;
-    margin: 0 auto 24px;
-  }
-
+  .login-screen { min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+  .login-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 48px; text-align: center; width: 360px; }
+  .login-logo { width: 64px; height: 64px; background: var(--accent); border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 800; color: #0f1117; margin: 0 auto 24px; }
   .login-title { font-size: 22px; font-weight: 700; margin-bottom: 8px; }
   .login-sub { font-size: 14px; color: var(--text2); margin-bottom: 32px; }
-
-  .btn-login {
-    width: 100%;
-    background: var(--accent);
-    color: #0f1117;
-    border: none;
-    border-radius: 10px;
-    padding: 14px;
-    font-size: 15px;
-    font-weight: 700;
-    cursor: pointer;
-    font-family: inherit;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    transition: opacity 0.15s;
-  }
-
-  .btn-login:hover { opacity: 0.9; }
+  .btn-login { width: 100%; background: var(--accent); color: #0f1117; border: none; border-radius: 10px; padding: 14px; font-size: 15px; font-weight: 700; cursor: pointer; font-family: inherit; display: flex; align-items: center; justify-content: center; gap: 10px; }
   .btn-login:disabled { opacity: 0.5; cursor: not-allowed; }
-
   .login-note { font-size: 12px; color: var(--text3); margin-top: 16px; }
 
-  /* APP */
   #app { display: none; }
-
-  header {
-    background: var(--surface);
-    border-bottom: 1px solid var(--border);
-    padding: 0 24px;
-    height: 60px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    position: sticky;
-    top: 0;
-    z-index: 100;
-  }
-
+  header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 24px; height: 60px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
   .logo { display: flex; align-items: center; gap: 12px; font-size: 16px; font-weight: 700; }
   .logo-icon { width: 36px; height: 36px; background: var(--accent); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 800; color: #0f1117; }
   .logo span { color: var(--accent); }
-
-  .header-right { display: flex; align-items: center; gap: 12px; }
+  .header-right { display: flex; align-items: center; gap: 10px; }
   .user-badge { background: var(--surface2); border: 1px solid var(--border); border-radius: 20px; padding: 6px 14px; font-size: 13px; }
-
-  .btn-logout { background: none; border: 1px solid var(--border); border-radius: 8px; padding: 6px 12px; font-size: 13px; color: var(--text2); cursor: pointer; font-family: inherit; transition: all 0.15s; }
+  .btn-icon { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 7px 10px; font-size: 16px; cursor: pointer; color: var(--text2); transition: all 0.15s; line-height: 1; }
+  .btn-icon:hover { border-color: var(--text2); color: var(--text); }
+  .btn-logout { background: none; border: 1px solid var(--border); border-radius: 8px; padding: 6px 12px; font-size: 13px; color: var(--text2); cursor: pointer; font-family: inherit; }
   .btn-logout:hover { border-color: var(--text2); color: var(--text); }
 
   .main { max-width: 1200px; margin: 0 auto; padding: 28px 24px; }
-
   .topbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; gap: 16px; flex-wrap: wrap; }
   .page-title { font-size: 22px; font-weight: 700; letter-spacing: -0.5px; }
   .topbar-right { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
 
   .search-wrap { position: relative; }
   .search-wrap svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text3); }
-  input[type="text"] { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 9px 14px 9px 38px; color: var(--text); font-family: inherit; font-size: 14px; width: 240px; outline: none; transition: border-color 0.2s; }
+  input[type="text"] { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 9px 14px 9px 38px; color: var(--text); font-family: inherit; font-size: 14px; width: 220px; outline: none; transition: border-color 0.2s; }
   input[type="text"]:focus { border-color: var(--accent); }
   input[type="text"]::placeholder { color: var(--text3); }
 
   .filter-tabs { display: flex; gap: 4px; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 4px; }
-  .filter-tab { padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; color: var(--text2); transition: all 0.15s; border: none; background: none; font-family: inherit; }
-  .filter-tab.active { background: var(--surface); color: var(--text); box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+  .filter-tab { padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; color: var(--text2); transition: all 0.15s; border: none; background: none; font-family: inherit; }
+  .filter-tab.active { background: var(--surface); color: var(--text); box-shadow: 0 1px 3px rgba(0,0,0,0.15); }
 
-  .btn-primary { background: var(--accent); color: #0f1117; border: none; border-radius: 8px; padding: 9px 18px; font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit; display: flex; align-items: center; gap: 6px; transition: opacity 0.15s; }
-  .btn-primary:hover { opacity: 0.9; }
+  .btn-primary { background: var(--accent); color: #0f1117; border: none; border-radius: 8px; padding: 9px 18px; font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit; display: flex; align-items: center; gap: 6px; }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
   .btn-ghost { background: none; color: var(--text2); border: 1px solid var(--border); border-radius: 8px; padding: 8px 16px; font-size: 13px; font-weight: 500; cursor: pointer; font-family: inherit; transition: all 0.15s; }
   .btn-ghost:hover { border-color: var(--text2); color: var(--text); }
+  .btn-excel { background: rgba(34,197,94,0.1); color: var(--green); border: 1px solid rgba(34,197,94,0.3); border-radius: 8px; padding: 9px 16px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; display: flex; align-items: center; gap: 6px; }
+  .btn-excel:hover { background: rgba(34,197,94,0.15); }
 
   .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px; }
   .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px 18px; }
@@ -142,11 +76,15 @@
   .table-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
   table { width: 100%; border-collapse: collapse; }
   thead tr { border-bottom: 1px solid var(--border); }
-  th { padding: 12px 16px; font-size: 11px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.6px; text-align: left; }
+  th { padding: 12px 16px; font-size: 11px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.6px; text-align: left; cursor: pointer; user-select: none; white-space: nowrap; }
+  th:hover { color: var(--text2); }
+  th .sort-arrow { margin-left: 4px; opacity: 0.5; }
+  th.sorted .sort-arrow { opacity: 1; color: var(--accent); }
+  body.compact tbody tr td { padding: 8px 16px; }
   tbody tr { border-bottom: 1px solid var(--border); cursor: pointer; transition: background 0.1s; }
   tbody tr:last-child { border-bottom: none; }
   tbody tr:hover { background: var(--surface2); }
-  td { padding: 14px 16px; font-size: 14px; }
+  td { padding: 14px 16px; font-size: 14px; transition: padding 0.2s; }
   .firm-name { font-weight: 600; }
   .pnr { font-family: 'DM Mono', monospace; font-size: 13px; color: var(--accent); font-weight: 500; }
   .contact { color: var(--text2); font-size: 13px; }
@@ -159,25 +97,30 @@
   .badge.kalkyle .badge-dot { background: var(--orange); }
   .badge.avsluttet { background: rgba(139,146,168,0.12); color: var(--text2); }
   .badge.avsluttet .badge-dot { background: var(--text2); }
+  .type-badge-privat { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 600; background: rgba(59,130,246,0.12); color: var(--accent2); }
+  .type-badge-firma { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 600; background: rgba(232,184,75,0.12); color: var(--accent); }
 
   .mapper-check { font-size: 13px; color: var(--text3); }
   .mapper-check.done { color: var(--green); }
 
-  /* LOADING */
   .loading-row td { text-align: center; padding: 40px; color: var(--text3); }
   .spinner { width: 20px; height: 20px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; display: inline-block; margin-right: 8px; vertical-align: middle; }
   @keyframes spin { to { transform: rotate(360deg); } }
 
-  /* MODAL */
-  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 200; align-items: flex-start; justify-content: center; padding: 40px 16px; overflow-y: auto; }
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 200; align-items: flex-start; justify-content: center; padding: 40px 16px; overflow-y: auto; }
   .modal-overlay.open { display: flex; }
   .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; width: 100%; max-width: 680px; animation: slideUp 0.2s ease; }
   @keyframes slideUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
   .modal-header { padding: 20px 24px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
-  .modal-title { font-size: 17px; font-weight: 700; letter-spacing: -0.3px; }
-  .modal-close { width: 32px; height: 32px; border-radius: 8px; border: none; background: var(--surface2); color: var(--text2); cursor: pointer; font-size: 18px; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
+  .modal-title { font-size: 17px; font-weight: 700; }
+  .modal-close { width: 32px; height: 32px; border-radius: 8px; border: none; background: var(--surface2); color: var(--text2); cursor: pointer; font-size: 18px; display: flex; align-items: center; justify-content: center; }
   .modal-close:hover { background: var(--border); color: var(--text); }
   .modal-body { padding: 24px; }
+
+  .kunde-type-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px; }
+  .kunde-type-btn { padding: 16px; border-radius: 10px; border: 2px solid var(--border); background: var(--surface2); color: var(--text2); font-family: inherit; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.15s; text-align: center; }
+  .kunde-type-btn.selected { border-color: var(--accent); color: var(--accent); background: rgba(232,184,75,0.08); }
+  .kunde-type-icon { font-size: 28px; display: block; margin-bottom: 6px; }
 
   .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
   .form-group { display: flex; flex-direction: column; gap: 6px; }
@@ -205,33 +148,50 @@
   .mappe-name { font-size: 12px; font-weight: 600; color: var(--text2); }
 
   .status-row { display: flex; align-items: center; gap: 10px; padding: 16px; background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; margin-bottom: 16px; flex-wrap: wrap; }
-  .status-label { font-size: 13px; color: var(--text2); margin-right: 4px; }
-  .status-btn { padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; border: 1px solid var(--border); background: none; color: var(--text2); transition: all 0.15s; }
-  .status-btn:hover { background: var(--surface); color: var(--text); }
+  .status-label { font-size: 13px; color: var(--text2); }
+  .status-btn { padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; border: 1px solid var(--border); background: none; color: var(--text2); }
   .status-btn.aktiv-btn { color: var(--green); border-color: rgba(34,197,94,0.3); }
   .status-btn.aktiv-btn:hover { background: rgba(34,197,94,0.1); }
 
   .empty-state { padding: 60px; text-align: center; color: var(--text3); }
   .empty-state-icon { font-size: 40px; margin-bottom: 12px; }
-  .empty-state-text { font-size: 14px; }
 
   .toast { position: fixed; bottom: 24px; right: 24px; background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 14px 18px; font-size: 14px; color: var(--text); z-index: 300; display: flex; align-items: center; gap: 10px; transform: translateY(80px); opacity: 0; transition: all 0.3s ease; max-width: 340px; }
   .toast.show { transform: translateY(0); opacity: 1; }
-
   .error-banner { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); border-radius: 8px; padding: 12px 16px; font-size: 13px; color: var(--red); margin-bottom: 16px; }
+
+  /* SETTINGS */
+  .settings-section { margin-bottom: 28px; }
+  .settings-section-title { font-size: 12px; font-weight: 700; color: var(--text3); text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+  .settings-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border); gap: 16px; }
+  .settings-row:last-child { border-bottom: none; }
+  .settings-row-label { font-size: 14px; font-weight: 500; }
+  .settings-row-sub { font-size: 12px; color: var(--text3); margin-top: 2px; }
+  .toggle { width: 44px; height: 24px; background: var(--border); border-radius: 12px; cursor: pointer; position: relative; transition: background 0.2s; border: none; flex-shrink: 0; }
+  .toggle.on { background: var(--accent); }
+  .toggle::after { content: ''; position: absolute; width: 18px; height: 18px; background: white; border-radius: 50%; top: 3px; left: 3px; transition: left 0.2s; }
+  .toggle.on::after { left: 23px; }
+
+  .col-toggles { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .col-toggle-btn { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; cursor: pointer; font-family: inherit; font-size: 13px; color: var(--text2); transition: all 0.15s; }
+  .col-toggle-btn.active { border-color: var(--accent); color: var(--text); background: rgba(232,184,75,0.06); }
+  .col-toggle-btn .col-check { font-size: 14px; }
+
+  .sort-select { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; color: var(--text); font-family: inherit; font-size: 13px; outline: none; cursor: pointer; }
+  .sort-select:focus { border-color: var(--accent); }
 
   @media (max-width: 600px) {
     .stats-row { grid-template-columns: 1fr 1fr; }
     .mapper-grid { grid-template-columns: repeat(2, 1fr); }
     .form-grid { grid-template-columns: 1fr; }
-    .detail-info-grid { grid-column: 1fr; }
-    input[type="text"] { width: 160px; }
+    .detail-info-grid { grid-template-columns: 1fr; }
+    input[type="text"] { width: 140px; }
+    .col-toggles { grid-template-columns: 1fr; }
   }
 </style>
 </head>
 <body>
 
-<!-- LOGIN -->
 <div class="login-screen" id="loginScreen">
   <div class="login-card">
     <div class="login-logo">LH</div>
@@ -245,7 +205,6 @@
   </div>
 </div>
 
-<!-- APP -->
 <div id="app">
   <header>
     <div class="logo">
@@ -253,6 +212,8 @@
       <div>LH Bygg <span>Entreprenør</span></div>
     </div>
     <div class="header-right">
+      <button class="btn-icon" onclick="toggleTheme()" id="themeBtn" title="Bytt tema">🌙</button>
+      <button class="btn-icon" onclick="openSettings()" title="Innstillinger">⚙️</button>
       <span class="user-badge" id="userBadge">👤</span>
       <button class="btn-logout" onclick="signOut()">Logg ut</button>
     </div>
@@ -260,7 +221,6 @@
 
   <div class="main">
     <div id="errorBanner"></div>
-
     <div class="topbar">
       <div class="page-title">Kunderegister</div>
       <div class="topbar-right">
@@ -274,6 +234,7 @@
           <button class="filter-tab" onclick="setFilter('Aktiv', this)">Aktive</button>
           <button class="filter-tab" onclick="setFilter('Avsluttet', this)">Avsluttet</button>
         </div>
+        <button class="btn-excel" onclick="exportExcel()" title="Eksporter til Excel">📊 Excel</button>
         <button class="btn-primary" onclick="openNewModal()">+ Ny kunde</button>
       </div>
     </div>
@@ -287,23 +248,14 @@
 
     <div class="table-wrap">
       <table>
-        <thead>
-          <tr>
-            <th>Pnr</th>
-            <th>Firmanavn</th>
-            <th>Kontakt</th>
-            <th>Telefon</th>
-            <th>Status</th>
-            <th>Mapper</th>
-          </tr>
-        </thead>
+        <thead id="tableHead"></thead>
         <tbody id="tableBody">
-          <tr class="loading-row"><td colspan="6"><span class="spinner"></span> Laster kunder...</td></tr>
+          <tr class="loading-row"><td colspan="7"><span class="spinner"></span> Laster kunder...</td></tr>
         </tbody>
       </table>
       <div class="empty-state" id="emptyState" style="display:none">
         <div class="empty-state-icon">📋</div>
-        <div class="empty-state-text">Ingen kunder funnet</div>
+        <div style="font-size:14px">Ingen kunder funnet</div>
       </div>
     </div>
   </div>
@@ -317,12 +269,16 @@
       <button class="modal-close" onclick="closeModal('formModal')">×</button>
     </div>
     <div class="modal-body">
+      <div class="kunde-type-row" id="kundeTypeRow">
+        <button class="kunde-type-btn selected" onclick="setKundeType('firma', this)"><span class="kunde-type-icon">🏢</span>Firmakunde</button>
+        <button class="kunde-type-btn" onclick="setKundeType('privat', this)"><span class="kunde-type-icon">👤</span>Privatkunde</button>
+      </div>
       <div class="form-grid">
-        <div class="form-group full"><label>Firmanavn *</label><input type="text" class="form-input" id="f_firmanavn" placeholder="Bedrift AS"></div>
+        <div class="form-group full"><label id="firmanavnLabel">Firmanavn *</label><input type="text" class="form-input" id="f_firmanavn" placeholder="Bedrift AS"></div>
         <div class="form-group"><label>Kontaktperson</label><input type="text" class="form-input" id="f_kontakt" placeholder="Ola Nordmann"></div>
         <div class="form-group"><label>Telefon</label><input type="text" class="form-input" id="f_telefon" placeholder="900 00 000"></div>
         <div class="form-group"><label>E-post</label><input type="text" class="form-input" id="f_epost" placeholder="ola@bedrift.no"></div>
-        <div class="form-group"><label>Org.nr</label><input type="text" class="form-input" id="f_orgnr" placeholder="123 456 789"></div>
+        <div class="form-group" id="orgnrGroup"><label>Org.nr</label><input type="text" class="form-input" id="f_orgnr" placeholder="123 456 789"></div>
         <div class="form-group full"><label>Adresse</label><input type="text" class="form-input" id="f_adresse" placeholder="Gateveien 1, 7000 Trondheim"></div>
         <div class="form-group"><label>Prosjektnummer</label><input type="text" class="form-input" id="f_pnr" placeholder="501"></div>
         <div class="form-group"><label>Status</label>
@@ -365,20 +321,90 @@
   </div>
 </div>
 
+<!-- SETTINGS MODAL -->
+<div class="modal-overlay" id="settingsModal">
+  <div class="modal" style="max-width:520px">
+    <div class="modal-header">
+      <div class="modal-title">⚙️ Innstillinger</div>
+      <button class="modal-close" onclick="closeModal('settingsModal')">×</button>
+    </div>
+    <div class="modal-body">
+
+      <div class="settings-section">
+        <div class="settings-section-title">Utseende</div>
+        <div class="settings-row">
+          <div><div class="settings-row-label">Mørkt tema</div><div class="settings-row-sub">Bytt mellom mørkt og lyst grensesnitt</div></div>
+          <button class="toggle on" id="darkModeToggle" onclick="toggleTheme()"></button>
+        </div>
+        <div class="settings-row">
+          <div><div class="settings-row-label">Kompakt visning</div><div class="settings-row-sub">Tettere rader – se mer på én gang</div></div>
+          <button class="toggle" id="compactToggle" onclick="toggleCompact()"></button>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-section-title">Kolonner i tabellen</div>
+        <div class="col-toggles" id="colToggles"></div>
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-section-title">Sortering</div>
+        <div class="settings-row">
+          <div><div class="settings-row-label">Standard sortering</div><div class="settings-row-sub">Hvordan listen sorteres ved innlasting</div></div>
+          <select class="sort-select" id="sortSelect" onchange="setSortPref()">
+            <option value="pnr-asc">Pnr stigende</option>
+            <option value="pnr-desc">Pnr synkende</option>
+            <option value="navn-asc">Navn A–Å</option>
+            <option value="navn-desc">Navn Å–A</option>
+            <option value="status">Status</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-section-title">Data</div>
+        <div class="settings-row">
+          <div><div class="settings-row-label">Eksporter til Excel</div><div class="settings-row-sub">Last ned hele kundelisten som .xlsx</div></div>
+          <button class="btn-excel" onclick="exportExcel(); closeModal('settingsModal')">📊 Last ned</button>
+        </div>
+        <div class="settings-row">
+          <div><div class="settings-row-label">Tilkobling</div><div class="settings-row-sub">SharePoint · Industriveien 1 AS (LH Bygg)</div></div>
+          <span style="color:var(--green);font-size:13px;font-weight:600">● Tilkoblet</span>
+        </div>
+        <div class="settings-row">
+          <div><div class="settings-row-label">Innlogget som</div><div class="settings-row-sub" id="settingsUser">–</div></div>
+        </div>
+        <div class="settings-row">
+          <div><div class="settings-row-label">Versjon</div><div class="settings-row-sub">LH Bygg Kunderegister v1.2</div></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"><span id="toastIcon">✅</span><span id="toastMsg"></span></div>
 
 <script>
-// ─── CONFIG ───────────────────────────────────────────────
-const CLIENT_ID   = '3b2da258-a2f9-41af-baab-f65265f45732';
-const TENANT_ID   = 'c9d89f66-621a-4a0b-9734-8b98789d9791';
-const SITE_URL    = 'lhbent.sharepoint.com';
-const SITE_PATH   = '/sites/Industriveien1ASLHBygg';
-const LIST_NAME   = 'Kunderegister';
-
+const CLIENT_ID = '3b2da258-a2f9-41af-baab-f65265f45732';
+const TENANT_ID = 'c9d89f66-621a-4a0b-9734-8b98789d9791';
+const SITE_URL  = 'lhbent.sharepoint.com';
+const SITE_PATH = '/sites/Industriveien1ASLHBygg';
+const LIST_NAME = 'Kunderegister';
 const MAPPER = ['HMS','Tegninger','FDV','Kontrakt','Kalkyle','Fremdrift','Faktura','Korrespondanse'];
 const MAPPER_ICONS = {HMS:'🦺',Tegninger:'📐',FDV:'📋',Kontrakt:'📝',Kalkyle:'🧮',Fremdrift:'📅',Faktura:'💰',Korrespondanse:'✉️'};
 
-// ─── MSAL ─────────────────────────────────────────────────
+// Columns config: key, label, default visible
+const COLUMNS = [
+  { key: 'pnr',     label: 'Pnr',        show: true },
+  { key: 'navn',    label: 'Navn/Firma',  show: true },
+  { key: 'type',    label: 'Type',        show: true },
+  { key: 'kontakt', label: 'Kontakt',     show: true },
+  { key: 'telefon', label: 'Telefon',     show: true },
+  { key: 'status',  label: 'Status',      show: true },
+  { key: 'mapper',  label: 'Mapper',      show: true },
+];
+
 const msalConfig = {
   auth: {
     clientId: CLIENT_ID,
@@ -391,25 +417,78 @@ const msalConfig = {
 const msalInstance = new msal.PublicClientApplication(msalConfig);
 const scopes = ['https://graph.microsoft.com/Sites.ReadWrite.All', 'User.Read'];
 
-let currentUser = null;
-let kunder = [];
-let currentFilter = 'alle';
-let currentSearch = '';
-let selectedId = null;
-let editMode = false;
-let siteId = null;
-let listId = null;
+let currentUser = null, kunder = [], currentFilter = 'alle', currentSearch = '';
+let selectedId = null, editMode = false, siteId = null, listId = null, kundeType = 'firma';
+let sortKey = 'pnr', sortDir = 'asc';
 
-// ─── AUTH ──────────────────────────────────────────────────
+// Load preferences
+let darkMode = localStorage.getItem('theme') !== 'light';
+let compactMode = localStorage.getItem('compact') === 'true';
+const savedCols = localStorage.getItem('columns');
+if (savedCols) { try { const c = JSON.parse(savedCols); COLUMNS.forEach(col => { if (c[col.key] !== undefined) col.show = c[col.key]; }); } catch(e){} }
+const savedSort = localStorage.getItem('sort');
+if (savedSort) { const [k,d] = savedSort.split('-'); sortKey = k; sortDir = d||'asc'; }
+
 async function init() {
   await msalInstance.initialize();
   const response = await msalInstance.handleRedirectPromise();
-  if (response) { currentUser = response.account; }
-  else {
-    const accounts = msalInstance.getAllAccounts();
-    if (accounts.length > 0) currentUser = accounts[0];
-  }
-  if (currentUser) { showApp(); }
+  if (response) currentUser = response.account;
+  else { const accounts = msalInstance.getAllAccounts(); if (accounts.length > 0) currentUser = accounts[0]; }
+  applyTheme(); applyCompact();
+  if (currentUser) showApp();
+}
+
+function applyTheme() {
+  document.body.classList.toggle('light', !darkMode);
+  document.getElementById('themeBtn').textContent = darkMode ? '🌙' : '☀️';
+  const t = document.getElementById('darkModeToggle');
+  if (t) t.classList.toggle('on', darkMode);
+  localStorage.setItem('theme', darkMode ? 'dark' : 'light');
+}
+
+function toggleTheme() { darkMode = !darkMode; applyTheme(); }
+
+function applyCompact() {
+  document.body.classList.toggle('compact', compactMode);
+  const t = document.getElementById('compactToggle');
+  if (t) t.classList.toggle('on', compactMode);
+  localStorage.setItem('compact', compactMode);
+}
+
+function toggleCompact() { compactMode = !compactMode; applyCompact(); }
+
+function setSortPref() {
+  const val = document.getElementById('sortSelect').value;
+  const parts = val.split('-');
+  sortKey = parts[0]; sortDir = parts[1] || 'asc';
+  localStorage.setItem('sort', val);
+  render();
+}
+
+function toggleColumn(key) {
+  const col = COLUMNS.find(c => c.key === key);
+  if (col) col.show = !col.show;
+  const saved = {}; COLUMNS.forEach(c => saved[c.key] = c.show);
+  localStorage.setItem('columns', JSON.stringify(saved));
+  renderColToggles(); render();
+}
+
+function renderColToggles() {
+  document.getElementById('colToggles').innerHTML = COLUMNS.map(col => `
+    <button class="col-toggle-btn ${col.show ? 'active' : ''}" onclick="toggleColumn('${col.key}')">
+      <span>${col.label}</span>
+      <span class="col-check">${col.show ? '✓' : '○'}</span>
+    </button>
+  `).join('');
+}
+
+function openSettings() {
+  document.getElementById('settingsUser').textContent = currentUser ? (currentUser.name || currentUser.username) : '–';
+  document.getElementById('darkModeToggle').classList.toggle('on', darkMode);
+  document.getElementById('compactToggle').classList.toggle('on', compactMode);
+  document.getElementById('sortSelect').value = `${sortKey}-${sortDir}`;
+  renderColToggles();
+  document.getElementById('settingsModal').classList.add('open');
 }
 
 async function signIn() {
@@ -417,8 +496,7 @@ async function signIn() {
   document.getElementById('loginBtn').innerHTML = '<span class="spinner"></span> Logger inn...';
   try {
     const response = await msalInstance.loginPopup({ scopes });
-    currentUser = response.account;
-    showApp();
+    currentUser = response.account; showApp();
   } catch(e) {
     console.error(e);
     document.getElementById('loginBtn').disabled = false;
@@ -426,54 +504,31 @@ async function signIn() {
   }
 }
 
-function signOut() {
-  msalInstance.logoutPopup();
-  location.reload();
-}
+function signOut() { msalInstance.logoutPopup(); location.reload(); }
 
 async function getToken() {
-  const request = { scopes, account: currentUser };
-  try {
-    const res = await msalInstance.acquireTokenSilent(request);
-    return res.accessToken;
-  } catch(e) {
-    const res = await msalInstance.acquireTokenRedirect(request);
-    return res?.accessToken;
-  }
+  try { return (await msalInstance.acquireTokenSilent({ scopes, account: currentUser })).accessToken; }
+  catch(e) { return (await msalInstance.acquireTokenPopup({ scopes })).accessToken; }
 }
 
 async function graphGet(url) {
-  const token = await getToken();
-  const res = await fetch(`https://graph.microsoft.com/v1.0${url}`, {
-    headers: { Authorization: `Bearer ${token}` }
-  });
-  if (!res.ok) throw new Error(`Graph feil: ${res.status} ${await res.text()}`);
+  const res = await fetch(`https://graph.microsoft.com/v1.0${url}`, { headers: { Authorization: `Bearer ${await getToken()}` } });
+  if (!res.ok) throw new Error(res.status);
   return res.json();
 }
 
 async function graphPost(url, body) {
-  const token = await getToken();
-  const res = await fetch(`https://graph.microsoft.com/v1.0${url}`, {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify(body)
-  });
-  if (!res.ok) throw new Error(`Graph feil: ${res.status} ${await res.text()}`);
+  const res = await fetch(`https://graph.microsoft.com/v1.0${url}`, { method: 'POST', headers: { Authorization: `Bearer ${await getToken()}`, 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  if (!res.ok) throw new Error(res.status);
   return res.json();
 }
 
 async function graphPatch(url, body) {
-  const token = await getToken();
-  const res = await fetch(`https://graph.microsoft.com/v1.0${url}`, {
-    method: 'PATCH',
-    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify(body)
-  });
-  if (!res.ok) throw new Error(`Graph feil: ${res.status} ${await res.text()}`);
+  const res = await fetch(`https://graph.microsoft.com/v1.0${url}`, { method: 'PATCH', headers: { Authorization: `Bearer ${await getToken()}`, 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  if (!res.ok) throw new Error(res.status);
   return res.json();
 }
 
-// ─── SHAREPOINT ────────────────────────────────────────────
 async function getSiteAndList() {
   if (siteId && listId) return;
   const site = await graphGet(`/sites/${SITE_URL}:${SITE_PATH}`);
@@ -497,39 +552,18 @@ async function fetchKunder() {
     status: item.fields.Status || 'Under kalkyle',
     mapper: item.fields.Mapperopprettet === 'Ja',
     notat: item.fields.Notat || '',
+    type: item.fields.Kundetype || 'firma',
   }));
 }
 
 async function createKunde(data) {
   await getSiteAndList();
-  return graphPost(`/sites/${siteId}/lists/${listId}/items`, {
-    fields: {
-      Title: data.firmanavn,
-      Kontaktperson: data.kontakt,
-      Telefon: data.telefon,
-      Epost: data.epost,
-      Adresse: data.adresse,
-      Orgnr: data.orgnr,
-      Prosjektnummer: data.pnr,
-      Status: data.status,
-      Notat: data.notat,
-    }
-  });
+  return graphPost(`/sites/${siteId}/lists/${listId}/items`, { fields: { Title: data.firmanavn, Kontaktperson: data.kontakt, Telefon: data.telefon, Epost: data.epost, Adresse: data.adresse, Orgnr: data.orgnr, Prosjektnummer: data.pnr, Status: data.status, Notat: data.notat, Kundetype: data.type } });
 }
 
 async function updateKunde(id, data) {
   await getSiteAndList();
-  return graphPatch(`/sites/${siteId}/lists/${listId}/items/${id}/fields`, {
-    Title: data.firmanavn,
-    Kontaktperson: data.kontakt,
-    Telefon: data.telefon,
-    Epost: data.epost,
-    Adresse: data.adresse,
-    Orgnr: data.orgnr,
-    Prosjektnummer: data.pnr,
-    Status: data.status,
-    Notat: data.notat,
-  });
+  return graphPatch(`/sites/${siteId}/lists/${listId}/items/${id}/fields`, { Title: data.firmanavn, Kontaktperson: data.kontakt, Telefon: data.telefon, Epost: data.epost, Adresse: data.adresse, Orgnr: data.orgnr, Prosjektnummer: data.pnr, Status: data.status, Notat: data.notat, Kundetype: data.type });
 }
 
 async function updateStatus(id, status) {
@@ -537,7 +571,6 @@ async function updateStatus(id, status) {
   return graphPatch(`/sites/${siteId}/lists/${listId}/items/${id}/fields`, { Status: status });
 }
 
-// ─── APP ───────────────────────────────────────────────────
 async function showApp() {
   document.getElementById('loginScreen').style.display = 'none';
   document.getElementById('app').style.display = 'block';
@@ -547,13 +580,8 @@ async function showApp() {
 }
 
 async function loadKunder() {
-  try {
-    kunder = await fetchKunder();
-    render();
-  } catch(e) {
-    showError('Kunne ikke laste kunder: ' + e.message);
-    document.getElementById('tableBody').innerHTML = '<tr class="loading-row"><td colspan="6">Feil ved lasting</td></tr>';
-  }
+  try { kunder = await fetchKunder(); render(); }
+  catch(e) { showError('Kunne ikke laste kunder: ' + e.message); document.getElementById('tableBody').innerHTML = '<tr class="loading-row"><td colspan="7">Feil ved lasting</td></tr>'; }
 }
 
 function showError(msg) {
@@ -568,58 +596,107 @@ function setFilter(f, btn) {
   render();
 }
 
-function filtered() {
-  return kunder.filter(k => {
+function sortedFiltered() {
+  let list = kunder.filter(k => {
     const matchFilter = currentFilter === 'alle' || k.status === currentFilter;
     const matchSearch = !currentSearch || k.firmanavn.toLowerCase().includes(currentSearch) || k.kontakt.toLowerCase().includes(currentSearch) || k.pnr.includes(currentSearch);
     return matchFilter && matchSearch;
   });
+
+  list.sort((a, b) => {
+    let av, bv;
+    if (sortKey === 'pnr') { av = parseInt(a.pnr)||0; bv = parseInt(b.pnr)||0; }
+    else if (sortKey === 'navn') { av = a.firmanavn.toLowerCase(); bv = b.firmanavn.toLowerCase(); }
+    else if (sortKey === 'status') { const order = {'Aktiv':0,'Under kalkyle':1,'Avsluttet':2}; av = order[a.status]||3; bv = order[b.status]||3; }
+    else { av = a[sortKey]||''; bv = b[sortKey]||''; }
+    if (av < bv) return sortDir === 'asc' ? -1 : 1;
+    if (av > bv) return sortDir === 'asc' ? 1 : -1;
+    return 0;
+  });
+  return list;
+}
+
+function sortBy(key) {
+  if (sortKey === key) sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+  else { sortKey = key; sortDir = 'asc'; }
+  localStorage.setItem('sort', `${sortKey}-${sortDir}`);
+  render();
 }
 
 function render() {
-  const list = filtered();
+  const list = sortedFiltered();
+  const visCols = COLUMNS.filter(c => c.show);
+
   document.getElementById('statTotal').textContent = kunder.length;
   document.getElementById('statKalkyle').textContent = kunder.filter(k=>k.status==='Under kalkyle').length;
   document.getElementById('statAktiv').textContent = kunder.filter(k=>k.status==='Aktiv').length;
   document.getElementById('statAvsluttet').textContent = kunder.filter(k=>k.status==='Avsluttet').length;
 
-  const empty = document.getElementById('emptyState');
-  const tbody = document.getElementById('tableBody');
+  // Header
+  const sortLabels = { pnr: 'Pnr', navn: 'Navn/Firma', type: 'Type', kontakt: 'Kontakt', telefon: 'Telefon', status: 'Status', mapper: 'Mapper' };
+  const sortableKeys = ['pnr','navn','status'];
+  document.getElementById('tableHead').innerHTML = '<tr>' + visCols.map(col => {
+    const sortable = sortableKeys.includes(col.key);
+    const active = sortKey === col.key;
+    const arrow = sortDir === 'asc' ? '↑' : '↓';
+    return `<th ${sortable ? `onclick="sortBy('${col.key}')"` : ''} class="${active ? 'sorted' : ''}">${col.label}${sortable ? `<span class="sort-arrow">${active ? arrow : '↕'}</span>` : ''}</th>`;
+  }).join('') + '</tr>';
 
-  if (list.length === 0) {
-    tbody.innerHTML = '';
-    empty.style.display = 'block';
-    return;
-  }
+  const tbody = document.getElementById('tableBody');
+  const empty = document.getElementById('emptyState');
+  if (list.length === 0) { tbody.innerHTML = ''; empty.style.display = 'block'; return; }
   empty.style.display = 'none';
-  tbody.innerHTML = list.map(k => `
-    <tr onclick="openDetail('${k.id}')">
-      <td><span class="pnr">${k.pnr || '—'}</span></td>
-      <td><span class="firm-name">${k.firmanavn}</span></td>
-      <td><span class="contact">${k.kontakt || '—'}</span></td>
-      <td><span class="contact">${k.telefon || '—'}</span></td>
-      <td>${badgeHtml(k.status)}</td>
-      <td><span class="mapper-check ${k.mapper ? 'done' : ''}">${k.mapper ? '✓ Opprettet' : '— Ikke opprettet'}</span></td>
-    </tr>
-  `).join('');
+
+  tbody.innerHTML = list.map(k => {
+    const cells = visCols.map(col => {
+      if (col.key === 'pnr') return `<td><span class="pnr">${k.pnr||'—'}</span></td>`;
+      if (col.key === 'navn') return `<td><span class="firm-name">${k.firmanavn}</span></td>`;
+      if (col.key === 'type') return `<td><span class="${k.type==='privat'?'type-badge-privat':'type-badge-firma'}">${k.type==='privat'?'👤 Privat':'🏢 Firma'}</span></td>`;
+      if (col.key === 'kontakt') return `<td><span class="contact">${k.kontakt||'—'}</span></td>`;
+      if (col.key === 'telefon') return `<td><span class="contact">${k.telefon||'—'}</span></td>`;
+      if (col.key === 'status') return `<td>${badgeHtml(k.status)}</td>`;
+      if (col.key === 'mapper') return `<td><span class="mapper-check ${k.mapper?'done':''}">${k.mapper?'✓ Opprettet':'— Ikke opprettet'}</span></td>`;
+      return '<td>—</td>';
+    });
+    return `<tr onclick="openDetail('${k.id}')">${cells.join('')}</tr>`;
+  }).join('');
 }
 
 function badgeHtml(status) {
-  const cls = status === 'Aktiv' ? 'aktiv' : status === 'Under kalkyle' ? 'kalkyle' : 'avsluttet';
+  const cls = status==='Aktiv'?'aktiv':status==='Under kalkyle'?'kalkyle':'avsluttet';
   return `<span class="badge ${cls}"><span class="badge-dot"></span>${status}</span>`;
+}
+
+function exportExcel() {
+  const headers = ['Prosjektnummer','Firmanavn','Type','Kontaktperson','Telefon','E-post','Adresse','Org.nr','Status','Mapper','Notat'];
+  const rows = kunder.map(k => [k.pnr, k.firmanavn, k.type==='privat'?'Privatkunde':'Firmakunde', k.kontakt, k.telefon, k.epost, k.adresse, k.orgnr, k.status, k.mapper?'Ja':'Nei', k.notat]);
+  const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+  ws['!cols'] = headers.map(() => ({ wch: 20 }));
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Kunderegister');
+  XLSX.writeFile(wb, `LHBygg_Kunderegister_${new Date().toISOString().slice(0,10)}.xlsx`);
+  toast('📊', 'Kunderegister eksportert til Excel');
+}
+
+function setKundeType(type, btn) {
+  kundeType = type;
+  document.querySelectorAll('.kunde-type-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  document.getElementById('firmanavnLabel').textContent = type==='privat' ? 'Navn *' : 'Firmanavn *';
+  document.getElementById('f_firmanavn').placeholder = type==='privat' ? 'Ola Nordmann' : 'Bedrift AS';
+  document.getElementById('orgnrGroup').style.display = type==='privat' ? 'none' : '';
 }
 
 function openDetail(id) {
   selectedId = id;
-  const k = kunder.find(x => x.id === id);
+  const k = kunder.find(x=>x.id===id);
   document.getElementById('detailFirma').textContent = k.firmanavn;
-  document.getElementById('detailPnr').textContent = `Prosjektnummer: ${k.pnr || '—'}`;
+  document.getElementById('detailPnr').textContent = `Pnr: ${k.pnr||'—'} · ${k.type==='privat'?'👤 Privatkunde':'🏢 Firmakunde'}`;
 
-  const sr = document.getElementById('statusRow');
   let btns = `<span class="status-label">Status:</span> ${badgeHtml(k.status)} &nbsp;`;
-  if (k.status === 'Under kalkyle') btns += `<button class="status-btn aktiv-btn" onclick="changeStatus('${id}','Aktiv')">→ Sett Aktiv</button>`;
-  else if (k.status === 'Aktiv') btns += `<button class="status-btn" onclick="changeStatus('${id}','Avsluttet')">→ Sett Avsluttet</button>`;
-  sr.innerHTML = btns;
+  if (k.status==='Under kalkyle') btns += `<button class="status-btn aktiv-btn" onclick="changeStatus('${id}','Aktiv')">→ Sett Aktiv</button>`;
+  else if (k.status==='Aktiv') btns += `<button class="status-btn" onclick="changeStatus('${id}','Avsluttet')">→ Sett Avsluttet</button>`;
+  document.getElementById('statusRow').innerHTML = btns;
 
   document.getElementById('detailInfo').innerHTML = `
     <div class="detail-field"><div class="detail-label">Kontaktperson</div><div class="detail-value">${k.kontakt||'—'}</div></div>
@@ -629,9 +706,9 @@ function openDetail(id) {
     <div class="detail-field" style="grid-column:1/-1"><div class="detail-label">Adresse</div><div class="detail-value">${k.adresse||'—'}</div></div>
   `;
 
-  const locked = k.status === 'Under kalkyle';
-  document.getElementById('mapperGrid').innerHTML = MAPPER.map(m => `
-    <div class="mappe-card ${locked ? 'locked' : ''}" title="${locked ? 'Låst – sett til Aktiv' : m}">
+  const locked = k.status==='Under kalkyle';
+  document.getElementById('mapperGrid').innerHTML = MAPPER.map(m=>`
+    <div class="mappe-card ${locked?'locked':''}" title="${locked?'Låst – sett til Aktiv':m}">
       <div class="mappe-icon">${MAPPER_ICONS[m]}</div>
       <div class="mappe-name">${m}</div>
     </div>
@@ -648,20 +725,20 @@ function openDetail(id) {
 async function changeStatus(id, newStatus) {
   try {
     await updateStatus(id, newStatus);
-    const k = kunder.find(x => x.id === id);
+    const k = kunder.find(x=>x.id===id);
     k.status = newStatus;
-    if (newStatus === 'Aktiv') toast('✅', `Status satt til Aktiv – mapper opprettes automatisk`);
-    else if (newStatus === 'Avsluttet') toast('📁', `Status satt til Avsluttet – mappe flyttes automatisk`);
-    render();
-    openDetail(id);
-  } catch(e) { showError('Kunne ikke oppdatere status: ' + e.message); }
+    if (newStatus==='Aktiv') toast('✅','Satt til Aktiv – mapper opprettes automatisk');
+    else if (newStatus==='Avsluttet') toast('📁','Satt til Avsluttet – mappe flyttes automatisk');
+    render(); openDetail(id);
+  } catch(e) { showError('Kunne ikke oppdatere: '+e.message); }
 }
 
 function editKunde() {
   closeModal('detailModal');
-  const k = kunder.find(x => x.id === selectedId);
-  editMode = true;
+  const k = kunder.find(x=>x.id===selectedId);
+  editMode = true; kundeType = k.type||'firma';
   document.getElementById('formModalTitle').textContent = 'Rediger kunde';
+  document.getElementById('kundeTypeRow').style.display = 'none';
   document.getElementById('f_firmanavn').value = k.firmanavn;
   document.getElementById('f_kontakt').value = k.kontakt;
   document.getElementById('f_telefon').value = k.telefon;
@@ -671,57 +748,42 @@ function editKunde() {
   document.getElementById('f_pnr').value = k.pnr;
   document.getElementById('f_status').value = k.status;
   document.getElementById('f_notat').value = k.notat;
+  document.getElementById('orgnrGroup').style.display = kundeType==='privat'?'none':'';
   document.getElementById('formModal').classList.add('open');
 }
 
 function openNewModal() {
-  editMode = false;
-  selectedId = null;
+  editMode = false; selectedId = null; kundeType = 'firma';
   document.getElementById('formModalTitle').textContent = 'Ny kunde';
-  ['firmanavn','kontakt','telefon','epost','orgnr','adresse','pnr','notat'].forEach(f => document.getElementById('f_'+f).value = '');
+  document.getElementById('kundeTypeRow').style.display = '';
+  ['firmanavn','kontakt','telefon','epost','orgnr','adresse','pnr','notat'].forEach(f=>document.getElementById('f_'+f).value='');
   document.getElementById('f_status').value = 'Under kalkyle';
+  document.getElementById('orgnrGroup').style.display = '';
+  document.getElementById('firmanavnLabel').textContent = 'Firmanavn *';
+  document.getElementById('f_firmanavn').placeholder = 'Bedrift AS';
+  document.querySelectorAll('.kunde-type-btn').forEach((b,i)=>b.classList.toggle('selected',i===0));
   document.getElementById('formModal').classList.add('open');
 }
 
 async function saveKunde() {
   const firma = document.getElementById('f_firmanavn').value.trim();
-  if (!firma) { alert('Firmanavn er påkrevd'); return; }
-
-  const data = {
-    firmanavn: firma,
-    kontakt: document.getElementById('f_kontakt').value,
-    telefon: document.getElementById('f_telefon').value,
-    epost: document.getElementById('f_epost').value,
-    orgnr: document.getElementById('f_orgnr').value,
-    adresse: document.getElementById('f_adresse').value,
-    pnr: document.getElementById('f_pnr').value,
-    status: document.getElementById('f_status').value,
-    notat: document.getElementById('f_notat').value,
-  };
-
+  if (!firma) { alert('Navn er påkrevd'); return; }
+  const data = { firmanavn: firma, kontakt: document.getElementById('f_kontakt').value, telefon: document.getElementById('f_telefon').value, epost: document.getElementById('f_epost').value, orgnr: document.getElementById('f_orgnr').value, adresse: document.getElementById('f_adresse').value, pnr: document.getElementById('f_pnr').value, status: document.getElementById('f_status').value, notat: document.getElementById('f_notat').value, type: kundeType };
   const btn = document.getElementById('saveBtn');
-  btn.disabled = true;
-  btn.textContent = 'Lagrer...';
-
+  btn.disabled = true; btn.textContent = 'Lagrer...';
   try {
     if (editMode && selectedId) {
       await updateKunde(selectedId, data);
-      const k = kunder.find(x => x.id === selectedId);
-      Object.assign(k, data);
+      Object.assign(kunder.find(x=>x.id===selectedId), data);
       toast('✅', `${data.firmanavn} oppdatert`);
     } else {
       const created = await createKunde(data);
       kunder.push({ id: created.id, mapper: false, ...data });
       toast('✅', `${data.firmanavn} lagt til`);
     }
-    closeModal('formModal');
-    render();
-  } catch(e) {
-    showError('Kunne ikke lagre: ' + e.message);
-  } finally {
-    btn.disabled = false;
-    btn.textContent = 'Lagre';
-  }
+    closeModal('formModal'); render();
+  } catch(e) { showError('Kunne ikke lagre: '+e.message); }
+  finally { btn.disabled = false; btn.textContent = 'Lagre'; }
 }
 
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }
@@ -731,11 +793,11 @@ function toast(icon, msg) {
   document.getElementById('toastIcon').textContent = icon;
   document.getElementById('toastMsg').textContent = msg;
   t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 3500);
+  setTimeout(()=>t.classList.remove('show'), 3500);
 }
 
 document.querySelectorAll('.modal-overlay').forEach(o => {
-  o.addEventListener('click', e => { if (e.target === o) o.classList.remove('open'); });
+  o.addEventListener('click', e => { if (e.target===o) o.classList.remove('open'); });
 });
 
 init();
