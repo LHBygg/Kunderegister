@@ -3,927 +3,711 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>LH Bygg – Kunderegister v4</title>
+<title>LH Bygg – Kunderegister</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-msal-browser/3.11.1/msal-browser.min.js"></script>
-<link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-:root {
-  --accent: #e8b84b;
-  --accent2: #3b82f6;
-  --green: #22c55e;
-  --orange: #f97316;
-  --red: #ef4444;
-  --bg: #0f1117;
-  --bg2: #161a23;
-  --bg3: #1e2330;
-  --bg4: #252b3a;
-  --border: rgba(255,255,255,0.08);
-  --border2: rgba(255,255,255,0.14);
-  --text: #f0f2f7;
-  --text2: #8b95a8;
-  --text3: #5a6478;
-  --radius: 8px;
-  --radius-lg: 12px;
-}
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; font-size: 14px; }
-.mono { font-family: 'DM Mono', monospace; }
-
+:root{--acc:#e8b84b;--acc-d:rgba(232,184,75,.12);--blu:#3b82f6;--blu-d:rgba(59,130,246,.12);--grn:#22c55e;--grn-d:rgba(34,197,94,.12);--org:#f97316;--org-d:rgba(249,115,22,.12);--red:#ef4444;--red-d:rgba(239,68,68,.12);--bg:#0d1117;--bg2:#161b27;--bg3:#1e2535;--bg4:#252d3f;--bg5:#2e3850;--br:rgba(255,255,255,.07);--br2:rgba(255,255,255,.13);--br3:rgba(255,255,255,.2);--tx:#e8ecf4;--tx2:#8b95ab;--tx3:#4e5a70;--r:8px;--rl:12px;--rxl:16px;}
+.light{--bg:#f4f6fa;--bg2:#fff;--bg3:#f0f2f7;--bg4:#e8ebf2;--bg5:#dde1ec;--br:rgba(0,0,0,.07);--br2:rgba(0,0,0,.13);--br3:rgba(0,0,0,.2);--tx:#1a2035;--tx2:#5a6478;--tx3:#9aa3b5;}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);font-size:14px;transition:background .2s,color .2s;}
+.mono{font-family:'DM Mono',monospace;}
 /* HEADER */
-.header {
-  position: sticky; top: 0; z-index: 100;
-  background: rgba(15,17,23,0.95);
-  backdrop-filter: blur(12px);
-  border-bottom: 1px solid var(--border);
-  padding: 0 24px;
-  height: 56px;
-  display: flex; align-items: center; gap: 16px;
-}
-.logo { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 15px; letter-spacing: -0.3px; }
-.logo-mark { width: 28px; height: 28px; background: var(--accent); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 12px; color: #000; }
-.header-spacer { flex: 1; }
-.version-badge { font-size: 11px; padding: 3px 8px; background: var(--bg3); border: 1px solid var(--border); border-radius: 20px; color: var(--text3); font-family: 'DM Mono', monospace; }
-.user-badge { display: flex; align-items: center; gap: 8px; padding: 6px 12px; background: var(--bg3); border: 1px solid var(--border); border-radius: 20px; font-size: 13px; cursor: pointer; }
-.user-avatar { width: 22px; height: 22px; border-radius: 50%; background: var(--accent2); display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 600; color: #fff; }
-.login-btn { padding: 8px 18px; background: var(--accent); color: #000; border: none; border-radius: var(--radius); font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; }
-.login-btn:hover { background: #d4a43e; }
-
-/* STATS ROW */
-.stats-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; padding: 20px 24px 0; }
-.stat-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 14px 16px; }
-.stat-label { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
-.stat-value { font-size: 24px; font-weight: 600; line-height: 1; }
-.stat-value.accent { color: var(--accent); }
-.stat-value.green { color: var(--green); }
-.stat-value.orange { color: var(--orange); }
-.stat-value.blue { color: var(--accent2); }
-.stat-value.gray { color: var(--text2); }
-
+.hdr{position:sticky;top:0;z-index:200;height:54px;display:flex;align-items:center;gap:12px;padding:0 24px;background:var(--bg);border-bottom:1px solid var(--br);}
+.logo{display:flex;align-items:center;gap:10px;font-weight:600;font-size:15px;letter-spacing:-.3px;color:var(--tx);text-decoration:none;}
+.lsq{width:30px;height:30px;background:var(--acc);border-radius:7px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:#000;flex-shrink:0;}
+.hsp{flex:1;}
+.hbtn{display:flex;align-items:center;gap:6px;padding:6px 12px;background:var(--bg3);border:1px solid var(--br2);border-radius:20px;font-size:12px;color:var(--tx2);cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s;white-space:nowrap;}
+.hbtn:hover{background:var(--bg4);color:var(--tx);}
+.udot{width:22px;height:22px;border-radius:50%;background:var(--blu);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;color:#fff;}
+.vbdg{font-size:10px;padding:2px 7px;background:var(--bg3);border:1px solid var(--br);border-radius:20px;color:var(--tx3);font-family:'DM Mono',monospace;}
+/* STATS */
+.stats{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;padding:18px 24px 0;}
+.sc{background:var(--bg2);border:1px solid var(--br);border-radius:var(--rl);padding:14px 16px;}
+.sc:hover{border-color:var(--br2);}
+.sc-l{font-size:11px;color:var(--tx3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px;}
+.sc-v{font-size:22px;font-weight:600;line-height:1;}
+.ca{color:var(--acc);}.cg{color:var(--grn);}.co{color:var(--org);}.cb{color:var(--blu);}.ct{color:var(--tx2);}
 /* TOOLBAR */
-.toolbar { display: flex; align-items: center; gap: 12px; padding: 16px 24px; }
-.search-box { display: flex; align-items: center; gap: 8px; background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 8px 14px; flex: 1; max-width: 360px; }
-.search-box input { background: none; border: none; outline: none; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 13px; width: 100%; }
-.search-box input::placeholder { color: var(--text3); }
-.search-icon { color: var(--text3); font-size: 16px; flex-shrink: 0; }
-.filter-tabs { display: flex; gap: 4px; background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 3px; }
-.filter-tab { padding: 5px 14px; border-radius: 5px; font-size: 12px; font-weight: 500; cursor: pointer; color: var(--text2); border: none; background: none; font-family: 'DM Sans', sans-serif; transition: all 0.15s; }
-.filter-tab.active { background: var(--bg4); color: var(--text); }
-.toolbar-spacer { flex: 1; }
-.btn { display: flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: var(--radius); font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500; cursor: pointer; border: 1px solid var(--border); background: var(--bg2); color: var(--text); transition: all 0.15s; }
-.btn:hover { background: var(--bg3); border-color: var(--border2); }
-.btn.primary { background: var(--accent); color: #000; border-color: var(--accent); font-weight: 600; }
-.btn.primary:hover { background: #d4a43e; }
-.btn-icon { font-size: 16px; }
-
+.tbar{display:flex;align-items:center;gap:10px;padding:14px 24px;}
+.srch{display:flex;align-items:center;gap:8px;background:var(--bg2);border:1px solid var(--br2);border-radius:var(--r);padding:8px 14px;flex:1;max-width:380px;}
+.srch:focus-within{border-color:var(--blu);}
+.srch input{background:none;border:none;outline:none;color:var(--tx);font-family:'DM Sans',sans-serif;font-size:13px;width:100%;}
+.srch input::placeholder{color:var(--tx3);}
+.ftabs{display:flex;gap:3px;background:var(--bg2);border:1px solid var(--br);border-radius:var(--r);padding:3px;}
+.ftab{padding:5px 13px;border-radius:5px;font-size:12px;font-weight:500;cursor:pointer;color:var(--tx2);border:none;background:none;font-family:'DM Sans',sans-serif;transition:all .15s;white-space:nowrap;}
+.ftab.on{background:var(--bg4);color:var(--tx);}
+.tsp{flex:1;}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:var(--r);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;border:1px solid var(--br2);background:var(--bg2);color:var(--tx);transition:all .15s;white-space:nowrap;}
+.btn:hover{background:var(--bg3);border-color:var(--br3);}
+.btn.pri{background:var(--acc);color:#000;border-color:var(--acc);font-weight:600;}
+.btn.pri:hover{background:#d4a43e;}
+.btn.danger{color:var(--red);border-color:rgba(239,68,68,.3);}
+.btn.danger:hover{background:var(--red-d);}
+.btn.sm{padding:5px 10px;font-size:12px;}
 /* TABLE */
-.table-wrap { padding: 0 24px 24px; }
-.customer-table { width: 100%; border-collapse: collapse; }
-.customer-table thead th {
-  text-align: left; padding: 10px 14px; font-size: 11px; font-weight: 500; color: var(--text3);
-  text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border);
-  background: var(--bg);
-  position: sticky; top: 56px; z-index: 10;
-}
-.customer-table tbody tr.customer-row { cursor: pointer; transition: background 0.1s; }
-.customer-table tbody tr.customer-row:hover td { background: var(--bg2); }
-.customer-table tbody tr.customer-row.expanded td { background: var(--bg2); border-bottom: none; }
-.customer-table tbody td { padding: 12px 14px; border-bottom: 1px solid var(--border); vertical-align: middle; }
-.expand-cell { width: 36px; }
-.expand-btn { width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; border-radius: 4px; background: var(--bg3); color: var(--text2); font-size: 12px; transition: all 0.2s; border: none; cursor: pointer; }
-.expand-btn.open { background: var(--accent); color: #000; transform: rotate(90deg); }
-.customer-name { font-weight: 500; font-size: 14px; }
-.customer-addr { font-size: 12px; color: var(--text3); margin-top: 2px; }
-.type-badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 20px; font-size: 11px; font-weight: 500; }
-.type-badge.firma { background: rgba(59,130,246,0.15); color: #60a5fa; }
-.type-badge.privat { background: rgba(232,184,75,0.15); color: var(--accent); }
-.contact-cell { font-size: 13px; }
-.tel-link { color: var(--accent2); text-decoration: none; font-size: 13px; }
-.tel-link:hover { text-decoration: underline; }
-.email-link { color: var(--accent2); text-decoration: none; font-size: 13px; }
-.email-link:hover { text-decoration: underline; }
-.proj-count { font-size: 13px; }
-.proj-active { font-size: 11px; color: var(--green); margin-top: 2px; }
-.portfolio-val { font-family: 'DM Mono', monospace; font-size: 13px; color: var(--accent); }
-
-/* EXPANDED ROW */
-tr.expanded-row td { padding: 0; background: var(--bg2); border-bottom: 1px solid var(--border2); }
-.expanded-content { padding: 16px 24px 20px 50px; }
-.expanded-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
-.expanded-title { font-size: 13px; color: var(--text2); font-weight: 500; }
-.project-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
-
+.tw{padding:0 24px 32px;}
+table.ct{width:100%;border-collapse:collapse;}
+table.ct thead th{text-align:left;padding:9px 12px;font-size:11px;font-weight:500;color:var(--tx3);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--br);background:var(--bg);position:sticky;top:54px;z-index:10;}
+table.ct tbody tr.crow{cursor:pointer;transition:background .1s;}
+table.ct tbody tr.crow:hover td{background:var(--bg2);}
+table.ct tbody tr.crow.open td{background:var(--bg2);border-bottom:none;}
+table.ct tbody td{padding:11px 12px;border-bottom:1px solid var(--br);vertical-align:middle;}
+.xbtn{width:22px;height:22px;display:flex;align-items:center;justify-content:center;border-radius:4px;background:var(--bg3);color:var(--tx2);font-size:10px;transition:all .2s;border:none;cursor:pointer;}
+.xbtn.on{background:var(--acc);color:#000;transform:rotate(90deg);}
+.cname{font-weight:500;font-size:14px;}
+.cadr{font-size:11px;color:var(--tx3);margin-top:1px;}
+.tbdg{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:500;}
+.tbdg.f{background:var(--blu-d);color:var(--blu);}
+.tbdg.p{background:var(--acc-d);color:var(--acc);}
+.al{color:var(--blu);text-decoration:none;font-size:13px;}
+.al:hover{text-decoration:underline;}
+.pv{font-family:'DM Mono',monospace;font-size:13px;color:var(--acc);}
+.pa{font-size:11px;color:var(--grn);margin-top:1px;}
+/* EXPANDED */
+tr.erow td{padding:0;background:var(--bg2);border-bottom:1px solid var(--br2);}
+.ebox{padding:14px 20px 18px 46px;}
+.ehdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+.etitle{font-size:12px;color:var(--tx2);font-weight:500;}
+.pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px;}
 /* PROJECT CARD */
-.project-card { background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 14px; transition: border-color 0.15s; }
-.project-card:hover { border-color: var(--border2); }
-.project-card.aktiv { border-left: 3px solid var(--green); }
-.project-card.kalkyle { border-left: 3px solid var(--orange); }
-.project-card.avsluttet { border-left: 3px solid var(--text3); opacity: 0.7; }
-.pc-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 10px; }
-.pc-name { font-weight: 500; font-size: 14px; line-height: 1.3; }
-.pc-num { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--accent); background: rgba(232,184,75,0.1); padding: 2px 6px; border-radius: 4px; }
-.status-badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 20px; font-size: 11px; font-weight: 500; margin-bottom: 10px; }
-.status-badge.aktiv { background: rgba(34,197,94,0.15); color: var(--green); }
-.status-badge.kalkyle { background: rgba(249,115,22,0.15); color: var(--orange); }
-.status-badge.avsluttet { background: rgba(90,100,120,0.2); color: var(--text3); }
-.pc-meta { display: flex; flex-direction: column; gap: 5px; margin-bottom: 10px; }
-.pc-meta-row { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text2); }
-.pc-meta-icon { font-size: 13px; color: var(--text3); }
-.pc-price { font-family: 'DM Mono', monospace; font-size: 13px; color: var(--accent); }
-.pc-note { font-size: 12px; color: var(--text3); margin-bottom: 10px; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-
-/* FOLDER BUTTONS */
-.folder-row { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; }
-.folder-btn { display: flex; align-items: center; gap: 4px; padding: 4px 8px; background: var(--bg4); border: 1px solid var(--border); border-radius: 5px; font-size: 11px; color: var(--text2); cursor: pointer; transition: all 0.15s; font-family: 'DM Sans', sans-serif; }
-.folder-btn:hover { background: var(--bg2); border-color: var(--border2); color: var(--text); }
-.folder-btn.locked { opacity: 0.4; cursor: not-allowed; }
-.folder-icon { font-size: 12px; }
-
-/* CARD ACTIONS */
-.pc-actions { display: flex; gap: 6px; }
-.pc-action-btn { flex: 1; padding: 6px; border-radius: 6px; font-size: 11px; font-weight: 500; cursor: pointer; border: 1px solid var(--border); background: var(--bg4); color: var(--text2); font-family: 'DM Sans', sans-serif; transition: all 0.15s; text-align: center; }
-.pc-action-btn:hover { background: var(--bg2); color: var(--text); }
-.pc-action-btn.set-aktiv { color: var(--green); border-color: rgba(34,197,94,0.3); }
-.pc-action-btn.set-aktiv:hover { background: rgba(34,197,94,0.1); }
-.pc-action-btn.set-avsluttet { color: var(--text3); }
-
-/* MODAL */
-.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 20px; }
-.modal-overlay.hidden { display: none; }
-.modal { background: var(--bg2); border: 1px solid var(--border2); border-radius: var(--radius-lg); width: 100%; max-width: 520px; max-height: 90vh; overflow-y: auto; }
-.modal-header { display: flex; align-items: center; justify-content: space-between; padding: 18px 20px; border-bottom: 1px solid var(--border); }
-.modal-title { font-size: 15px; font-weight: 600; }
-.modal-close { width: 28px; height: 28px; background: var(--bg3); border: none; border-radius: 6px; cursor: pointer; color: var(--text2); font-size: 16px; display: flex; align-items: center; justify-content: center; }
-.modal-body { padding: 20px; }
-.form-group { margin-bottom: 16px; }
-.form-label { display: block; font-size: 12px; color: var(--text2); margin-bottom: 6px; font-weight: 500; }
-.form-input { width: 100%; padding: 9px 12px; background: var(--bg3); border: 1px solid var(--border2); border-radius: var(--radius); color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 13px; outline: none; }
-.form-input:focus { border-color: var(--accent2); }
-.form-input::placeholder { color: var(--text3); }
-.form-select { width: 100%; padding: 9px 12px; background: var(--bg3); border: 1px solid var(--border2); border-radius: var(--radius); color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 13px; outline: none; cursor: pointer; }
-.form-textarea { width: 100%; padding: 9px 12px; background: var(--bg3); border: 1px solid var(--border2); border-radius: var(--radius); color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 13px; outline: none; resize: vertical; min-height: 70px; }
-.type-toggle { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px; }
-.type-toggle-btn { padding: 10px; border: 1px solid var(--border2); border-radius: var(--radius); background: var(--bg3); color: var(--text2); cursor: pointer; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500; transition: all 0.15s; text-align: center; }
-.type-toggle-btn.active { border-color: var(--accent); background: rgba(232,184,75,0.1); color: var(--accent); }
-.modal-footer { display: flex; gap: 10px; padding: 16px 20px; border-top: 1px solid var(--border); }
-.modal-footer .btn { flex: 1; justify-content: center; }
-
-/* FILE BROWSER MODAL */
-.file-list { display: flex; flex-direction: column; gap: 2px; }
-.file-item { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: var(--radius); transition: background 0.1s; }
-.file-item:hover { background: var(--bg3); }
-.file-name { flex: 1; font-size: 13px; color: var(--accent2); cursor: pointer; text-decoration: none; }
-.file-name:hover { text-decoration: underline; }
-.file-meta { font-size: 11px; color: var(--text3); font-family: 'DM Mono', monospace; }
-.upload-zone { border: 1.5px dashed var(--border2); border-radius: var(--radius); padding: 24px; text-align: center; color: var(--text3); font-size: 13px; cursor: pointer; transition: all 0.15s; margin-top: 12px; }
-.upload-zone:hover { border-color: var(--accent2); color: var(--text2); background: rgba(59,130,246,0.05); }
-.upload-zone.dragover { border-color: var(--accent); background: rgba(232,184,75,0.05); }
-
-/* LOADING / EMPTY */
-.loading { text-align: center; padding: 60px 20px; color: var(--text3); }
-.spinner { width: 32px; height: 32px; border: 2px solid var(--border2); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 12px; }
-@keyframes spin { to { transform: rotate(360deg); } }
-.empty { text-align: center; padding: 60px 20px; color: var(--text3); }
-.empty-icon { font-size: 40px; margin-bottom: 12px; }
-
-/* TOAST */
-.toast { position: fixed; bottom: 24px; right: 24px; background: var(--bg3); border: 1px solid var(--border2); border-radius: var(--radius); padding: 12px 18px; font-size: 13px; z-index: 2000; display: flex; align-items: center; gap: 8px; transform: translateY(100px); opacity: 0; transition: all 0.25s; }
-.toast.show { transform: translateY(0); opacity: 1; }
-.toast.success { border-left: 3px solid var(--green); }
-.toast.error { border-left: 3px solid var(--red); }
-
-/* AUTH SCREEN */
-.auth-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; gap: 16px; }
-.auth-logo { width: 56px; height: 56px; background: var(--accent); border-radius: 14px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 22px; color: #000; }
-.auth-title { font-size: 22px; font-weight: 600; }
-.auth-sub { font-size: 14px; color: var(--text3); }
-
-/* SCROLLBAR */
-::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--bg4); border-radius: 3px; }
-
-/* RESPONSIVE */
-@media (max-width: 768px) {
-  .stats-row { grid-template-columns: repeat(2, 1fr); }
-  .stat-card:last-child { grid-column: span 2; }
-  .header { padding: 0 16px; }
-  .toolbar, .table-wrap, .stats-row { padding-left: 16px; padding-right: 16px; }
-  .expanded-content { padding-left: 16px; }
-}
+.pcard{background:var(--bg3);border:1px solid var(--br);border-radius:var(--rl);padding:13px;cursor:pointer;transition:all .2s;}
+.pcard:hover{border-color:var(--br2);background:var(--bg4);transform:translateY(-1px);}
+.pcard.aktiv{border-left:3px solid var(--grn);}
+.pcard.kalkyle{border-left:3px solid var(--org);}
+.pcard.avsluttet{border-left:3px solid var(--tx3);opacity:.65;}
+.pctop{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:8px;}
+.pcname{font-weight:500;font-size:14px;line-height:1.3;flex:1;}
+.pcnum{font-family:'DM Mono',monospace;font-size:10px;color:var(--acc);background:var(--acc-d);padding:2px 6px;border-radius:4px;white-space:nowrap;}
+.sbdg{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:20px;font-size:11px;font-weight:500;margin-bottom:8px;}
+.sbdg.aktiv{background:var(--grn-d);color:var(--grn);}
+.sbdg.kalkyle{background:var(--org-d);color:var(--org);}
+.sbdg.avsluttet{background:rgba(78,90,112,.2);color:var(--tx3);}
+.pcinfo{display:flex;flex-direction:column;gap:4px;margin-bottom:8px;}
+.pcrow{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--tx2);}
+.pcprice{font-family:'DM Mono',monospace;font-size:13px;color:var(--acc);}
+.pcnote{font-size:11px;color:var(--tx3);margin-bottom:8px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.pcacts{display:flex;gap:5px;}
+.pca{flex:1;padding:5px 6px;border-radius:5px;font-size:11px;font-weight:500;cursor:pointer;border:1px solid var(--br);background:var(--bg5);color:var(--tx2);font-family:'DM Sans',sans-serif;transition:all .15s;text-align:center;}
+.pca:hover{background:var(--bg3);color:var(--tx);}
+.pca.grn{color:var(--grn);border-color:rgba(34,197,94,.25);}
+.pca.grn:hover{background:var(--grn-d);}
+.pca.red{color:var(--red);border-color:rgba(239,68,68,.25);}
+.pca.red:hover{background:var(--red-d);}
+/* PROJECT DETAIL PANEL */
+.pdov{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:500;display:flex;align-items:stretch;justify-content:flex-end;opacity:0;pointer-events:none;transition:opacity .25s;}
+.pdov.on{opacity:1;pointer-events:all;}
+.pdm{width:680px;max-width:100vw;background:var(--bg2);border-left:1px solid var(--br2);display:flex;flex-direction:column;transform:translateX(60px);transition:transform .25s;overflow:hidden;}
+.pdov.on .pdm{transform:translateX(0);}
+.pdmhdr{display:flex;align-items:flex-start;justify-content:space-between;padding:20px 22px 16px;border-bottom:1px solid var(--br);flex-shrink:0;}
+.pdmtitle{font-size:17px;font-weight:600;line-height:1.3;}
+.pdmsub{font-size:12px;color:var(--tx2);margin-top:4px;}
+.pdmclose{width:30px;height:30px;background:var(--bg3);border:none;border-radius:6px;cursor:pointer;color:var(--tx2);font-size:15px;display:flex;align-items:center;justify-content:center;}
+.pdmbody{flex:1;overflow-y:auto;padding:20px 22px;}
+.pdsec{margin-bottom:22px;}
+.pdsect{font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--tx3);font-weight:500;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--br);}
+.igrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.iitem{background:var(--bg3);border-radius:var(--r);padding:10px 12px;}
+.ilbl{font-size:11px;color:var(--tx3);margin-bottom:3px;}
+.ival{font-size:13px;font-weight:500;}
+.ival.acc{color:var(--acc);font-family:'DM Mono',monospace;}
+/* FOLDERS */
+.fgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;}
+.fbtn{display:flex;flex-direction:column;align-items:center;gap:5px;padding:12px 6px;background:var(--bg3);border:1px solid var(--br);border-radius:var(--rl);cursor:pointer;transition:all .2s;font-size:12px;color:var(--tx2);font-family:'DM Sans',sans-serif;text-align:center;}
+.fbtn:hover:not(.lck){background:var(--bg4);border-color:var(--br2);color:var(--tx);}
+.fbtn .fi{font-size:22px;}
+.fbtn.lck{opacity:.3;cursor:not-allowed;}
+.fbtn.act{background:var(--blu-d);border-color:rgba(59,130,246,.35);color:var(--blu);}
+/* FILE PANEL */
+.fpanel{background:var(--bg3);border:1px solid var(--br);border-radius:var(--rl);overflow:hidden;margin-top:12px;}
+.fphdr{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--br);}
+.fptitle{font-size:13px;font-weight:500;}
+.flist{min-height:50px;max-height:240px;overflow-y:auto;}
+.fitem{display:flex;align-items:center;gap:10px;padding:8px 14px;border-bottom:1px solid var(--br);transition:background .1s;}
+.fitem:last-child{border-bottom:none;}
+.fitem:hover{background:var(--bg4);}
+.fn{flex:1;font-size:13px;color:var(--blu);cursor:pointer;text-decoration:none;}
+.fn:hover{text-decoration:underline;}
+.fm{font-size:11px;color:var(--tx3);font-family:'DM Mono',monospace;white-space:nowrap;}
+.uzone{border:1.5px dashed var(--br2);border-radius:var(--r);padding:16px;text-align:center;color:var(--tx3);font-size:12px;cursor:pointer;transition:all .15s;margin:10px 14px 14px;}
+.uzone:hover,.uzone.dov{border-color:var(--blu);color:var(--tx2);background:var(--blu-d);}
+.uzone-icon{font-size:18px;margin-bottom:3px;}
+.fempty{padding:18px;text-align:center;color:var(--tx3);font-size:12px;}
+/* MODALS */
+.mov{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:600;display:flex;align-items:center;justify-content:center;padding:20px;}
+.mov.hid{display:none;}
+.mbox{background:var(--bg2);border:1px solid var(--br2);border-radius:var(--rxl);width:100%;max-width:500px;max-height:92vh;overflow-y:auto;}
+.mbox.sm{max-width:380px;}
+.mhdr{display:flex;align-items:center;justify-content:space-between;padding:18px 20px;border-bottom:1px solid var(--br);}
+.mhdr-t{font-size:15px;font-weight:600;}
+.mclose{width:28px;height:28px;background:var(--bg3);border:none;border-radius:6px;cursor:pointer;color:var(--tx2);font-size:14px;display:flex;align-items:center;justify-content:center;}
+.mbody{padding:20px;}
+.mftr{display:flex;gap:8px;padding:14px 20px;border-top:1px solid var(--br);}
+.mftr .btn{flex:1;justify-content:center;}
+.fg{margin-bottom:14px;}
+.fl{display:block;font-size:12px;color:var(--tx2);margin-bottom:5px;font-weight:500;}
+.fi2{width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--br2);border-radius:var(--r);color:var(--tx);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;transition:border-color .15s;}
+.fi2:focus{border-color:var(--blu);}
+.fi2::placeholder{color:var(--tx3);}
+.fg2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.ttog{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;}
+.ttbtn{padding:10px;border:1px solid var(--br2);border-radius:var(--r);background:var(--bg3);color:var(--tx2);cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;transition:all .15s;text-align:center;}
+.ttbtn.on{border-color:var(--acc);background:var(--acc-d);color:var(--acc);}
+.dupw{background:var(--org-d);border:1px solid rgba(249,115,22,.3);border-radius:var(--r);padding:10px 12px;font-size:12px;color:var(--org);margin-bottom:14px;display:none;}
+.dupw.show{display:block;}
+/* SETTINGS */
+.sp{position:fixed;top:54px;right:0;width:290px;height:calc(100vh - 54px);background:var(--bg2);border-left:1px solid var(--br2);z-index:300;transform:translateX(290px);transition:transform .25s;overflow-y:auto;}
+.sp.on{transform:translateX(0);}
+.sphdr{padding:16px 18px;border-bottom:1px solid var(--br);font-size:14px;font-weight:600;display:flex;align-items:center;justify-content:space-between;}
+.spbody{padding:16px 18px;}
+.spsec{margin-bottom:20px;}
+.splbl{font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--tx3);font-weight:500;margin-bottom:10px;}
+.sprow{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--br);}
+.sprow:last-child{border-bottom:none;}
+.sprl{font-size:13px;color:var(--tx);}
+.sprs{font-size:11px;color:var(--tx3);margin-top:1px;}
+.tog{width:36px;height:20px;background:var(--bg4);border-radius:10px;position:relative;cursor:pointer;transition:background .2s;flex-shrink:0;}
+.tog.on{background:var(--grn);}
+.tog::after{content:'';position:absolute;top:3px;left:3px;width:14px;height:14px;border-radius:50%;background:#fff;transition:left .2s;}
+.tog.on::after{left:19px;}
+.spinfo{font-size:12px;color:var(--tx3);line-height:1.6;}
+/* AUTH */
+.auth{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;gap:14px;}
+.auth-logo{width:60px;height:60px;background:var(--acc);border-radius:14px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:24px;color:#000;}
+.auth-t{font-size:22px;font-weight:600;}
+.auth-s{font-size:13px;color:var(--tx3);}
+.auth-btn{padding:11px 26px;background:var(--acc);color:#000;border:none;border-radius:var(--r);font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;}
+.auth-btn:hover{background:#d4a43e;}
+/* MISC */
+.loading{text-align:center;padding:50px 20px;color:var(--tx3);}
+.spin{width:26px;height:26px;border:2px solid var(--br2);border-top-color:var(--acc);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 10px;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.empty{text-align:center;padding:50px 20px;color:var(--tx3);}
+.toast{position:fixed;bottom:22px;right:22px;background:var(--bg3);border:1px solid var(--br2);border-radius:var(--r);padding:11px 16px;font-size:13px;z-index:2000;display:flex;align-items:center;gap:8px;transform:translateY(80px);opacity:0;transition:all .22s;max-width:340px;}
+.toast.on{transform:translateY(0);opacity:1;}
+.toast.s{border-left:3px solid var(--grn);}
+.toast.e{border-left:3px solid var(--red);}
+.toast.w{border-left:3px solid var(--org);}
+::-webkit-scrollbar{width:5px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:var(--bg4);border-radius:3px;}
+@media(max-width:800px){.stats{grid-template-columns:repeat(2,1fr);}.sc:last-child{grid-column:span 2;}.hdr,.tbar,.tw,.stats{padding-left:14px;padding-right:14px;}.ebox{padding-left:14px;}.pdm{width:100vw;}}
 </style>
 </head>
 <body>
-
-<!-- AUTH SCREEN -->
-<div id="authScreen" class="auth-screen">
+<div id="authWrap" class="auth">
   <div class="auth-logo">LH</div>
-  <div class="auth-title">LH Bygg Kunderegister</div>
-  <div class="auth-sub">Logg inn med din Microsoft-konto</div>
-  <button class="login-btn" onclick="signIn()">Logg inn med Microsoft</button>
-  <div style="font-size:12px;color:var(--text3);">v4.0 — LH Bygg Entreprenør AS</div>
+  <div class="auth-t">LH Bygg Kunderegister</div>
+  <div class="auth-s">Logg inn med din Microsoft 365-konto</div>
+  <button class="auth-btn" onclick="signIn()">🔐 Logg inn med Microsoft</button>
+  <div style="font-size:11px;color:var(--tx3)">v4.1 · LH Bygg Entreprenør AS</div>
 </div>
 
-<!-- MAIN APP (hidden until login) -->
-<div id="app" style="display:none;">
+<div id="appWrap" style="display:none">
+<header class="hdr">
+  <a class="logo" href="#"><div class="lsq">LH</div>Kunderegister</a>
+  <div class="hsp"></div>
+  <span class="vbdg">v4.1</span>
+  <button class="hbtn" onclick="exportCSV()">
+    <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    Eksporter
+  </button>
+  <button class="hbtn" onclick="toggleSP()" id="spBtn">
+    <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+    Innstillinger
+  </button>
+  <div class="hbtn" onclick="signOut()"><div class="udot" id="uInit">TS</div><span id="uName">Tom Andre</span></div>
+</header>
 
-  <!-- HEADER -->
-  <header class="header">
-    <div class="logo">
-      <div class="logo-mark">LH</div>
-      Kunderegister
-    </div>
-    <div class="header-spacer"></div>
-    <span class="version-badge">v4.0</span>
-    <div class="user-badge" onclick="signOut()">
-      <div class="user-avatar" id="userInitials">TS</div>
-      <span id="userName">Tom Andre</span>
-    </div>
-  </header>
+<div class="stats">
+  <div class="sc"><div class="sc-l">Kunder</div><div class="sc-v cb" id="stK">—</div></div>
+  <div class="sc"><div class="sc-l">Under kalkyle</div><div class="sc-v co" id="stKa">—</div></div>
+  <div class="sc"><div class="sc-l">Aktive prosjekter</div><div class="sc-v cg" id="stA">—</div></div>
+  <div class="sc"><div class="sc-l">Avsluttede</div><div class="sc-v ct" id="stAv">—</div></div>
+  <div class="sc"><div class="sc-l">Aktiv portefølje</div><div class="sc-v ca" id="stP">—</div></div>
+</div>
 
-  <!-- STATS -->
-  <div class="stats-row" id="statsRow">
-    <div class="stat-card"><div class="stat-label">Kunder</div><div class="stat-value blue" id="statKunder">—</div></div>
-    <div class="stat-card"><div class="stat-label">Under kalkyle</div><div class="stat-value orange" id="statKalkyle">—</div></div>
-    <div class="stat-card"><div class="stat-label">Aktive prosjekter</div><div class="stat-value green" id="statAktiv">—</div></div>
-    <div class="stat-card"><div class="stat-label">Avsluttede</div><div class="stat-value gray" id="statAvsluttet">—</div></div>
-    <div class="stat-card"><div class="stat-label">Aktiv portefølje</div><div class="stat-value accent" id="statPortefolje">—</div></div>
+<div class="tbar">
+  <div class="srch">
+    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    <input type="text" id="srchIn" placeholder="Søk kunde, kontaktperson..." oninput="renderTable()">
   </div>
-
-  <!-- TOOLBAR -->
-  <div class="toolbar">
-    <div class="search-box">
-      <svg class="search-icon" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-      <input type="text" id="searchInput" placeholder="Søk kunde eller kontaktperson..." oninput="filterCustomers()">
-    </div>
-    <div class="filter-tabs">
-      <button class="filter-tab active" onclick="setFilter('alle', this)">Alle</button>
-      <button class="filter-tab" onclick="setFilter('kalkyle', this)">Kalkyle</button>
-      <button class="filter-tab" onclick="setFilter('aktiv', this)">Aktive</button>
-      <button class="filter-tab" onclick="setFilter('avsluttet', this)">Avsluttet</button>
-    </div>
-    <div class="toolbar-spacer"></div>
-    <button class="btn" onclick="exportExcel()">
-      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-      Eksporter
-    </button>
-    <button class="btn primary" onclick="openNewCustomer()">
-      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-      Ny kunde
-    </button>
+  <div class="ftabs">
+    <button class="ftab on" onclick="setF('alle',this)">Alle</button>
+    <button class="ftab" onclick="setF('kalkyle',this)">Kalkyle</button>
+    <button class="ftab" onclick="setF('aktiv',this)">Aktive</button>
+    <button class="ftab" onclick="setF('avsluttet',this)">Avsluttet</button>
   </div>
+  <div class="tsp"></div>
+  <button class="btn pri" onclick="openCM()">
+    <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    Ny kunde
+  </button>
+</div>
 
-  <!-- TABLE -->
-  <div class="table-wrap">
-    <table class="customer-table">
-      <thead>
-        <tr>
-          <th style="width:36px;"></th>
-          <th>Kundenavn</th>
-          <th>Type</th>
-          <th>Kontaktperson</th>
-          <th>Telefon</th>
-          <th>E-post</th>
-          <th>Prosjekter</th>
-          <th>Portefølje</th>
-        </tr>
-      </thead>
-      <tbody id="customerTableBody">
-        <tr><td colspan="8"><div class="loading"><div class="spinner"></div>Laster kunder...</div></td></tr>
-      </tbody>
-    </table>
+<div class="tw">
+  <table class="ct">
+    <thead><tr>
+      <th style="width:34px"></th>
+      <th>Kundenavn</th><th>Type</th><th>Kontaktperson</th>
+      <th>Telefon</th><th>E-post</th><th>Prosjekter</th><th>Portefølje</th>
+      <th style="width:36px"></th>
+    </tr></thead>
+    <tbody id="tbody"><tr><td colspan="9"><div class="loading"><div class="spin"></div>Laster...</div></td></tr></tbody>
+  </table>
+</div>
+</div>
+
+<!-- PROJECT DETAIL PANEL -->
+<div class="pdov" id="pdov" onclick="pdovClick(event)">
+  <div class="pdm">
+    <div class="pdmhdr">
+      <div><div class="pdmtitle" id="pdmT">—</div><div class="pdmsub" id="pdmS"></div></div>
+      <button class="pdmclose" onclick="closePD()">✕</button>
+    </div>
+    <div class="pdmbody" id="pdmB"></div>
   </div>
 </div>
 
-<!-- MODAL: NY/REDIGER KUNDE -->
-<div class="modal-overlay hidden" id="customerModal">
-  <div class="modal">
-    <div class="modal-header">
-      <div class="modal-title" id="customerModalTitle">Ny kunde</div>
-      <button class="modal-close" onclick="closeModal('customerModal')">✕</button>
+<!-- SETTINGS PANEL -->
+<div class="sp" id="spPanel">
+  <div class="sphdr">Innstillinger<button class="mclose" onclick="toggleSP()">✕</button></div>
+  <div class="spbody">
+    <div class="spsec">
+      <div class="splbl">Utseende</div>
+      <div class="sprow"><div><div class="sprl">Mørkt tema</div></div><div class="tog on" id="thTog" onclick="toggleTheme(this)"></div></div>
+      <div class="sprow"><div><div class="sprl">Kompakt visning</div><div class="sprs">Tettere rader</div></div><div class="tog" id="cpTog" onclick="toggleCompact(this)"></div></div>
     </div>
-    <div class="modal-body">
-      <div class="type-toggle" id="typeToggle">
-        <button class="type-toggle-btn active" onclick="setCustomerType('Firma', this)">🏢 Firmakunde</button>
-        <button class="type-toggle-btn" onclick="setCustomerType('Privat', this)">👤 Privatkunde</button>
-      </div>
-      <input type="hidden" id="customerId">
-      <div class="form-group">
-        <label class="form-label" id="firmaLabel">Firmanavn</label>
-        <input type="text" class="form-input" id="firmanavn" placeholder="Eks: Haucon AS">
-      </div>
-      <div class="form-group">
-        <label class="form-label">Kontaktperson</label>
-        <input type="text" class="form-input" id="kontaktperson" placeholder="Navn">
-      </div>
-      <div class="form-group">
-        <label class="form-label">Telefon</label>
-        <input type="text" class="form-input" id="telefon" placeholder="+47 xxx xx xxx">
-      </div>
-      <div class="form-group">
-        <label class="form-label">E-post</label>
-        <input type="email" class="form-input" id="epost" placeholder="epost@firma.no">
-      </div>
-      <div class="form-group">
-        <label class="form-label">Adresse</label>
-        <input type="text" class="form-input" id="adresse" placeholder="Gateadresse, postnr sted">
-      </div>
-      <div class="form-group" id="orgnrGroup">
-        <label class="form-label">Org.nr</label>
-        <input type="text" class="form-input" id="orgnr" placeholder="123 456 789">
-      </div>
+    <div class="spsec">
+      <div class="splbl">Data</div>
+      <div class="sprow"><div class="sprl">Oppdater data</div><button class="btn sm" onclick="loadData()">↺ Refresh</button></div>
     </div>
-    <div class="modal-footer">
-      <button class="btn" onclick="closeModal('customerModal')">Avbryt</button>
-      <button class="btn primary" onclick="saveCustomer()">Lagre kunde</button>
+    <div class="spsec">
+      <div class="splbl">Om appen</div>
+      <div class="spinfo">LH Bygg Kunderegister v4.1<br>LH Bygg Entreprenør AS · lhbe.no<br><br>Innlogget som:<br><span style="color:var(--tx)" id="spUser">—</span></div>
     </div>
   </div>
 </div>
 
-<!-- MODAL: NY/REDIGER PROSJEKT -->
-<div class="modal-overlay hidden" id="projectModal">
-  <div class="modal">
-    <div class="modal-header">
-      <div class="modal-title" id="projectModalTitle">Nytt prosjekt</div>
-      <button class="modal-close" onclick="closeModal('projectModal')">✕</button>
+<!-- MODAL: KUNDE -->
+<div class="mov hid" id="custMov">
+  <div class="mbox">
+    <div class="mhdr"><div class="mhdr-t" id="cmT">Ny kunde</div><button class="mclose" onclick="closeMov('custMov')">✕</button></div>
+    <div class="mbody">
+      <div class="ttog" id="typeTog">
+        <button class="ttbtn on" onclick="setType('Firma',this)">🏢 Firmakunde</button>
+        <button class="ttbtn" onclick="setType('Privat',this)">👤 Privatkunde</button>
+      </div>
+      <div class="dupw" id="dupW">⚠️ Lignende kunde finnes: <span id="dupN"></span></div>
+      <input type="hidden" id="cId">
+      <div class="fg"><label class="fl" id="cFL">Firmanavn</label><input class="fi2" id="cFirma" placeholder="Eks: Haucon AS" oninput="chkDup()"></div>
+      <div class="fg2">
+        <div class="fg"><label class="fl">Kontaktperson</label><input class="fi2" id="cKont" placeholder="Navn"></div>
+        <div class="fg"><label class="fl">Telefon</label><input class="fi2" id="cTlf" placeholder="+47 xxx xx xxx"></div>
+      </div>
+      <div class="fg"><label class="fl">E-post</label><input class="fi2" id="cEpost" placeholder="epost@firma.no"></div>
+      <div class="fg"><label class="fl">Adresse</label><input class="fi2" id="cAdr" placeholder="Gateadresse, postnr sted"></div>
+      <div class="fg" id="cOrgG"><label class="fl">Org.nr</label><input class="fi2" id="cOrg" placeholder="123 456 789"></div>
     </div>
-    <div class="modal-body">
-      <input type="hidden" id="projectId">
-      <input type="hidden" id="projectKundenavn">
-      <div class="form-group">
-        <label class="form-label">Prosjektnavn</label>
-        <input type="text" class="form-input" id="prosjektnavn" placeholder="Eks: Orkdalsveien 652 – Nybygg">
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-        <div class="form-group">
-          <label class="form-label">Prosjektnummer</label>
-          <input type="text" class="form-input mono" id="prosjektnummer" placeholder="2026-01">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Kalkylenummer</label>
-          <input type="text" class="form-input mono" id="kalkylenummer" placeholder="K2026-01">
-        </div>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-        <div class="form-group">
-          <label class="form-label">Kontraktsum (ekskl. mva)</label>
-          <input type="number" class="form-input" id="pris" placeholder="0">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Oppstartsdato</label>
-          <input type="date" class="form-input" id="oppstartsdato">
-        </div>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-        <div class="form-group">
-          <label class="form-label">Status</label>
-          <select class="form-select" id="status">
-            <option value="Under kalkyle">Under kalkyle</option>
-            <option value="Aktiv">Aktiv</option>
-            <option value="Avsluttet">Avsluttet</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Prosjektleder</label>
-          <select class="form-select" id="prosjektleder">
-            <option value="">— Velg —</option>
-            <option value="Tom Andre Søderberg">Tom Andre Søderberg</option>
-            <option value="Per Ytterhus Sognli">Per Ytterhus Sognli</option>
-            <option value="Magne Vidar Rise">Magne Vidar Rise</option>
-          </select>
-        </div>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Notat</label>
-        <textarea class="form-textarea" id="notat" placeholder="Tilleggsopplysninger..."></textarea>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn" onclick="closeModal('projectModal')">Avbryt</button>
-      <button class="btn primary" onclick="saveProject()">Lagre prosjekt</button>
-    </div>
+    <div class="mftr"><button class="btn" onclick="closeMov('custMov')">Avbryt</button><button class="btn pri" onclick="saveCust()">Lagre kunde</button></div>
   </div>
 </div>
 
-<!-- MODAL: FIL-BROWSER -->
-<div class="modal-overlay hidden" id="fileModal">
-  <div class="modal" style="max-width:600px;">
-    <div class="modal-header">
-      <div class="modal-title" id="fileModalTitle">📁 Mappe</div>
-      <button class="modal-close" onclick="closeModal('fileModal')">✕</button>
-    </div>
-    <div class="modal-body">
-      <div id="fileList" class="file-list">
-        <div class="loading"><div class="spinner"></div>Laster filer...</div>
+<!-- MODAL: PROSJEKT -->
+<div class="mov hid" id="projMov">
+  <div class="mbox">
+    <div class="mhdr"><div class="mhdr-t" id="pmT">Nytt prosjekt</div><button class="mclose" onclick="closeMov('projMov')">✕</button></div>
+    <div class="mbody">
+      <input type="hidden" id="pId"><input type="hidden" id="pKunde">
+      <div class="fg"><label class="fl">Prosjektnavn *</label><input class="fi2" id="pNavn" placeholder="Eks: Orkdalsveien 652 – Nybygg"></div>
+      <div class="fg2">
+        <div class="fg"><label class="fl">Prosjektnummer *</label><input class="fi2 mono" id="pNr" placeholder="2026-01"></div>
+        <div class="fg"><label class="fl">Kalkylenummer *</label><input class="fi2 mono" id="pKalk" placeholder="K2026-01"></div>
       </div>
-      <div class="upload-zone" id="uploadZone" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="dropFiles(event)" onclick="document.getElementById('fileInput').click()">
-        <div style="font-size:22px;margin-bottom:6px;">⬆️</div>
-        Dra filer hit eller klikk for å laste opp
+      <div class="fg2">
+        <div class="fg"><label class="fl">Kontraktsum (ekskl. mva)</label><input class="fi2" id="pPris" type="number" placeholder="0"></div>
+        <div class="fg"><label class="fl">Oppstartsdato</label><input class="fi2" id="pDato" type="date"></div>
       </div>
-      <input type="file" id="fileInput" multiple style="display:none" onchange="uploadFiles(event)">
+      <div class="fg2">
+        <div class="fg"><label class="fl">Status</label>
+          <select class="fi2" id="pStat"><option value="Under kalkyle">Under kalkyle</option><option value="Aktiv">Aktiv</option><option value="Avsluttet">Avsluttet</option></select>
+        </div>
+        <div class="fg"><label class="fl">Prosjektleder</label>
+          <select class="fi2" id="pLeder"><option value="">— Velg —</option><option>Tom Andre Søderberg</option><option>Per Ytterhus Sognli</option><option>Magne Vidar Rise</option></select>
+        </div>
+      </div>
+      <div class="fg"><label class="fl">Notat</label><textarea class="fi2" id="pNotat" rows="3" placeholder="Tilleggsopplysninger..."></textarea></div>
     </div>
-    <div class="modal-footer">
-      <button class="btn primary" onclick="closeModal('fileModal')">Lukk</button>
-    </div>
+    <div class="mftr"><button class="btn" onclick="closeMov('projMov')">Avbryt</button><button class="btn pri" onclick="saveProj()">Lagre prosjekt</button></div>
   </div>
 </div>
 
-<!-- TOAST -->
+<!-- MODAL: BEKREFT SLETT -->
+<div class="mov hid" id="confMov">
+  <div class="mbox sm">
+    <div class="mbody" style="text-align:center;padding:24px 20px 16px">
+      <div style="font-size:28px;margin-bottom:10px" id="confIco">🗑️</div>
+      <div style="font-size:15px;font-weight:600;margin-bottom:8px" id="confTit">Slett?</div>
+      <div style="font-size:13px;color:var(--tx2);line-height:1.5" id="confTxt">Er du sikker?</div>
+    </div>
+    <div class="mftr"><button class="btn" onclick="closeMov('confMov')">Avbryt</button><button class="btn danger" id="confOk">Slett</button></div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
-const MSAL_CONFIG = {
-  auth: {
-    clientId: '3b2da258-a2f9-41af-baab-f65265f45732',
-    authority: 'https://login.microsoftonline.com/c9d89f66-621a-4a0b-9734-8b98789d9791',
-    redirectUri: window.location.href.split('?')[0]
-  },
-  cache: { cacheLocation: 'localStorage', storeAuthStateInCookie: false }
-};
-const SP_SITE = 'https://lhbent.sharepoint.com/sites/Industriveien1ASLHBygg';
-const CUSTOMERS_LIST = 'D702DBE2-269F-41A0-8107-55C681AEC5BF';
-const PROJECTS_LIST = '3DB9CF64-778C-48D8-8F32-044AC6EE249C';
-const SCOPES = ['Sites.ReadWrite.All', 'User.Read'];
+const MC={auth:{clientId:'3b2da258-a2f9-41af-baab-f65265f45732',authority:'https://login.microsoftonline.com/c9d89f66-621a-4a0b-9734-8b98789d9791',redirectUri:window.location.href.split('?')[0]},cache:{cacheLocation:'localStorage',storeAuthStateInCookie:false}};
+const SP='https://lhbent.sharepoint.com/sites/Industriveien1ASLHBygg';
+const CL='D702DBE2-269F-41A0-8107-55C681AEC5BF';
+const PL='3DB9CF64-778C-48D8-8F32-044AC6EE249C';
+const SC=['Sites.ReadWrite.All','User.Read'];
+let ms,acc,customers=[],projects=[],activeF='alle',custType='Firma',expanded=new Set(),activePath='',activePID=null;
 
-let msalApp, account, allCustomers = [], allProjects = [], currentFilter = 'alle', currentFolderPath = '', currentFilePath = '';
-
-async function init() {
-  try {
-    msalApp = new msal.PublicClientApplication(MSAL_CONFIG);
-    await msalApp.initialize();
-    const accounts = msalApp.getAllAccounts();
-    if (accounts.length > 0) {
-      account = accounts[0];
-      showApp();
-      await loadData();
-    }
-  } catch(e) { console.error(e); }
+async function init(){
+  try{ms=new msal.PublicClientApplication(MC);await ms.initialize();const a=ms.getAllAccounts();if(a.length){acc=a[0];showApp();await loadData();}}
+  catch(e){console.error(e);}
 }
-
-async function signIn() {
-  try {
-    const result = await msalApp.loginPopup({ scopes: SCOPES });
-    account = result.account;
-    showApp();
-    await loadData();
-  } catch(e) { console.error(e); }
+async function signIn(){try{const r=await ms.loginPopup({scopes:SC});acc=r.account;showApp();await loadData();}catch(e){console.error(e);}}
+function signOut(){ms.logoutPopup();document.getElementById('appWrap').style.display='none';document.getElementById('authWrap').style.display='flex';}
+function showApp(){
+  document.getElementById('authWrap').style.display='none';document.getElementById('appWrap').style.display='block';
+  const n=acc.name||acc.username;
+  document.getElementById('uName').textContent=n.split(' ').slice(0,2).join(' ');
+  document.getElementById('uInit').textContent=n.split(' ').map(x=>x[0]).slice(0,2).join('').toUpperCase();
+  document.getElementById('spUser').textContent=acc.username;
 }
+async function gt(){try{const r=await ms.acquireTokenSilent({scopes:SC,account:acc});return r.accessToken;}catch{const r=await ms.acquireTokenPopup({scopes:SC});return r.accessToken;}}
+async function spGet(u){const t=await gt();const r=await fetch(u,{headers:{Authorization:'Bearer '+t,Accept:'application/json;odata=nometadata'}});if(!r.ok)throw new Error(await r.text());return r.json();}
+async function spPost(u,b){const t=await gt();const r=await fetch(u,{method:'POST',headers:{Authorization:'Bearer '+t,Accept:'application/json;odata=nometadata','Content-Type':'application/json'},body:JSON.stringify(b)});if(!r.ok)throw new Error(await r.text());const tx=await r.text();return tx?JSON.parse(tx):{};} 
+async function spPatch(u,b){const t=await gt();const r=await fetch(u,{method:'PATCH',headers:{Authorization:'Bearer '+t,Accept:'application/json;odata=nometadata','Content-Type':'application/json','If-Match':'*'},body:JSON.stringify(b)});if(!r.ok)throw new Error(await r.text());}
+async function spDel(u){const t=await gt();const r=await fetch(u,{method:'DELETE',headers:{Authorization:'Bearer '+t,'If-Match':'*'}});if(!r.ok)throw new Error(await r.text());}
 
-function signOut() {
-  msalApp.logoutPopup();
-  document.getElementById('app').style.display = 'none';
-  document.getElementById('authScreen').style.display = 'flex';
-}
-
-function showApp() {
-  document.getElementById('authScreen').style.display = 'none';
-  document.getElementById('app').style.display = 'block';
-  const name = account.name || account.username;
-  document.getElementById('userName').textContent = name.split(' ').slice(0,2).join(' ');
-  const initials = name.split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase();
-  document.getElementById('userInitials').textContent = initials;
-}
-
-async function getToken() {
-  try {
-    const r = await msalApp.acquireTokenSilent({ scopes: SCOPES, account });
-    return r.accessToken;
-  } catch {
-    const r = await msalApp.acquireTokenPopup({ scopes: SCOPES });
-    return r.accessToken;
-  }
-}
-
-async function spGet(url) {
-  const token = await getToken();
-  const r = await fetch(url, { headers: { Authorization: 'Bearer ' + token, Accept: 'application/json;odata=nometadata' } });
-  if (!r.ok) throw new Error(await r.text());
-  return r.json();
-}
-
-async function spPost(url, body) {
-  const token = await getToken();
-  const r = await fetch(url, {
-    method: 'POST', headers: { Authorization: 'Bearer ' + token, Accept: 'application/json;odata=nometadata', 'Content-Type': 'application/json' },
-    body: JSON.stringify(body)
-  });
-  if (!r.ok) throw new Error(await r.text());
-  const text = await r.text();
-  return text ? JSON.parse(text) : {};
-}
-
-async function spPatch(url, body) {
-  const token = await getToken();
-  const r = await fetch(url, {
-    method: 'PATCH', headers: { Authorization: 'Bearer ' + token, Accept: 'application/json;odata=nometadata', 'Content-Type': 'application/json', 'If-Match': '*' },
-    body: JSON.stringify(body)
-  });
-  if (!r.ok) throw new Error(await r.text());
-}
-
-async function loadData() {
-  try {
-    const [custData, projData] = await Promise.all([
-      spGet(`${SP_SITE}/_api/web/lists(guid'${CUSTOMERS_LIST}')/items?$select=ID,Title,Kontaktperson,Telefon,Epost,Adresse,Orgnr,Kundetype&$top=500`),
-      spGet(`${SP_SITE}/_api/web/lists(guid'${PROJECTS_LIST}')/items?$select=ID,Title,Kundenavn,Prosjektnummer,Kalkylenummer,Oppstartsdato,Pris,Status,Prosjektleder,Mapperopprettet,VarselSendt,MappeFlyttet,Notat&$top=500`)
+async function loadData(){
+  try{
+    const[cd,pd]=await Promise.all([
+      spGet(`${SP}/_api/web/lists(guid'${CL}')/items?$select=ID,Title,Kontaktperson,Telefon,Epost,Adresse,Orgnr,Kundetype&$top=500`),
+      spGet(`${SP}/_api/web/lists(guid'${PL}')/items?$select=ID,Title,Kundenavn,Prosjektnummer,Kalkylenummer,Oppstartsdato,Pris,Status,Prosjektleder,Notat&$top=500`)
     ]);
-    allCustomers = custData.value || [];
-    allProjects = projData.value || [];
-    updateStats();
-    renderTable();
-  } catch(e) {
-    console.error(e);
-    showToast('Feil ved lasting av data: ' + e.message, 'error');
-  }
+    customers=cd.value||[];projects=pd.value||[];updateStats();renderTable();
+  }catch(e){toast('Feil ved lasting: '+e.message,'e');}
 }
 
-function updateStats() {
-  const total = allCustomers.length;
-  const kalkyle = allProjects.filter(p => p.Status === 'Under kalkyle').length;
-  const aktiv = allProjects.filter(p => p.Status === 'Aktiv').length;
-  const avsluttet = allProjects.filter(p => p.Status === 'Avsluttet').length;
-  const portefolje = allProjects.filter(p => p.Status === 'Aktiv').reduce((s, p) => s + (parseFloat(p.Pris) || 0), 0);
-  document.getElementById('statKunder').textContent = total;
-  document.getElementById('statKalkyle').textContent = kalkyle;
-  document.getElementById('statAktiv').textContent = aktiv;
-  document.getElementById('statAvsluttet').textContent = avsluttet;
-  document.getElementById('statPortefolje').textContent = formatCurrency(portefolje);
+function updateStats(){
+  document.getElementById('stK').textContent=customers.length;
+  document.getElementById('stKa').textContent=projects.filter(p=>p.Status==='Under kalkyle').length;
+  document.getElementById('stA').textContent=projects.filter(p=>p.Status==='Aktiv').length;
+  document.getElementById('stAv').textContent=projects.filter(p=>p.Status==='Avsluttet').length;
+  document.getElementById('stP').textContent=fc(projects.filter(p=>p.Status==='Aktiv').reduce((s,p)=>s+(parseFloat(p.Pris)||0),0));
 }
+function fc(v){if(!v)return'—';return new Intl.NumberFormat('nb-NO',{style:'currency',currency:'NOK',maximumFractionDigits:0}).format(v);}
+function fd(d){return d?d.substring(0,10):'';}
+function esc(s){return(s||'').replace(/'/g,"\\'").replace(/&/g,'&amp;').replace(/</g,'&lt;');}
+function setF(f,el){activeF=f;document.querySelectorAll('.ftab').forEach(t=>t.classList.remove('on'));el.classList.add('on');renderTable();}
 
-function formatCurrency(val) {
-  if (!val) return '—';
-  return new Intl.NumberFormat('nb-NO', { style: 'currency', currency: 'NOK', maximumFractionDigits: 0 }).format(val);
+function getFiltered(){
+  const q=(document.getElementById('srchIn').value||'').toLowerCase();
+  let c=[...customers];
+  if(q)c=c.filter(x=>(x.Title||'').toLowerCase().includes(q)||(x.Kontaktperson||'').toLowerCase().includes(q));
+  if(activeF!=='alle'){const sm={kalkyle:'Under kalkyle',aktiv:'Aktiv',avsluttet:'Avsluttet'};const s=sm[activeF];c=c.filter(x=>projects.some(p=>p.Kundenavn===x.Title&&p.Status===s));}
+  return c;
 }
+function gp(kn){return projects.filter(p=>p.Kundenavn===kn);}
+function gport(kn){return projects.filter(p=>p.Kundenavn===kn&&p.Status==='Aktiv').reduce((s,p)=>s+(parseFloat(p.Pris)||0),0);}
 
-function getProjectsForCustomer(kundenavn) {
-  return allProjects.filter(p => p.Kundenavn === kundenavn);
-}
-
-function getPortfolioForCustomer(kundenavn) {
-  return allProjects.filter(p => p.Kundenavn === kundenavn && p.Status === 'Aktiv').reduce((s,p) => s + (parseFloat(p.Pris)||0), 0);
-}
-
-let activeFilter = 'alle', searchTerm = '';
-
-function setFilter(f, el) {
-  activeFilter = f;
-  document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
-  el.classList.add('active');
-  renderTable();
-}
-
-function filterCustomers() {
-  searchTerm = document.getElementById('searchInput').value.toLowerCase();
-  renderTable();
-}
-
-function getFilteredCustomers() {
-  let customers = [...allCustomers];
-  if (searchTerm) {
-    customers = customers.filter(c =>
-      (c.Title || '').toLowerCase().includes(searchTerm) ||
-      (c.Kontaktperson || '').toLowerCase().includes(searchTerm)
-    );
-  }
-  if (activeFilter !== 'alle') {
-    const statusMap = { kalkyle: 'Under kalkyle', aktiv: 'Aktiv', avsluttet: 'Avsluttet' };
-    const status = statusMap[activeFilter];
-    customers = customers.filter(c => allProjects.some(p => p.Kundenavn === c.Title && p.Status === status));
-  }
-  return customers;
-}
-
-let expandedRows = new Set();
-
-function renderTable() {
-  const customers = getFilteredCustomers();
-  const tbody = document.getElementById('customerTableBody');
-  if (customers.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="8"><div class="empty"><div class="empty-icon">🏗️</div>Ingen kunder funnet</div></td></tr>';
-    return;
-  }
-  let html = '';
-  customers.forEach(c => {
-    const projects = getProjectsForCustomer(c.Title);
-    const activeProjects = projects.filter(p => p.Status === 'Aktiv');
-    const portfolio = getPortfolioForCustomer(c.Title);
-    const isExpanded = expandedRows.has(c.ID);
-    const type = c.Kundetype || 'Firma';
-    html += `<tr class="customer-row ${isExpanded ? 'expanded' : ''}" onclick="toggleExpand(${c.ID})">
-      <td class="expand-cell"><button class="expand-btn ${isExpanded ? 'open' : ''}">▶</button></td>
-      <td><div class="customer-name">${c.Title || '—'}</div><div class="customer-addr">${c.Adresse || ''}</div></td>
-      <td><span class="type-badge ${type.toLowerCase()}">${type === 'Firma' ? '🏢 Firma' : '👤 Privat'}</span></td>
-      <td class="contact-cell">${c.Kontaktperson || '—'}</td>
-      <td>${c.Telefon ? `<a class="tel-link" href="tel:${c.Telefon}">${c.Telefon}</a>` : '—'}</td>
-      <td>${c.Epost ? `<a class="email-link" href="mailto:${c.Epost}">${c.Epost}</a>` : '—'}</td>
-      <td><div class="proj-count">${projects.length} prosjekter</div>${activeProjects.length > 0 ? `<div class="proj-active">${activeProjects.length} aktive</div>` : ''}</td>
-      <td><div class="portfolio-val">${portfolio > 0 ? formatCurrency(portfolio) : '—'}</div></td>
+function renderTable(){
+  const list=getFiltered();const tb=document.getElementById('tbody');
+  if(!list.length){tb.innerHTML='<tr><td colspan="9"><div class="empty">Ingen kunder funnet</div></td></tr>';return;}
+  let h='';
+  list.forEach(c=>{
+    const ps=gp(c.Title);const act=ps.filter(p=>p.Status==='Aktiv');const port=gport(c.Title);const io=expanded.has(c.ID);const t=c.Kundetype||'Firma';
+    h+=`<tr class="crow${io?' open':''}" onclick="togExp(${c.ID})">
+      <td><button class="xbtn${io?' on':''}">▶</button></td>
+      <td><div class="cname">${c.Title||'—'}</div><div class="cadr">${c.Adresse||''}</div></td>
+      <td><span class="tbdg ${t==='Firma'?'f':'p'}">${t==='Firma'?'🏢 Firma':'👤 Privat'}</span></td>
+      <td>${c.Kontaktperson||'—'}</td>
+      <td>${c.Telefon?`<a class="al" href="tel:${c.Telefon}" onclick="event.stopPropagation()">${c.Telefon}</a>`:'—'}</td>
+      <td>${c.Epost?`<a class="al" href="mailto:${c.Epost}" onclick="event.stopPropagation()">${c.Epost}</a>`:'—'}</td>
+      <td><div>${ps.length} prosjekter</div>${act.length?`<div class="pa">${act.length} aktive</div>`:''}</td>
+      <td><div class="pv">${port>0?fc(port):'—'}</div></td>
+      <td onclick="event.stopPropagation()"><button class="btn sm" style="padding:4px 8px;font-size:11px" onclick="openEditC(${c.ID})">✏️</button></td>
     </tr>`;
-    if (isExpanded) {
-      html += `<tr class="expanded-row"><td colspan="8"><div class="expanded-content">
-        <div class="expanded-header">
-          <div class="expanded-title">${c.Title} — Prosjekter</div>
-          <button class="btn primary" onclick="event.stopPropagation();openNewProject('${escHtml(c.Title)}')">
-            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            Nytt prosjekt
-          </button>
+    if(io){
+      h+=`<tr class="erow"><td colspan="9"><div class="ebox">
+        <div class="ehdr">
+          <div class="etitle">${esc(c.Title)}</div>
+          <div style="display:flex;gap:6px">
+            <button class="btn sm danger" onclick="event.stopPropagation();cDelC(${c.ID},'${esc(c.Title)}')">🗑 Slett kunde</button>
+            <button class="btn sm pri" onclick="event.stopPropagation();openNP('${esc(c.Title)}')">+ Nytt prosjekt</button>
+          </div>
         </div>
-        <div class="project-grid">`;
-      if (projects.length === 0) {
-        html += '<div style="color:var(--text3);font-size:13px;grid-column:1/-1;">Ingen prosjekter ennå</div>';
-      }
-      projects.forEach(p => { html += renderProjectCard(p); });
-      html += '</div></div></td></tr>';
+        <div class="pgrid">`;
+      if(!ps.length)h+='<div style="color:var(--tx3);font-size:13px;grid-column:1/-1">Ingen prosjekter ennå</div>';
+      ps.forEach(p=>{h+=renderPC(p);});
+      h+=`</div></div></td></tr>`;
     }
   });
-  tbody.innerHTML = html;
+  tb.innerHTML=h;
 }
 
-function escHtml(str) { return (str||'').replace(/'/g, "\\'").replace(/"/g, '&quot;'); }
-
-function renderProjectCard(p) {
-  const status = p.Status || 'Under kalkyle';
-  const statusClass = status === 'Aktiv' ? 'aktiv' : status === 'Avsluttet' ? 'avsluttet' : 'kalkyle';
-  const statusLabel = status === 'Under kalkyle' ? '⚙️ Under kalkyle' : status === 'Aktiv' ? '✅ Aktiv' : '🏁 Avsluttet';
-  const folders = status === 'Aktiv' || status === 'Avsluttet'
-    ? ['HMS','Tegninger','FDV','Kontrakt','Fremdrift','Faktura','Kalkyle','Korrespondanse']
-    : ['Kalkyle','Korrespondanse'];
-  const locked = status === 'Avsluttet';
-
-  let folderHtml = '<div class="folder-row">';
-  folders.forEach(f => {
-    folderHtml += `<button class="folder-btn ${locked ? 'locked' : ''}" onclick="event.stopPropagation();${locked ? '' : `openFolder('${escHtml(p.Title)}','${escHtml(p.Prosjektnummer||'')}','${escHtml(p.Kalkylenummer||'')}','${f}','${statusClass}')`}"}>
-      <span class="folder-icon">📁</span>${f}
-    </button>`;
-  });
-  folderHtml += '</div>';
-
-  let actionsHtml = '<div class="pc-actions">';
-  if (status === 'Under kalkyle') actionsHtml += `<button class="pc-action-btn set-aktiv" onclick="event.stopPropagation();setProjectStatus(${p.ID},'Aktiv')">→ Sett Aktiv</button>`;
-  if (status === 'Aktiv') actionsHtml += `<button class="pc-action-btn set-avsluttet" onclick="event.stopPropagation();setProjectStatus(${p.ID},'Avsluttet')">→ Sett Avsluttet</button>`;
-  actionsHtml += `<button class="pc-action-btn" onclick="event.stopPropagation();openEditProject(${p.ID})">✏️ Rediger</button>`;
-  actionsHtml += '</div>';
-
-  return `<div class="project-card ${statusClass}">
-    <div class="pc-header">
-      <div class="pc-name">${p.Title || '—'}</div>
-      ${p.Prosjektnummer ? `<span class="pc-num mono">${p.Prosjektnummer}</span>` : ''}
+function renderPC(p){
+  const s=p.Status||'Under kalkyle';const sc=s==='Aktiv'?'aktiv':s==='Avsluttet'?'avsluttet':'kalkyle';
+  const sl=s==='Aktiv'?'✅ Aktiv':s==='Avsluttet'?'🏁 Avsluttet':'⚙️ Under kalkyle';
+  let acts='';
+  if(s==='Under kalkyle')acts+=`<button class="pca grn" onclick="event.stopPropagation();setSt(${p.ID},'Aktiv')">→ Sett Aktiv</button>`;
+  if(s==='Aktiv')acts+=`<button class="pca" onclick="event.stopPropagation();setSt(${p.ID},'Avsluttet')">→ Avsluttet</button>`;
+  acts+=`<button class="pca" onclick="event.stopPropagation();openPD(${p.ID})">📂 Åpne</button>`;
+  acts+=`<button class="pca red" onclick="event.stopPropagation();cDelP(${p.ID},'${esc(p.Title)}')">🗑</button>`;
+  return`<div class="pcard ${sc}" onclick="event.stopPropagation();openPD(${p.ID})">
+    <div class="pctop"><div class="pcname">${p.Title||'—'}</div>${p.Prosjektnummer?`<span class="pcnum">${p.Prosjektnummer}</span>`:''}</div>
+    <div><span class="sbdg ${sc}">${sl}</span></div>
+    <div class="pcinfo">
+      ${p.Pris?`<div class="pcrow">💰 <span class="pcprice">${fc(p.Pris)}</span></div>`:''}
+      ${p.Prosjektleder?`<div class="pcrow">👷 ${p.Prosjektleder}</div>`:''}
+      ${p.Oppstartsdato?`<div class="pcrow">📅 ${fd(p.Oppstartsdato)}</div>`:''}
     </div>
-    <div><span class="status-badge ${statusClass}">${statusLabel}</span></div>
-    <div class="pc-meta">
-      ${p.Pris ? `<div class="pc-meta-row"><span class="pc-meta-icon">💰</span><span class="pc-price">${formatCurrency(p.Pris)}</span></div>` : ''}
-      ${p.Prosjektleder ? `<div class="pc-meta-row"><span class="pc-meta-icon">👷</span>${p.Prosjektleder}</div>` : ''}
-      ${p.Oppstartsdato ? `<div class="pc-meta-row"><span class="pc-meta-icon">📅</span>${p.Oppstartsdato.substring(0,10)}</div>` : ''}
-    </div>
-    ${p.Notat ? `<div class="pc-note">${p.Notat}</div>` : ''}
-    ${folderHtml}
-    ${actionsHtml}
+    ${p.Notat?`<div class="pcnote">${p.Notat}</div>`:''}
+    <div class="pcacts">${acts}</div>
   </div>`;
 }
 
-function toggleExpand(customerId) {
-  if (expandedRows.has(customerId)) expandedRows.delete(customerId);
-  else expandedRows.add(customerId);
-  renderTable();
-}
+function togExp(id){if(expanded.has(id))expanded.delete(id);else expanded.add(id);renderTable();}
 
-// CUSTOMER MODAL
-let customerType = 'Firma';
-function openNewCustomer() {
-  document.getElementById('customerModalTitle').textContent = 'Ny kunde';
-  document.getElementById('customerId').value = '';
-  document.getElementById('firmanavn').value = '';
-  document.getElementById('kontaktperson').value = '';
-  document.getElementById('telefon').value = '';
-  document.getElementById('epost').value = '';
-  document.getElementById('adresse').value = '';
-  document.getElementById('orgnr').value = '';
-  document.getElementById('typeToggle').style.display = 'grid';
-  customerType = 'Firma';
-  document.getElementById('firmaLabel').textContent = 'Firmanavn';
-  document.getElementById('orgnrGroup').style.display = 'block';
-  document.querySelectorAll('.type-toggle-btn').forEach((b,i) => b.classList.toggle('active', i===0));
-  openModal('customerModal');
-}
-
-function openEditCustomer(id) {
-  const c = allCustomers.find(x => x.ID === id);
-  if (!c) return;
-  document.getElementById('customerModalTitle').textContent = 'Rediger kunde';
-  document.getElementById('customerId').value = c.ID;
-  document.getElementById('firmanavn').value = c.Title || '';
-  document.getElementById('kontaktperson').value = c.Kontaktperson || '';
-  document.getElementById('telefon').value = c.Telefon || '';
-  document.getElementById('epost').value = c.Epost || '';
-  document.getElementById('adresse').value = c.Adresse || '';
-  document.getElementById('orgnr').value = c.Orgnr || '';
-  document.getElementById('typeToggle').style.display = 'none';
-  customerType = c.Kundetype || 'Firma';
-  openModal('customerModal');
-}
-
-function setCustomerType(type, btn) {
-  customerType = type;
-  document.querySelectorAll('.type-toggle-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  document.getElementById('firmaLabel').textContent = type === 'Firma' ? 'Firmanavn' : 'Navn';
-  document.getElementById('orgnrGroup').style.display = type === 'Firma' ? 'block' : 'none';
-}
-
-async function saveCustomer() {
-  const id = document.getElementById('customerId').value;
-  const body = {
-    Title: document.getElementById('firmanavn').value,
-    Kontaktperson: document.getElementById('kontaktperson').value,
-    Telefon: document.getElementById('telefon').value,
-    Epost: document.getElementById('epost').value,
-    Adresse: document.getElementById('adresse').value,
-    Orgnr: document.getElementById('orgnr').value,
-    Kundetype: customerType
-  };
-  try {
-    if (id) {
-      await spPatch(`${SP_SITE}/_api/web/lists(guid'${CUSTOMERS_LIST}')/items(${id})`, body);
-      showToast('Kunde oppdatert ✓', 'success');
-    } else {
-      await spPost(`${SP_SITE}/_api/web/lists(guid'${CUSTOMERS_LIST}')/items`, body);
-      showToast('Kunde opprettet ✓', 'success');
-    }
-    closeModal('customerModal');
-    await loadData();
-  } catch(e) { showToast('Feil: ' + e.message, 'error'); }
-}
-
-// PROJECT MODAL
-function openNewProject(kundenavn) {
-  document.getElementById('projectModalTitle').textContent = 'Nytt prosjekt';
-  document.getElementById('projectId').value = '';
-  document.getElementById('projectKundenavn').value = kundenavn;
-  document.getElementById('prosjektnavn').value = '';
-  document.getElementById('prosjektnummer').value = '';
-  document.getElementById('kalkylenummer').value = '';
-  document.getElementById('pris').value = '';
-  document.getElementById('oppstartsdato').value = '';
-  document.getElementById('status').value = 'Under kalkyle';
-  document.getElementById('prosjektleder').value = '';
-  document.getElementById('notat').value = '';
-  openModal('projectModal');
-}
-
-function openEditProject(id) {
-  const p = allProjects.find(x => x.ID === id);
-  if (!p) return;
-  document.getElementById('projectModalTitle').textContent = 'Rediger prosjekt';
-  document.getElementById('projectId').value = p.ID;
-  document.getElementById('projectKundenavn').value = p.Kundenavn || '';
-  document.getElementById('prosjektnavn').value = p.Title || '';
-  document.getElementById('prosjektnummer').value = p.Prosjektnummer || '';
-  document.getElementById('kalkylenummer').value = p.Kalkylenummer || '';
-  document.getElementById('pris').value = p.Pris || '';
-  document.getElementById('oppstartsdato').value = p.Oppstartsdato ? p.Oppstartsdato.substring(0,10) : '';
-  document.getElementById('status').value = p.Status || 'Under kalkyle';
-  document.getElementById('prosjektleder').value = p.Prosjektleder || '';
-  document.getElementById('notat').value = p.Notat || '';
-  openModal('projectModal');
-}
-
-async function saveProject() {
-  const id = document.getElementById('projectId').value;
-  const body = {
-    Title: document.getElementById('prosjektnavn').value,
-    Kundenavn: document.getElementById('projectKundenavn').value,
-    Prosjektnummer: document.getElementById('prosjektnummer').value,
-    Kalkylenummer: document.getElementById('kalkylenummer').value,
-    Pris: parseFloat(document.getElementById('pris').value) || null,
-    Oppstartsdato: document.getElementById('oppstartsdato').value || null,
-    Status: document.getElementById('status').value,
-    Prosjektleder: document.getElementById('prosjektleder').value,
-    Notat: document.getElementById('notat').value
-  };
-  try {
-    if (id) {
-      await spPatch(`${SP_SITE}/_api/web/lists(guid'${PROJECTS_LIST}')/items(${id})`, body);
-      showToast('Prosjekt oppdatert ✓', 'success');
-    } else {
-      await spPost(`${SP_SITE}/_api/web/lists(guid'${PROJECTS_LIST}')/items`, body);
-      showToast('Prosjekt opprettet ✓', 'success');
-    }
-    closeModal('projectModal');
-    await loadData();
-  } catch(e) { showToast('Feil: ' + e.message, 'error'); }
-}
-
-async function setProjectStatus(id, newStatus) {
-  try {
-    await spPatch(`${SP_SITE}/_api/web/lists(guid'${PROJECTS_LIST}')/items(${id})`, { Status: newStatus });
-    showToast(`Status satt til ${newStatus} ✓`, 'success');
-    await loadData();
-  } catch(e) { showToast('Feil: ' + e.message, 'error'); }
-}
-
-// FILE BROWSER
-async function openFolder(prosjektnavn, prosjektnummer, kalkylenummer, mappenavn, statusClass) {
-  let basePath;
-  if (statusClass === 'kalkyle') {
-    basePath = `Felles/LHBE/Kalkyler/${kalkylenummer} - ${prosjektnavn}/${mappenavn}`;
-  } else if (statusClass === 'avsluttet') {
-    basePath = `Felles/LHBE/Avsluttede prosjekter/${prosjektnummer} - ${prosjektnavn}/${mappenavn}`;
-  } else {
-    basePath = `Felles/LHBE/Prosjekter/${prosjektnummer} - ${prosjektnavn}/${mappenavn}`;
-  }
-  currentFilePath = basePath;
-  document.getElementById('fileModalTitle').textContent = '📁 ' + mappenavn;
-  document.getElementById('fileList').innerHTML = '<div class="loading"><div class="spinner"></div>Laster filer...</div>';
-  openModal('fileModal');
-  await loadFiles(basePath);
-}
-
-async function loadFiles(path) {
-  try {
-    const encodedPath = encodeURIComponent(path);
-    const data = await spGet(`${SP_SITE}/_api/web/GetFolderByServerRelativePath(decodedurl='/sites/Industriveien1ASLHBygg/Delte dokumenter/${path}')/Files?$select=Name,Length,TimeLastModified,ServerRelativeUrl`);
-    const files = data.value || [];
-    const listEl = document.getElementById('fileList');
-    if (files.length === 0) {
-      listEl.innerHTML = '<div style="color:var(--text3);font-size:13px;padding:12px 0;">Mappen er tom</div>';
-      return;
-    }
-    listEl.innerHTML = files.map(f => `
-      <div class="file-item">
-        <span>📄</span>
-        <a class="file-name" href="${SP_SITE}${f.ServerRelativeUrl}" target="_blank">${f.Name}</a>
-        <span class="file-meta">${formatFileSize(f.Length)}</span>
-        <span class="file-meta">${f.TimeLastModified ? f.TimeLastModified.substring(0,10) : ''}</span>
-      </div>`).join('');
-  } catch(e) {
-    document.getElementById('fileList').innerHTML = '<div style="color:var(--text3);font-size:13px;">Kunne ikke laste filer. Kontroller at mappen finnes.</div>';
-  }
-}
-
-function formatFileSize(bytes) {
-  if (!bytes) return '';
-  if (bytes < 1024) return bytes + ' B';
-  if (bytes < 1048576) return Math.round(bytes/1024) + ' KB';
-  return (bytes/1048576).toFixed(1) + ' MB';
-}
-
-function dragOver(e) { e.preventDefault(); document.getElementById('uploadZone').classList.add('dragover'); }
-function dragLeave(e) { document.getElementById('uploadZone').classList.remove('dragover'); }
-async function dropFiles(e) {
-  e.preventDefault();
-  document.getElementById('uploadZone').classList.remove('dragover');
-  await uploadFileList(e.dataTransfer.files);
-}
-async function uploadFiles(e) { await uploadFileList(e.target.files); }
-
-async function uploadFileList(files) {
-  if (!files || files.length === 0) return;
-  for (const file of files) {
-    try {
-      const token = await getToken();
-      const reader = new FileReader();
-      reader.onload = async (e) => {
-        const arrayBuffer = e.target.result;
-        const uploadUrl = `${SP_SITE}/_api/web/GetFolderByServerRelativePath(decodedurl='/sites/Industriveien1ASLHBygg/Delte dokumenter/${currentFilePath}')/Files/add(url='${encodeURIComponent(file.name)}',overwrite=true)`;
-        const r = await fetch(uploadUrl, {
-          method: 'POST', headers: { Authorization: 'Bearer ' + token, Accept: 'application/json;odata=nometadata' },
-          body: arrayBuffer
-        });
-        if (r.ok) { showToast(file.name + ' lastet opp ✓', 'success'); await loadFiles(currentFilePath); }
-        else showToast('Feil ved opplasting av ' + file.name, 'error');
-      };
-      reader.readAsArrayBuffer(file);
-    } catch(e) { showToast('Feil: ' + e.message, 'error'); }
-  }
-}
-
-// EXCEL EXPORT
-function exportExcel() {
-  const rows = [['Kundenavn','Type','Kontaktperson','Telefon','E-post','Adresse','Prosjekter','Aktive','Portefølje']];
-  getFilteredCustomers().forEach(c => {
-    const projs = getProjectsForCustomer(c.Title);
-    const active = projs.filter(p => p.Status === 'Aktiv').length;
-    const portfolio = getPortfolioForCustomer(c.Title);
-    rows.push([c.Title, c.Kundetype||'', c.Kontaktperson||'', c.Telefon||'', c.Epost||'', c.Adresse||'', projs.length, active, portfolio]);
+// PROJECT DETAIL
+function openPD(pid){
+  const p=projects.find(x=>x.ID===pid);if(!p)return;
+  activePID=pid;
+  const s=p.Status||'Under kalkyle';const sc=s==='Aktiv'?'aktiv':s==='Avsluttet'?'avsluttet':'kalkyle';
+  const sl=s==='Aktiv'?'✅ Aktiv':s==='Avsluttet'?'🏁 Avsluttet':'⚙️ Under kalkyle';
+  document.getElementById('pdmT').textContent=p.Title||'—';
+  document.getElementById('pdmS').textContent=(p.Kundenavn||'')+(p.Prosjektnummer?' · '+p.Prosjektnummer:'');
+  const allF=['HMS','Tegninger','FDV','Kontrakt','Fremdrift','Faktura','Kalkyle','Korrespondanse'];
+  const avF=s==='Under kalkyle'?['Kalkyle','Korrespondanse']:allF;
+  const lck=s==='Avsluttet';
+  let fg='<div class="fgrid">';
+  allF.forEach(f=>{
+    const av=avF.includes(f);const l=!av||lck;
+    fg+=`<button class="fbtn${l?' lck':''}" id="fb_${f}" onclick="${l?'':``openF(${pid},'${f}')``}"}>
+      <span class="fi">📁</span>${f}
+    </button>`;
   });
-  const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(';')).join('\n');
-  const blob = new Blob(['\ufeff'+csv], {type:'text/csv;charset=utf-8;'});
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = `LHBE_Kunderegister_${new Date().toISOString().substring(0,10)}.csv`;
-  a.click();
+  fg+='</div>';
+  let acts='';
+  if(s==='Under kalkyle')acts+=`<button class="btn" onclick="setSt(${p.ID},'Aktiv');closePD()">→ Sett Aktiv</button>`;
+  if(s==='Aktiv')acts+=`<button class="btn" onclick="setSt(${p.ID},'Avsluttet');closePD()">→ Sett Avsluttet</button>`;
+  acts+=`<button class="btn" onclick="openEditP(${p.ID})">✏️ Rediger</button>`;
+  acts+=`<button class="btn danger" onclick="cDelP(${p.ID},'${esc(p.Title)}')">🗑 Slett prosjekt</button>`;
+  document.getElementById('pdmB').innerHTML=`
+    <div class="pdsec">
+      <div class="pdsect">Detaljer</div>
+      <div class="igrid">
+        <div class="iitem"><div class="ilbl">Status</div><div class="ival"><span class="sbdg ${sc}" style="margin:0">${sl}</span></div></div>
+        <div class="iitem"><div class="ilbl">Kontraktsum</div><div class="ival acc">${fc(p.Pris)}</div></div>
+        <div class="iitem"><div class="ilbl">Prosjektleder</div><div class="ival">${p.Prosjektleder||'—'}</div></div>
+        <div class="iitem"><div class="ilbl">Oppstart</div><div class="ival">${fd(p.Oppstartsdato)||'—'}</div></div>
+        <div class="iitem"><div class="ilbl">Prosjektnummer</div><div class="ival mono">${p.Prosjektnummer||'—'}</div></div>
+        <div class="iitem"><div class="ilbl">Kalkylenummer</div><div class="ival mono">${p.Kalkylenummer||'—'}</div></div>
+      </div>
+      ${p.Notat?`<div style="margin-top:10px;padding:10px 12px;background:var(--bg3);border-radius:var(--r);font-size:13px;color:var(--tx2);line-height:1.5">${p.Notat}</div>`:''}
+    </div>
+    <div class="pdsec">
+      <div class="pdsect">Mapper</div>
+      ${s==='Under kalkyle'?'<div style="font-size:12px;color:var(--tx3);margin-bottom:10px">Under kalkyle er kun Kalkyle og Korrespondanse tilgjengelige</div>':''}
+      ${fg}
+      <div id="fpanel"></div>
+    </div>
+    <div class="pdsec">
+      <div class="pdsect">Handlinger</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">${acts}</div>
+    </div>`;
+  document.getElementById('pdov').classList.add('on');
 }
 
-// MODAL HELPERS
-function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
-function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+function pdovClick(e){if(e.target===document.getElementById('pdov'))closePD();}
+function closePD(){document.getElementById('pdov').classList.remove('on');activePID=null;activePath='';}
 
-// TOAST
-function showToast(msg, type='success') {
-  const t = document.getElementById('toast');
-  t.textContent = (type === 'success' ? '✓ ' : '✕ ') + msg;
-  t.className = 'toast ' + type + ' show';
-  setTimeout(() => t.className = 'toast', 3500);
+async function openF(pid,mappenavn){
+  const p=projects.find(x=>x.ID===pid);if(!p)return;
+  const s=p.Status||'Under kalkyle';
+  let base;
+  if(s==='Under kalkyle')base=`Felles/LHBE/Kalkyler/${p.Kalkylenummer} - ${p.Title}/${mappenavn}`;
+  else if(s==='Avsluttet')base=`Felles/LHBE/Avsluttede prosjekter/${p.Prosjektnummer} - ${p.Title}/${mappenavn}`;
+  else base=`Felles/LHBE/Prosjekter/${p.Prosjektnummer} - ${p.Title}/${mappenavn}`;
+  activePath=base;
+  document.querySelectorAll('.fbtn').forEach(b=>b.classList.remove('act'));
+  const fb=document.getElementById('fb_'+mappenavn);if(fb)fb.classList.add('act');
+  const fp=document.getElementById('fpanel');
+  fp.innerHTML=`<div class="fpanel">
+    <div class="fphdr"><div class="fptitle">📁 ${mappenavn}</div><button class="btn sm" onclick="document.getElementById('upIn').click()">⬆️ Last opp</button></div>
+    <div id="flist" class="flist"><div class="fempty"><div class="spin" style="margin:0 auto 8px;width:20px;height:20px;border-width:2px"></div>Laster...</div></div>
+    <div class="uzone" id="uz" ondragover="dov2(event)" ondragleave="dlv2()" ondrop="drop2(event)" onclick="document.getElementById('upIn').click()">
+      <div class="uzone-icon">📎</div>Dra filer hit eller klikk for å laste opp
+    </div>
+    <input type="file" id="upIn" multiple style="display:none" onchange="upF(event)">
+  </div>`;
+  await loadFiles(base);
+}
+
+async function loadFiles(path){
+  try{
+    const fp=`/sites/Industriveien1ASLHBygg/Delte dokumenter/${path}`;
+    const d=await spGet(`${SP}/_api/web/GetFolderByServerRelativePath(decodedurl='${encodeURIComponent(fp)}')/Files?$select=Name,Length,TimeLastModified,ServerRelativeUrl`);
+    const files=d.value||[];const el=document.getElementById('flist');
+    if(!files.length){el.innerHTML='<div class="fempty">Mappen er tom</div>';return;}
+    el.innerHTML=files.map(f=>`<div class="fitem"><span>📄</span><a class="fn" href="${SP}${f.ServerRelativeUrl}" target="_blank">${f.Name}</a><span class="fm">${fsz(f.Length)}</span><span class="fm">${fd(f.TimeLastModified)}</span></div>`).join('');
+  }catch(e){const el=document.getElementById('flist');if(el)el.innerHTML='<div class="fempty" style="color:var(--org)">Kunne ikke laste filer. Sjekk at mappen finnes.</div>';}
+}
+
+function fsz(b){if(!b)return'';if(b<1024)return b+' B';if(b<1048576)return Math.round(b/1024)+' KB';return(b/1048576).toFixed(1)+' MB';}
+function dov2(e){e.preventDefault();document.getElementById('uz').classList.add('dov');}
+function dlv2(){document.getElementById('uz').classList.remove('dov');}
+async function drop2(e){e.preventDefault();document.getElementById('uz').classList.remove('dov');await upFiles2(e.dataTransfer.files);}
+async function upF(e){await upFiles2(e.target.files);}
+async function upFiles2(files){
+  if(!files||!files.length||!activePath)return;
+  for(const file of files){
+    try{
+      const t=await gt();const ab=await file.arrayBuffer();
+      const url=`${SP}/_api/web/GetFolderByServerRelativePath(decodedurl='/sites/Industriveien1ASLHBygg/Delte dokumenter/${activePath}')/Files/add(url='${encodeURIComponent(file.name)}',overwrite=true)`;
+      const r=await fetch(url,{method:'POST',headers:{Authorization:'Bearer '+t,Accept:'application/json;odata=nometadata'},body:ab});
+      if(r.ok)toast(file.name+' lastet opp ✓','s');else toast('Feil ved opplasting','e');
+    }catch(e){toast('Feil: '+e.message,'e');}
+  }
+  await loadFiles(activePath);
+}
+
+// KUNDE CRUD
+function openCM(id){
+  custType='Firma';
+  document.getElementById('cmT').textContent=id?'Rediger kunde':'Ny kunde';
+  document.getElementById('typeTog').style.display=id?'none':'grid';
+  document.getElementById('cId').value=id||'';
+  document.getElementById('dupW').classList.remove('show');
+  if(id){
+    const c=customers.find(x=>x.ID===id);if(!c)return;
+    custType=c.Kundetype||'Firma';
+    document.getElementById('cFirma').value=c.Title||'';
+    document.getElementById('cKont').value=c.Kontaktperson||'';
+    document.getElementById('cTlf').value=c.Telefon||'';
+    document.getElementById('cEpost').value=c.Epost||'';
+    document.getElementById('cAdr').value=c.Adresse||'';
+    document.getElementById('cOrg').value=c.Orgnr||'';
+  }else{
+    ['cFirma','cKont','cTlf','cEpost','cAdr','cOrg'].forEach(x=>document.getElementById(x).value='');
+  }
+  document.getElementById('cFL').textContent=custType==='Firma'?'Firmanavn':'Navn';
+  document.getElementById('cOrgG').style.display=custType==='Firma'?'block':'none';
+  document.querySelectorAll('.ttbtn').forEach((b,i)=>b.classList.toggle('on',i===(custType==='Firma'?0:1)));
+  openMov('custMov');
+}
+function openEditC(id){openCM(id);}
+
+function setType(t,btn){
+  custType=t;document.querySelectorAll('.ttbtn').forEach(b=>b.classList.remove('on'));btn.classList.add('on');
+  document.getElementById('cFL').textContent=t==='Firma'?'Firmanavn':'Navn';
+  document.getElementById('cOrgG').style.display=t==='Firma'?'block':'none';
+}
+
+function chkDup(){
+  const val=(document.getElementById('cFirma').value||'').toLowerCase();
+  const id=document.getElementById('cId').value;
+  if(val.length<3){document.getElementById('dupW').classList.remove('show');return;}
+  const m=customers.find(c=>c.Title&&c.Title.toLowerCase().includes(val)&&String(c.ID)!==String(id));
+  if(m){document.getElementById('dupN').textContent=m.Title;document.getElementById('dupW').classList.add('show');}
+  else document.getElementById('dupW').classList.remove('show');
+}
+
+async function saveCust(){
+  const id=document.getElementById('cId').value;
+  const navn=document.getElementById('cFirma').value.trim();
+  if(!navn){toast('Navn er påkrevd','w');return;}
+  const b={Title:navn,Kontaktperson:document.getElementById('cKont').value,Telefon:document.getElementById('cTlf').value,Epost:document.getElementById('cEpost').value,Adresse:document.getElementById('cAdr').value,Orgnr:document.getElementById('cOrg').value,Kundetype:custType};
+  try{
+    if(id)await spPatch(`${SP}/_api/web/lists(guid'${CL}')/items(${id})`,b);
+    else await spPost(`${SP}/_api/web/lists(guid'${CL}')/items`,b);
+    toast(id?'Kunde oppdatert ✓':'Kunde opprettet ✓','s');closeMov('custMov');await loadData();
+  }catch(e){toast('Feil: '+e.message,'e');}
+}
+
+// PROSJEKT CRUD
+function openNP(kn){
+  document.getElementById('pmT').textContent='Nytt prosjekt';
+  document.getElementById('pId').value='';document.getElementById('pKunde').value=kn;
+  ['pNavn','pNr','pKalk','pPris','pDato','pNotat'].forEach(x=>document.getElementById(x).value='');
+  document.getElementById('pStat').value='Under kalkyle';document.getElementById('pLeder').value='';
+  openMov('projMov');
+}
+function openEditP(id){
+  const p=projects.find(x=>x.ID===id);if(!p)return;
+  document.getElementById('pmT').textContent='Rediger prosjekt';
+  document.getElementById('pId').value=p.ID;document.getElementById('pKunde').value=p.Kundenavn||'';
+  document.getElementById('pNavn').value=p.Title||'';document.getElementById('pNr').value=p.Prosjektnummer||'';
+  document.getElementById('pKalk').value=p.Kalkylenummer||'';document.getElementById('pPris').value=p.Pris||'';
+  document.getElementById('pDato').value=fd(p.Oppstartsdato);document.getElementById('pStat').value=p.Status||'Under kalkyle';
+  document.getElementById('pLeder').value=p.Prosjektleder||'';document.getElementById('pNotat').value=p.Notat||'';
+  openMov('projMov');
+}
+
+async function saveProj(){
+  const id=document.getElementById('pId').value;
+  const navn=document.getElementById('pNavn').value.trim();
+  const nr=document.getElementById('pNr').value.trim();
+  const kalk=document.getElementById('pKalk').value.trim();
+  if(!navn){toast('Prosjektnavn er påkrevd','w');return;}
+  if(!nr){toast('Prosjektnummer er påkrevd','w');return;}
+  if(!kalk){toast('Kalkylenummer er påkrevd','w');return;}
+  const b={Title:navn,Kundenavn:document.getElementById('pKunde').value,Prosjektnummer:nr,Kalkylenummer:kalk,Pris:parseFloat(document.getElementById('pPris').value)||null,Oppstartsdato:document.getElementById('pDato').value||null,Status:document.getElementById('pStat').value,Prosjektleder:document.getElementById('pLeder').value,Notat:document.getElementById('pNotat').value};
+  try{
+    if(id)await spPatch(`${SP}/_api/web/lists(guid'${PL}')/items(${id})`,b);
+    else await spPost(`${SP}/_api/web/lists(guid'${PL}')/items`,b);
+    toast(id?'Prosjekt oppdatert ✓':'Prosjekt opprettet ✓','s');closeMov('projMov');await loadData();
+  }catch(e){toast('Feil: '+e.message,'e');}
+}
+
+async function setSt(id,s){
+  try{await spPatch(`${SP}/_api/web/lists(guid'${PL}')/items(${id})`,{Status:s});toast('Status: '+s+' ✓','s');await loadData();}
+  catch(e){toast('Feil: '+e.message,'e');}
+}
+
+function cDelC(id,navn){
+  document.getElementById('confIco').textContent='⚠️';
+  document.getElementById('confTit').textContent='Slett kunde?';
+  document.getElementById('confTxt').innerHTML=`Er du sikker på at du vil slette <strong>${navn}</strong>?<br><small style="color:var(--org)">Prosjekter slettes ikke automatisk.</small>`;
+  document.getElementById('confOk').onclick=async()=>{
+    try{await spDel(`${SP}/_api/web/lists(guid'${CL}')/items(${id})`);toast('Kunde slettet','s');closeMov('confMov');expanded.delete(id);await loadData();}
+    catch(e){toast('Feil: '+e.message,'e');}
+  };openMov('confMov');
+}
+function cDelP(id,navn){
+  document.getElementById('confIco').textContent='🗑️';
+  document.getElementById('confTit').textContent='Slett prosjekt?';
+  document.getElementById('confTxt').innerHTML=`Er du sikker på at du vil slette <strong>${navn}</strong>?<br><small style="color:var(--tx3)">Mapper i OneDrive slettes ikke.</small>`;
+  document.getElementById('confOk').onclick=async()=>{
+    try{await spDel(`${SP}/_api/web/lists(guid'${PL}')/items(${id})`);toast('Prosjekt slettet','s');closeMov('confMov');closePD();await loadData();}
+    catch(e){toast('Feil: '+e.message,'e');}
+  };openMov('confMov');
+}
+
+// SETTINGS
+function toggleSP(){document.getElementById('spPanel').classList.toggle('on');}
+function toggleTheme(el){el.classList.toggle('on');document.body.classList.toggle('light',!el.classList.contains('on'));}
+function toggleCompact(el){
+  el.classList.toggle('on');
+  const v=el.classList.contains('on');
+  document.querySelectorAll('table.ct tbody td').forEach(td=>{td.style.padding=v?'7px 12px':'11px 12px';});
+}
+
+function exportCSV(){
+  const rows=[['Kundenavn','Type','Kontaktperson','Telefon','E-post','Adresse','Prosjekter','Aktive','Portefølje NOK']];
+  getFiltered().forEach(c=>{const ps=gp(c.Title);const act=ps.filter(p=>p.Status==='Aktiv').length;const port=gport(c.Title);rows.push([c.Title,c.Kundetype||'',c.Kontaktperson||'',c.Telefon||'',c.Epost||'',c.Adresse||'',ps.length,act,port]);});
+  const csv=rows.map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(';')).join('\n');
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8;'}));a.download=`LHBE_Kunder_${new Date().toISOString().substring(0,10)}.csv`;a.click();
+}
+
+function openMov(id){document.getElementById(id).classList.remove('hid');}
+function closeMov(id){document.getElementById(id).classList.add('hid');}
+
+function toast(msg,type='s'){
+  const t=document.getElementById('toast');t.textContent=(type==='s'?'✓ ':type==='e'?'✕ ':'⚠ ')+msg;
+  t.className='toast '+type+' on';setTimeout(()=>t.className='toast',3500);
 }
 
 init();
