@@ -760,12 +760,22 @@ function openDetail(id) {
   `;
 
   const locked = k.status==='Under kalkyle';
-  document.getElementById('mapperGrid').innerHTML = MAPPER.map(m=>`
-    <div class="mappe-card ${locked?'locked':''}" title="${locked?'Låst – sett til Aktiv':m}">
-      <div class="mappe-icon">${MAPPER_ICONS[m]}</div>
-      <div class="mappe-name">${m}</div>
-    </div>
-  `).join('');
+  const baseUrl = `https://lhbent.sharepoint.com/sites/Industriveien1ASLHBygg/Delte%20dokumenter/Felles/LHBE/Prosjekter/${k.pnr}%20-%20${encodeURIComponent(k.firmanavn)}`;
+  document.getElementById('mapperGrid').innerHTML = MAPPER.map(m=>{
+    const mappeUrl = `${baseUrl}/${encodeURIComponent(m)}`;
+    if (locked) {
+      return `<div class="mappe-card locked" title="Låst – sett til Aktiv">
+        <div class="mappe-icon">${MAPPER_ICONS[m]}</div>
+        <div class="mappe-name">${m}</div>
+      </div>`;
+    }
+    return `<a href="${mappeUrl}" target="_blank" style="text-decoration:none">
+      <div class="mappe-card" title="Åpne ${m} i SharePoint">
+        <div class="mappe-icon">${MAPPER_ICONS[m]}</div>
+        <div class="mappe-name">${m}</div>
+      </div>
+    </a>`;
+  }).join('');
 
   document.getElementById('notatSection').innerHTML = k.notat ? `
     <div class="section-title" style="margin-top:20px">Notat</div>
