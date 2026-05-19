@@ -760,15 +760,16 @@ function openDetail(id) {
   `;
 
   const locked = k.status==='Under kalkyle';
-  const baseUrl = `https://lhbent.sharepoint.com/sites/Industriveien1ASLHBygg/Delte%20dokumenter/Felles/LHBE/Prosjekter/${k.pnr}%20-%20${encodeURIComponent(k.firmanavn)}`;
+  const viewid = '4445a462-2859-4c56-8451-24b4acf6d034';
   document.getElementById('mapperGrid').innerHTML = MAPPER.map(m=>{
-    const mappeUrl = `${baseUrl}/${encodeURIComponent(m)}`;
     if (locked) {
       return `<div class="mappe-card locked" title="Låst – sett til Aktiv">
         <div class="mappe-icon">${MAPPER_ICONS[m]}</div>
         <div class="mappe-name">${m}</div>
       </div>`;
     }
+    const folderPath = `/sites/Industriveien1ASLHBygg/Delte dokumenter/Felles/LHBE/Prosjekter/${k.pnr} - ${k.firmanavn}/${m}`;
+    const mappeUrl = `https://lhbent.sharepoint.com/sites/Industriveien1ASLHBygg/Delte%20dokumenter/Forms/AllItems.aspx?id=${encodeURIComponent(folderPath)}&viewid=${viewid}`;
     return `<a href="${mappeUrl}" target="_blank" style="text-decoration:none">
       <div class="mappe-card" title="Åpne ${m} i SharePoint">
         <div class="mappe-icon">${MAPPER_ICONS[m]}</div>
