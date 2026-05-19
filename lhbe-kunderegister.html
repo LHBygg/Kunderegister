@@ -485,9 +485,8 @@ function openPD(pid){
   let fg='<div class="fgrid">';
   allF.forEach(f=>{
     const av=avF.includes(f);const l=!av||lck;
-    fg+=`<button class="fbtn${l?' lck':''}" id="fb_${f}" onclick="${l?'':``openF(${pid},'${f}')``}"}>
-      <span class="fi">📁</span>${f}
-    </button>`;
+    const onclick=l?'':'openF('+pid+',\''+f+'\')';
+    fg+='<button class="fbtn'+(l?' lck':'')+'" id="fb_'+f+'" onclick="'+onclick+'">'+'<span class="fi">📁</span>'+f+'</button>';
   });
   fg+='</div>';
   let acts='';
