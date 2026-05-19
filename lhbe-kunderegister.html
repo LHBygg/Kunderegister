@@ -63,7 +63,6 @@
   .btn-ghost { background: none; color: var(--text2); border: 1px solid var(--border); border-radius: 8px; padding: 8px 16px; font-size: 13px; font-weight: 500; cursor: pointer; font-family: inherit; transition: all 0.15s; }
   .btn-ghost:hover { border-color: var(--text2); color: var(--text); }
   .btn-excel { background: rgba(34,197,94,0.1); color: var(--green); border: 1px solid rgba(34,197,94,0.3); border-radius: 8px; padding: 9px 16px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; display: flex; align-items: center; gap: 6px; }
-  .btn-excel:hover { background: rgba(34,197,94,0.15); }
 
   .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px; }
   .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px 18px; }
@@ -78,8 +77,7 @@
   thead tr { border-bottom: 1px solid var(--border); }
   th { padding: 12px 16px; font-size: 11px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.6px; text-align: left; cursor: pointer; user-select: none; white-space: nowrap; }
   th:hover { color: var(--text2); }
-  th .sort-arrow { margin-left: 4px; opacity: 0.5; }
-  th.sorted .sort-arrow { opacity: 1; color: var(--accent); }
+  th.sorted { color: var(--accent); }
   body.compact tbody tr td { padding: 8px 16px; }
   tbody tr { border-bottom: 1px solid var(--border); cursor: pointer; transition: background 0.1s; }
   tbody tr:last-child { border-bottom: none; }
@@ -160,7 +158,6 @@
   .toast.show { transform: translateY(0); opacity: 1; }
   .error-banner { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); border-radius: 8px; padding: 12px 16px; font-size: 13px; color: var(--red); margin-bottom: 16px; }
 
-  /* SETTINGS */
   .settings-section { margin-bottom: 28px; }
   .settings-section-title { font-size: 12px; font-weight: 700; color: var(--text3); text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
   .settings-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border); gap: 16px; }
@@ -171,14 +168,10 @@
   .toggle.on { background: var(--accent); }
   .toggle::after { content: ''; position: absolute; width: 18px; height: 18px; background: white; border-radius: 50%; top: 3px; left: 3px; transition: left 0.2s; }
   .toggle.on::after { left: 23px; }
-
   .col-toggles { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
   .col-toggle-btn { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; cursor: pointer; font-family: inherit; font-size: 13px; color: var(--text2); transition: all 0.15s; }
   .col-toggle-btn.active { border-color: var(--accent); color: var(--text); background: rgba(232,184,75,0.06); }
-  .col-toggle-btn .col-check { font-size: 14px; }
-
   .sort-select { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; color: var(--text); font-family: inherit; font-size: 13px; outline: none; cursor: pointer; }
-  .sort-select:focus { border-color: var(--accent); }
 
   @media (max-width: 600px) {
     .stats-row { grid-template-columns: 1fr 1fr; }
@@ -234,7 +227,7 @@
           <button class="filter-tab" onclick="setFilter('Aktiv', this)">Aktive</button>
           <button class="filter-tab" onclick="setFilter('Avsluttet', this)">Avsluttet</button>
         </div>
-        <button class="btn-excel" onclick="exportExcel()" title="Eksporter til Excel">📊 Excel</button>
+        <button class="btn-excel" onclick="exportExcel()">📊 Excel</button>
         <button class="btn-primary" onclick="openNewModal()">+ Ny kunde</button>
       </div>
     </div>
@@ -329,7 +322,6 @@
       <button class="modal-close" onclick="closeModal('settingsModal')">×</button>
     </div>
     <div class="modal-body">
-
       <div class="settings-section">
         <div class="settings-section-title">Utseende</div>
         <div class="settings-row">
@@ -337,39 +329,32 @@
           <button class="toggle on" id="darkModeToggle" onclick="toggleTheme()"></button>
         </div>
         <div class="settings-row">
-          <div><div class="settings-row-label">Kompakt visning</div><div class="settings-row-sub">Tettere rader – se mer på én gang</div></div>
+          <div><div class="settings-row-label">Kompakt visning</div><div class="settings-row-sub">Tettere rader i tabellen</div></div>
           <button class="toggle" id="compactToggle" onclick="toggleCompact()"></button>
         </div>
       </div>
-
       <div class="settings-section">
-        <div class="settings-section-title">Kolonner i tabellen</div>
+        <div class="settings-section-title">Kolonner</div>
         <div class="col-toggles" id="colToggles"></div>
       </div>
-
       <div class="settings-section">
         <div class="settings-section-title">Sortering</div>
         <div class="settings-row">
-          <div><div class="settings-row-label">Standard sortering</div><div class="settings-row-sub">Hvordan listen sorteres ved innlasting</div></div>
+          <div><div class="settings-row-label">Standard sortering</div></div>
           <select class="sort-select" id="sortSelect" onchange="setSortPref()">
             <option value="pnr-asc">Pnr stigende</option>
             <option value="pnr-desc">Pnr synkende</option>
             <option value="navn-asc">Navn A–Å</option>
             <option value="navn-desc">Navn Å–A</option>
-            <option value="status">Status</option>
+            <option value="status-asc">Status</option>
           </select>
         </div>
       </div>
-
       <div class="settings-section">
         <div class="settings-section-title">Data</div>
         <div class="settings-row">
           <div><div class="settings-row-label">Eksporter til Excel</div><div class="settings-row-sub">Last ned hele kundelisten som .xlsx</div></div>
           <button class="btn-excel" onclick="exportExcel(); closeModal('settingsModal')">📊 Last ned</button>
-        </div>
-        <div class="settings-row">
-          <div><div class="settings-row-label">Tilkobling</div><div class="settings-row-sub">SharePoint · Industriveien 1 AS (LH Bygg)</div></div>
-          <span style="color:var(--green);font-size:13px;font-weight:600">● Tilkoblet</span>
         </div>
         <div class="settings-row">
           <div><div class="settings-row-label">Innlogget som</div><div class="settings-row-sub" id="settingsUser">–</div></div>
@@ -378,7 +363,6 @@
           <div><div class="settings-row-label">Versjon</div><div class="settings-row-sub">LH Bygg Kunderegister v1.2</div></div>
         </div>
       </div>
-
     </div>
   </div>
 </div>
@@ -394,53 +378,62 @@ const LIST_NAME = 'Kunderegister';
 const MAPPER = ['HMS','Tegninger','FDV','Kontrakt','Kalkyle','Fremdrift','Faktura','Korrespondanse'];
 const MAPPER_ICONS = {HMS:'🦺',Tegninger:'📐',FDV:'📋',Kontrakt:'📝',Kalkyle:'🧮',Fremdrift:'📅',Faktura:'💰',Korrespondanse:'✉️'};
 
-// Columns config: key, label, default visible
 const COLUMNS = [
-  { key: 'pnr',     label: 'Pnr',        show: true },
-  { key: 'navn',    label: 'Navn/Firma',  show: true },
-  { key: 'type',    label: 'Type',        show: true },
-  { key: 'kontakt', label: 'Kontakt',     show: true },
-  { key: 'telefon', label: 'Telefon',     show: true },
-  { key: 'status',  label: 'Status',      show: true },
-  { key: 'mapper',  label: 'Mapper',      show: true },
+  { key: 'pnr',     label: 'Pnr',       show: true },
+  { key: 'navn',    label: 'Navn/Firma', show: true },
+  { key: 'type',    label: 'Type',       show: true },
+  { key: 'kontakt', label: 'Kontakt',    show: true },
+  { key: 'telefon', label: 'Telefon',    show: true },
+  { key: 'status',  label: 'Status',     show: true },
+  { key: 'mapper',  label: 'Mapper',     show: true },
 ];
 
-const msalConfig = {
-  auth: {
-    clientId: CLIENT_ID,
-    authority: `https://login.microsoftonline.com/${TENANT_ID}`,
-    redirectUri: 'https://lhbygg.github.io/Kunderegister/lhbe-kunderegister.html',
-  },
-  cache: { cacheLocation: 'sessionStorage' }
-};
-
-const msalInstance = new msal.PublicClientApplication(msalConfig);
+let msalInstance = null;
 const scopes = ['https://graph.microsoft.com/Sites.ReadWrite.All', 'User.Read'];
 
 let currentUser = null, kunder = [], currentFilter = 'alle', currentSearch = '';
 let selectedId = null, editMode = false, siteId = null, listId = null, kundeType = 'firma';
 let sortKey = 'pnr', sortDir = 'asc';
-
-// Load preferences
 let darkMode = localStorage.getItem('theme') !== 'light';
 let compactMode = localStorage.getItem('compact') === 'true';
+
 const savedCols = localStorage.getItem('columns');
 if (savedCols) { try { const c = JSON.parse(savedCols); COLUMNS.forEach(col => { if (c[col.key] !== undefined) col.show = c[col.key]; }); } catch(e){} }
 const savedSort = localStorage.getItem('sort');
-if (savedSort) { const [k,d] = savedSort.split('-'); sortKey = k; sortDir = d||'asc'; }
+if (savedSort) { const parts = savedSort.split('-'); sortKey = parts[0]; sortDir = parts[1] || 'asc'; }
 
 async function init() {
-  await msalInstance.initialize();
-  const response = await msalInstance.handleRedirectPromise();
-  if (response) currentUser = response.account;
-  else { const accounts = msalInstance.getAllAccounts(); if (accounts.length > 0) currentUser = accounts[0]; }
-  applyTheme(); applyCompact();
-  if (currentUser) showApp();
+  try {
+    const msalConfig = {
+      auth: {
+        clientId: CLIENT_ID,
+        authority: `https://login.microsoftonline.com/${TENANT_ID}`,
+        redirectUri: window.location.href.split('?')[0].split('#')[0],
+      },
+      cache: { cacheLocation: 'localStorage', storeAuthStateInCookie: true }
+    };
+
+    msalInstance = new msal.PublicClientApplication(msalConfig);
+    await msalInstance.initialize();
+    await msalInstance.handleRedirectPromise();
+
+    const accounts = msalInstance.getAllAccounts();
+    if (accounts.length > 0) {
+      currentUser = accounts[0];
+      applyTheme(); applyCompact();
+      showApp();
+    } else {
+      applyTheme();
+    }
+  } catch(e) {
+    console.error('Init error:', e);
+  }
 }
 
 function applyTheme() {
   document.body.classList.toggle('light', !darkMode);
-  document.getElementById('themeBtn').textContent = darkMode ? '🌙' : '☀️';
+  const btn = document.getElementById('themeBtn');
+  if (btn) btn.textContent = darkMode ? '🌙' : '☀️';
   const t = document.getElementById('darkModeToggle');
   if (t) t.classList.toggle('on', darkMode);
   localStorage.setItem('theme', darkMode ? 'dark' : 'light');
@@ -474,10 +467,11 @@ function toggleColumn(key) {
 }
 
 function renderColToggles() {
-  document.getElementById('colToggles').innerHTML = COLUMNS.map(col => `
+  const el = document.getElementById('colToggles');
+  if (!el) return;
+  el.innerHTML = COLUMNS.map(col => `
     <button class="col-toggle-btn ${col.show ? 'active' : ''}" onclick="toggleColumn('${col.key}')">
-      <span>${col.label}</span>
-      <span class="col-check">${col.show ? '✓' : '○'}</span>
+      <span>${col.label}</span><span>${col.show ? '✓' : '○'}</span>
     </button>
   `).join('');
 }
@@ -496,36 +490,73 @@ async function signIn() {
   document.getElementById('loginBtn').innerHTML = '<span class="spinner"></span> Logger inn...';
   try {
     const response = await msalInstance.loginPopup({ scopes });
-    currentUser = response.account; showApp();
+    currentUser = response.account;
+    applyTheme(); applyCompact();
+    showApp();
   } catch(e) {
-    console.error(e);
+    console.error('Login error:', e);
     document.getElementById('loginBtn').disabled = false;
     document.getElementById('loginBtn').innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M11.4 24H0V12.6L11.4 24zM12.6 24H24V12.6L12.6 24zM0 11.4V0h11.4L0 11.4zM24 11.4L12.6 0H24v11.4z"/></svg> Logg inn med Microsoft';
   }
 }
 
-function signOut() { msalInstance.logoutPopup(); location.reload(); }
+function signOut() {
+  msalInstance.logoutPopup({ account: currentUser });
+  currentUser = null;
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('loginScreen').style.display = 'flex';
+}
 
 async function getToken() {
-  try { return (await msalInstance.acquireTokenSilent({ scopes, account: currentUser })).accessToken; }
-  catch(e) { return (await msalInstance.acquireTokenPopup({ scopes })).accessToken; }
+  if (!currentUser) throw new Error('Ikke innlogget');
+  try {
+    const result = await msalInstance.acquireTokenSilent({ scopes, account: currentUser });
+    if (!result.accessToken) throw new Error('Tom token');
+    return result.accessToken;
+  } catch(e) {
+    console.log('Silent token failed, trying popup:', e);
+    const result = await msalInstance.acquireTokenPopup({ scopes });
+    return result.accessToken;
+  }
 }
 
 async function graphGet(url) {
-  const res = await fetch(`https://graph.microsoft.com/v1.0${url}`, { headers: { Authorization: `Bearer ${await getToken()}` } });
-  if (!res.ok) throw new Error(res.status);
+  const token = await getToken();
+  const res = await fetch(`https://graph.microsoft.com/v1.0${url}`, {
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }
+  });
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`${res.status}: ${err}`);
+  }
   return res.json();
 }
 
 async function graphPost(url, body) {
-  const res = await fetch(`https://graph.microsoft.com/v1.0${url}`, { method: 'POST', headers: { Authorization: `Bearer ${await getToken()}`, 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-  if (!res.ok) throw new Error(res.status);
+  const token = await getToken();
+  const res = await fetch(`https://graph.microsoft.com/v1.0${url}`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`${res.status}: ${err}`);
+  }
   return res.json();
 }
 
 async function graphPatch(url, body) {
-  const res = await fetch(`https://graph.microsoft.com/v1.0${url}`, { method: 'PATCH', headers: { Authorization: `Bearer ${await getToken()}`, 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-  if (!res.ok) throw new Error(res.status);
+  const token = await getToken();
+  const res = await fetch(`https://graph.microsoft.com/v1.0${url}`, {
+    method: 'PATCH',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`${res.status}: ${err}`);
+  }
   return res.json();
 }
 
@@ -534,6 +565,7 @@ async function getSiteAndList() {
   const site = await graphGet(`/sites/${SITE_URL}:${SITE_PATH}`);
   siteId = site.id;
   const lists = await graphGet(`/sites/${siteId}/lists?$filter=displayName eq '${LIST_NAME}'`);
+  if (!lists.value || lists.value.length === 0) throw new Error('Kunderegister-listen ble ikke funnet');
   listId = lists.value[0].id;
 }
 
@@ -556,14 +588,31 @@ async function fetchKunder() {
   }));
 }
 
+function buildFields(data) {
+  const fields = {
+    Title: data.firmanavn,
+    Kontaktperson: data.kontakt,
+    Telefon: data.telefon,
+    Epost: data.epost,
+    Adresse: data.adresse,
+    Orgnr: data.orgnr,
+    Prosjektnummer: data.pnr,
+    Status: data.status,
+    Notat: data.notat,
+  };
+  // Only add Kundetype if it's not empty
+  if (data.type) fields.Kundetype = data.type;
+  return fields;
+}
+
 async function createKunde(data) {
   await getSiteAndList();
-  return graphPost(`/sites/${siteId}/lists/${listId}/items`, { fields: { Title: data.firmanavn, Kontaktperson: data.kontakt, Telefon: data.telefon, Epost: data.epost, Adresse: data.adresse, Orgnr: data.orgnr, Prosjektnummer: data.pnr, Status: data.status, Notat: data.notat, Kundetype: data.type } });
+  return graphPost(`/sites/${siteId}/lists/${listId}/items`, { fields: buildFields(data) });
 }
 
 async function updateKunde(id, data) {
   await getSiteAndList();
-  return graphPatch(`/sites/${siteId}/lists/${listId}/items/${id}/fields`, { Title: data.firmanavn, Kontaktperson: data.kontakt, Telefon: data.telefon, Epost: data.epost, Adresse: data.adresse, Orgnr: data.orgnr, Prosjektnummer: data.pnr, Status: data.status, Notat: data.notat, Kundetype: data.type });
+  return graphPatch(`/sites/${siteId}/lists/${listId}/items/${id}/fields`, buildFields(data));
 }
 
 async function updateStatus(id, status) {
@@ -580,13 +629,20 @@ async function showApp() {
 }
 
 async function loadKunder() {
-  try { kunder = await fetchKunder(); render(); }
-  catch(e) { showError('Kunne ikke laste kunder: ' + e.message); document.getElementById('tableBody').innerHTML = '<tr class="loading-row"><td colspan="7">Feil ved lasting</td></tr>'; }
+  document.getElementById('tableBody').innerHTML = '<tr class="loading-row"><td colspan="7"><span class="spinner"></span> Laster kunder...</td></tr>';
+  try {
+    kunder = await fetchKunder();
+    render();
+  } catch(e) {
+    console.error('Load error:', e);
+    showError('Kunne ikke laste kunder: ' + e.message);
+    document.getElementById('tableBody').innerHTML = '<tr class="loading-row"><td colspan="7">Feil ved lasting – prøv å laste siden på nytt</td></tr>';
+  }
 }
 
 function showError(msg) {
   document.getElementById('errorBanner').innerHTML = `<div class="error-banner">⚠️ ${msg}</div>`;
-  setTimeout(() => document.getElementById('errorBanner').innerHTML = '', 6000);
+  setTimeout(() => document.getElementById('errorBanner').innerHTML = '', 8000);
 }
 
 function setFilter(f, btn) {
@@ -607,7 +663,7 @@ function sortedFiltered() {
     let av, bv;
     if (sortKey === 'pnr') { av = parseInt(a.pnr)||0; bv = parseInt(b.pnr)||0; }
     else if (sortKey === 'navn') { av = a.firmanavn.toLowerCase(); bv = b.firmanavn.toLowerCase(); }
-    else if (sortKey === 'status') { const order = {'Aktiv':0,'Under kalkyle':1,'Avsluttet':2}; av = order[a.status]||3; bv = order[b.status]||3; }
+    else if (sortKey === 'status') { const o = {'Aktiv':0,'Under kalkyle':1,'Avsluttet':2}; av = o[a.status]||3; bv = o[b.status]||3; }
     else { av = a[sortKey]||''; bv = b[sortKey]||''; }
     if (av < bv) return sortDir === 'asc' ? -1 : 1;
     if (av > bv) return sortDir === 'asc' ? 1 : -1;
@@ -632,14 +688,12 @@ function render() {
   document.getElementById('statAktiv').textContent = kunder.filter(k=>k.status==='Aktiv').length;
   document.getElementById('statAvsluttet').textContent = kunder.filter(k=>k.status==='Avsluttet').length;
 
-  // Header
-  const sortLabels = { pnr: 'Pnr', navn: 'Navn/Firma', type: 'Type', kontakt: 'Kontakt', telefon: 'Telefon', status: 'Status', mapper: 'Mapper' };
   const sortableKeys = ['pnr','navn','status'];
   document.getElementById('tableHead').innerHTML = '<tr>' + visCols.map(col => {
     const sortable = sortableKeys.includes(col.key);
     const active = sortKey === col.key;
-    const arrow = sortDir === 'asc' ? '↑' : '↓';
-    return `<th ${sortable ? `onclick="sortBy('${col.key}')"` : ''} class="${active ? 'sorted' : ''}">${col.label}${sortable ? `<span class="sort-arrow">${active ? arrow : '↕'}</span>` : ''}</th>`;
+    const arrow = sortDir === 'asc' ? ' ↑' : ' ↓';
+    return `<th ${sortable ? `onclick="sortBy('${col.key}')"` : ''} class="${active ? 'sorted' : ''}">${col.label}${sortable ? (active ? arrow : ' ↕') : ''}</th>`;
   }).join('') + '</tr>';
 
   const tbody = document.getElementById('tableBody');
@@ -700,8 +754,8 @@ function openDetail(id) {
 
   document.getElementById('detailInfo').innerHTML = `
     <div class="detail-field"><div class="detail-label">Kontaktperson</div><div class="detail-value">${k.kontakt||'—'}</div></div>
-    <div class="detail-field"><div class="detail-label">Telefon</div><div class="detail-value">${k.telefon||'—'}</div></div>
-    <div class="detail-field"><div class="detail-label">E-post</div><div class="detail-value">${k.epost||'—'}</div></div>
+    <div class="detail-field"><div class="detail-label">Telefon</div><div class="detail-value">${k.telefon ? `<a href="tel:${k.telefon}" style="color:var(--green);text-decoration:none">📞 ${k.telefon}</a>` : '—'}</div></div>
+    <div class="detail-field"><div class="detail-label">E-post</div><div class="detail-value">${k.epost ? `<a href="mailto:${k.epost}" style="color:var(--accent2);text-decoration:none">✉️ ${k.epost}</a>` : '—'}</div></div>
     <div class="detail-field"><div class="detail-label">Org.nr</div><div class="detail-value">${k.orgnr||'—'}</div></div>
     <div class="detail-field" style="grid-column:1/-1"><div class="detail-label">Adresse</div><div class="detail-value">${k.adresse||'—'}</div></div>
   `;
@@ -768,7 +822,18 @@ function openNewModal() {
 async function saveKunde() {
   const firma = document.getElementById('f_firmanavn').value.trim();
   if (!firma) { alert('Navn er påkrevd'); return; }
-  const data = { firmanavn: firma, kontakt: document.getElementById('f_kontakt').value, telefon: document.getElementById('f_telefon').value, epost: document.getElementById('f_epost').value, orgnr: document.getElementById('f_orgnr').value, adresse: document.getElementById('f_adresse').value, pnr: document.getElementById('f_pnr').value, status: document.getElementById('f_status').value, notat: document.getElementById('f_notat').value, type: kundeType };
+  const data = {
+    firmanavn: firma,
+    kontakt: document.getElementById('f_kontakt').value,
+    telefon: document.getElementById('f_telefon').value,
+    epost: document.getElementById('f_epost').value,
+    orgnr: document.getElementById('f_orgnr').value,
+    adresse: document.getElementById('f_adresse').value,
+    pnr: document.getElementById('f_pnr').value,
+    status: document.getElementById('f_status').value,
+    notat: document.getElementById('f_notat').value,
+    type: kundeType
+  };
   const btn = document.getElementById('saveBtn');
   btn.disabled = true; btn.textContent = 'Lagrer...';
   try {
@@ -782,8 +847,12 @@ async function saveKunde() {
       toast('✅', `${data.firmanavn} lagt til`);
     }
     closeModal('formModal'); render();
-  } catch(e) { showError('Kunne ikke lagre: '+e.message); }
-  finally { btn.disabled = false; btn.textContent = 'Lagre'; }
+  } catch(e) {
+    console.error('Save error:', e);
+    showError('Kunne ikke lagre: ' + e.message);
+  } finally {
+    btn.disabled = false; btn.textContent = 'Lagre';
+  }
 }
 
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }
