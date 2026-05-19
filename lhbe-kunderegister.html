@@ -3,49 +3,49 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>LH Bygg – Kunderegister v4.1</title>
+<title>LH Bygg Kunderegister v4.2</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-msal-browser/3.11.1/msal-browser.min.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-:root{--acc:#e8b84b;--acc-d:rgba(232,184,75,.12);--blu:#3b82f6;--blu-d:rgba(59,130,246,.12);--grn:#22c55e;--grn-d:rgba(34,197,94,.12);--org:#f97316;--org-d:rgba(249,115,22,.12);--red:#ef4444;--red-d:rgba(239,68,68,.12);--bg:#0d1117;--bg2:#161b27;--bg3:#1e2535;--bg4:#252d3f;--bg5:#2e3850;--br:rgba(255,255,255,.07);--br2:rgba(255,255,255,.13);--br3:rgba(255,255,255,.2);--tx:#e8ecf4;--tx2:#8b95ab;--tx3:#4e5a70;--r:8px;--rl:12px;--rxl:16px;}
-.light{--bg:#f4f6fa;--bg2:#fff;--bg3:#f0f2f7;--bg4:#e8ebf2;--bg5:#dde1ec;--br:rgba(0,0,0,.07);--br2:rgba(0,0,0,.13);--br3:rgba(0,0,0,.2);--tx:#1a2035;--tx2:#5a6478;--tx3:#9aa3b5;}
+:root{--acc:#e8b84b;--blu:#3b82f6;--grn:#22c55e;--org:#f97316;--red:#ef4444;
+--bg:#0d1117;--bg2:#161b27;--bg3:#1e2535;--bg4:#252d3f;--bg5:#2e3850;
+--br:rgba(255,255,255,.07);--br2:rgba(255,255,255,.13);--br3:rgba(255,255,255,.2);
+--tx:#e8ecf4;--tx2:#8b95ab;--tx3:#4e5a70;--r:8px;--rl:12px;--rxl:16px;}
+.light{--bg:#f4f6fa;--bg2:#fff;--bg3:#f0f2f7;--bg4:#e8ebf2;--bg5:#dde1ec;
+--br:rgba(0,0,0,.07);--br2:rgba(0,0,0,.13);--br3:rgba(0,0,0,.2);
+--tx:#1a2035;--tx2:#5a6478;--tx3:#9aa3b5;}
 *{box-sizing:border-box;margin:0;padding:0;}
-html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);font-size:14px;transition:background .2s,color .2s;}
+html,body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);font-size:14px;}
 .mono{font-family:'DM Mono',monospace;}
-/* HEADER */
 .hdr{position:sticky;top:0;z-index:200;height:54px;display:flex;align-items:center;gap:12px;padding:0 24px;background:var(--bg);border-bottom:1px solid var(--br);}
-.logo{display:flex;align-items:center;gap:10px;font-weight:600;font-size:15px;letter-spacing:-.3px;color:var(--tx);text-decoration:none;}
 .lsq{width:30px;height:30px;background:var(--acc);border-radius:7px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:#000;flex-shrink:0;}
+.logo{display:flex;align-items:center;gap:10px;font-weight:600;font-size:15px;color:var(--tx);text-decoration:none;}
 .hsp{flex:1;}
-.hbtn{display:flex;align-items:center;gap:6px;padding:6px 12px;background:var(--bg3);border:1px solid var(--br2);border-radius:20px;font-size:12px;color:var(--tx2);cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s;white-space:nowrap;}
+.hbtn{display:flex;align-items:center;gap:6px;padding:6px 12px;background:var(--bg3);border:1px solid var(--br2);border-radius:20px;font-size:12px;color:var(--tx2);cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s;}
 .hbtn:hover{background:var(--bg4);color:var(--tx);}
 .udot{width:22px;height:22px;border-radius:50%;background:var(--blu);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;color:#fff;}
 .vbdg{font-size:10px;padding:2px 7px;background:var(--bg3);border:1px solid var(--br);border-radius:20px;color:var(--tx3);font-family:'DM Mono',monospace;}
-/* STATS */
 .stats{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;padding:18px 24px 0;}
 .sc{background:var(--bg2);border:1px solid var(--br);border-radius:var(--rl);padding:14px 16px;}
-.sc:hover{border-color:var(--br2);}
 .sc-l{font-size:11px;color:var(--tx3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px;}
 .sc-v{font-size:22px;font-weight:600;line-height:1;}
 .ca{color:var(--acc);}.cg{color:var(--grn);}.co{color:var(--org);}.cb{color:var(--blu);}.ct{color:var(--tx2);}
-/* TOOLBAR */
 .tbar{display:flex;align-items:center;gap:10px;padding:14px 24px;}
 .srch{display:flex;align-items:center;gap:8px;background:var(--bg2);border:1px solid var(--br2);border-radius:var(--r);padding:8px 14px;flex:1;max-width:380px;}
 .srch:focus-within{border-color:var(--blu);}
 .srch input{background:none;border:none;outline:none;color:var(--tx);font-family:'DM Sans',sans-serif;font-size:13px;width:100%;}
 .srch input::placeholder{color:var(--tx3);}
 .ftabs{display:flex;gap:3px;background:var(--bg2);border:1px solid var(--br);border-radius:var(--r);padding:3px;}
-.ftab{padding:5px 13px;border-radius:5px;font-size:12px;font-weight:500;cursor:pointer;color:var(--tx2);border:none;background:none;font-family:'DM Sans',sans-serif;transition:all .15s;white-space:nowrap;}
+.ftab{padding:5px 13px;border-radius:5px;font-size:12px;font-weight:500;cursor:pointer;color:var(--tx2);border:none;background:none;font-family:'DM Sans',sans-serif;transition:all .15s;}
 .ftab.on{background:var(--bg4);color:var(--tx);}
 .tsp{flex:1;}
-.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:var(--r);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;border:1px solid var(--br2);background:var(--bg2);color:var(--tx);transition:all .15s;white-space:nowrap;}
-.btn:hover{background:var(--bg3);border-color:var(--br3);}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:var(--r);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;border:1px solid var(--br2);background:var(--bg2);color:var(--tx);transition:all .15s;}
+.btn:hover{background:var(--bg3);}
 .btn.pri{background:var(--acc);color:#000;border-color:var(--acc);font-weight:600;}
 .btn.pri:hover{background:#d4a43e;}
 .btn.danger{color:var(--red);border-color:rgba(239,68,68,.3);}
-.btn.danger:hover{background:var(--red-d);}
+.btn.danger:hover{background:rgba(239,68,68,.1);}
 .btn.sm{padding:5px 10px;font-size:12px;}
-/* TABLE */
 .tw{padding:0 24px 32px;}
 table.ct{width:100%;border-collapse:collapse;}
 table.ct thead th{text-align:left;padding:9px 12px;font-size:11px;font-weight:500;color:var(--tx3);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--br);background:var(--bg);position:sticky;top:54px;z-index:10;}
@@ -58,43 +58,38 @@ table.ct tbody td{padding:11px 12px;border-bottom:1px solid var(--br);vertical-a
 .cname{font-weight:500;font-size:14px;}
 .cadr{font-size:11px;color:var(--tx3);margin-top:1px;}
 .tbdg{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:500;}
-.tbdg.f{background:var(--blu-d);color:var(--blu);}
-.tbdg.p{background:var(--acc-d);color:var(--acc);}
+.tbdg.f{background:rgba(59,130,246,.15);color:var(--blu);}
+.tbdg.p{background:rgba(232,184,75,.15);color:var(--acc);}
 .al{color:var(--blu);text-decoration:none;font-size:13px;}
 .al:hover{text-decoration:underline;}
 .pv{font-family:'DM Mono',monospace;font-size:13px;color:var(--acc);}
 .pa{font-size:11px;color:var(--grn);margin-top:1px;}
-/* EXPANDED */
 tr.erow td{padding:0;background:var(--bg2);border-bottom:1px solid var(--br2);}
 .ebox{padding:14px 20px 18px 46px;}
 .ehdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
 .etitle{font-size:12px;color:var(--tx2);font-weight:500;}
 .pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px;}
-/* PROJECT CARD */
 .pcard{background:var(--bg3);border:1px solid var(--br);border-radius:var(--rl);padding:13px;cursor:pointer;transition:all .2s;}
-.pcard:hover{border-color:var(--br2);background:var(--bg4);transform:translateY(-1px);}
+.pcard:hover{border-color:var(--br2);background:var(--bg4);}
 .pcard.aktiv{border-left:3px solid var(--grn);}
 .pcard.kalkyle{border-left:3px solid var(--org);}
 .pcard.avsluttet{border-left:3px solid var(--tx3);opacity:.65;}
 .pctop{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:8px;}
 .pcname{font-weight:500;font-size:14px;line-height:1.3;flex:1;}
-.pcnum{font-family:'DM Mono',monospace;font-size:10px;color:var(--acc);background:var(--acc-d);padding:2px 6px;border-radius:4px;white-space:nowrap;}
-.sbdg{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:20px;font-size:11px;font-weight:500;margin-bottom:8px;}
-.sbdg.aktiv{background:var(--grn-d);color:var(--grn);}
-.sbdg.kalkyle{background:var(--org-d);color:var(--org);}
+.pcnum{font-family:'DM Mono',monospace;font-size:10px;color:var(--acc);background:rgba(232,184,75,.12);padding:2px 6px;border-radius:4px;}
+.sbdg{display:inline-flex;align-items:center;padding:3px 8px;border-radius:20px;font-size:11px;font-weight:500;margin-bottom:8px;}
+.sbdg.aktiv{background:rgba(34,197,94,.15);color:var(--grn);}
+.sbdg.kalkyle{background:rgba(249,115,22,.15);color:var(--org);}
 .sbdg.avsluttet{background:rgba(78,90,112,.2);color:var(--tx3);}
 .pcinfo{display:flex;flex-direction:column;gap:4px;margin-bottom:8px;}
 .pcrow{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--tx2);}
 .pcprice{font-family:'DM Mono',monospace;font-size:13px;color:var(--acc);}
-.pcnote{font-size:11px;color:var(--tx3);margin-bottom:8px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.pcnote{font-size:11px;color:var(--tx3);margin-bottom:8px;line-height:1.4;}
 .pcacts{display:flex;gap:5px;}
 .pca{flex:1;padding:5px 6px;border-radius:5px;font-size:11px;font-weight:500;cursor:pointer;border:1px solid var(--br);background:var(--bg5);color:var(--tx2);font-family:'DM Sans',sans-serif;transition:all .15s;text-align:center;}
 .pca:hover{background:var(--bg3);color:var(--tx);}
 .pca.grn{color:var(--grn);border-color:rgba(34,197,94,.25);}
-.pca.grn:hover{background:var(--grn-d);}
 .pca.red{color:var(--red);border-color:rgba(239,68,68,.25);}
-.pca.red:hover{background:var(--red-d);}
-/* PROJECT DETAIL PANEL */
 .pdov{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:500;display:flex;align-items:stretch;justify-content:flex-end;opacity:0;pointer-events:none;transition:opacity .25s;}
 .pdov.on{opacity:1;pointer-events:all;}
 .pdm{width:680px;max-width:100vw;background:var(--bg2);border-left:1px solid var(--br2);display:flex;flex-direction:column;transform:translateX(60px);transition:transform .25s;overflow:hidden;}
@@ -111,14 +106,12 @@ tr.erow td{padding:0;background:var(--bg2);border-bottom:1px solid var(--br2);}
 .ilbl{font-size:11px;color:var(--tx3);margin-bottom:3px;}
 .ival{font-size:13px;font-weight:500;}
 .ival.acc{color:var(--acc);font-family:'DM Mono',monospace;}
-/* FOLDERS */
 .fgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;}
 .fbtn{display:flex;flex-direction:column;align-items:center;gap:5px;padding:12px 6px;background:var(--bg3);border:1px solid var(--br);border-radius:var(--rl);cursor:pointer;transition:all .2s;font-size:12px;color:var(--tx2);font-family:'DM Sans',sans-serif;text-align:center;}
-.fbtn:hover:not(.lck){background:var(--bg4);border-color:var(--br2);color:var(--tx);}
+.fbtn:hover{background:var(--bg4);border-color:var(--br2);color:var(--tx);}
+.fbtn.lck{opacity:.3;cursor:not-allowed;pointer-events:none;}
+.fbtn.act{background:rgba(59,130,246,.15);border-color:rgba(59,130,246,.35);color:var(--blu);}
 .fbtn .fi{font-size:22px;}
-.fbtn.lck{opacity:.3;cursor:not-allowed;}
-.fbtn.act{background:var(--blu-d);border-color:rgba(59,130,246,.35);color:var(--blu);}
-/* FILE PANEL */
 .fpanel{background:var(--bg3);border:1px solid var(--br);border-radius:var(--rl);overflow:hidden;margin-top:12px;}
 .fphdr{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--br);}
 .fptitle{font-size:13px;font-weight:500;}
@@ -130,10 +123,9 @@ tr.erow td{padding:0;background:var(--bg2);border-bottom:1px solid var(--br2);}
 .fn:hover{text-decoration:underline;}
 .fm{font-size:11px;color:var(--tx3);font-family:'DM Mono',monospace;white-space:nowrap;}
 .uzone{border:1.5px dashed var(--br2);border-radius:var(--r);padding:16px;text-align:center;color:var(--tx3);font-size:12px;cursor:pointer;transition:all .15s;margin:10px 14px 14px;}
-.uzone:hover,.uzone.dov{border-color:var(--blu);color:var(--tx2);background:var(--blu-d);}
+.uzone:hover,.uzone.dov{border-color:var(--blu);color:var(--tx2);background:rgba(59,130,246,.08);}
 .uzone-icon{font-size:18px;margin-bottom:3px;}
 .fempty{padding:18px;text-align:center;color:var(--tx3);font-size:12px;}
-/* MODALS */
 .mov{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:600;display:flex;align-items:center;justify-content:center;padding:20px;}
 .mov.hid{display:none;}
 .mbox{background:var(--bg2);border:1px solid var(--br2);border-radius:var(--rxl);width:100%;max-width:500px;max-height:92vh;overflow-y:auto;}
@@ -152,10 +144,9 @@ tr.erow td{padding:0;background:var(--bg2);border-bottom:1px solid var(--br2);}
 .fg2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
 .ttog{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;}
 .ttbtn{padding:10px;border:1px solid var(--br2);border-radius:var(--r);background:var(--bg3);color:var(--tx2);cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;transition:all .15s;text-align:center;}
-.ttbtn.on{border-color:var(--acc);background:var(--acc-d);color:var(--acc);}
-.dupw{background:var(--org-d);border:1px solid rgba(249,115,22,.3);border-radius:var(--r);padding:10px 12px;font-size:12px;color:var(--org);margin-bottom:14px;display:none;}
+.ttbtn.on{border-color:var(--acc);background:rgba(232,184,75,.12);color:var(--acc);}
+.dupw{background:rgba(249,115,22,.12);border:1px solid rgba(249,115,22,.3);border-radius:var(--r);padding:10px 12px;font-size:12px;color:var(--org);margin-bottom:14px;display:none;}
 .dupw.show{display:block;}
-/* SETTINGS */
 .sp{position:fixed;top:54px;right:0;width:290px;height:calc(100vh - 54px);background:var(--bg2);border-left:1px solid var(--br2);z-index:300;transform:translateX(290px);transition:transform .25s;overflow-y:auto;}
 .sp.on{transform:translateX(0);}
 .sphdr{padding:16px 18px;border-bottom:1px solid var(--br);font-size:14px;font-weight:600;display:flex;align-items:center;justify-content:space-between;}
@@ -171,14 +162,12 @@ tr.erow td{padding:0;background:var(--bg2);border-bottom:1px solid var(--br2);}
 .tog::after{content:'';position:absolute;top:3px;left:3px;width:14px;height:14px;border-radius:50%;background:#fff;transition:left .2s;}
 .tog.on::after{left:19px;}
 .spinfo{font-size:12px;color:var(--tx3);line-height:1.6;}
-/* AUTH */
 .auth{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;gap:14px;}
 .auth-logo{width:60px;height:60px;background:var(--acc);border-radius:14px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:24px;color:#000;}
 .auth-t{font-size:22px;font-weight:600;}
 .auth-s{font-size:13px;color:var(--tx3);}
 .auth-btn{padding:11px 26px;background:var(--acc);color:#000;border:none;border-radius:var(--r);font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;}
 .auth-btn:hover{background:#d4a43e;}
-/* MISC */
 .loading{text-align:center;padding:50px 20px;color:var(--tx3);}
 .spin{width:26px;height:26px;border:2px solid var(--br2);border-top-color:var(--acc);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 10px;}
 @keyframes spin{to{transform:rotate(360deg);}}
@@ -188,59 +177,58 @@ tr.erow td{padding:0;background:var(--bg2);border-bottom:1px solid var(--br2);}
 .toast.s{border-left:3px solid var(--grn);}
 .toast.e{border-left:3px solid var(--red);}
 .toast.w{border-left:3px solid var(--org);}
-::-webkit-scrollbar{width:5px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:var(--bg4);border-radius:3px;}
-@media(max-width:800px){.stats{grid-template-columns:repeat(2,1fr);}.sc:last-child{grid-column:span 2;}.hdr,.tbar,.tw,.stats{padding-left:14px;padding-right:14px;}.ebox{padding-left:14px;}.pdm{width:100vw;}}
+::-webkit-scrollbar{width:5px;}
+::-webkit-scrollbar-thumb{background:var(--bg4);border-radius:3px;}
+@media(max-width:800px){
+  .stats{grid-template-columns:repeat(2,1fr);}
+  .sc:last-child{grid-column:span 2;}
+  .hdr,.tbar,.tw,.stats{padding-left:14px;padding-right:14px;}
+  .ebox{padding-left:14px;}
+  .pdm{width:100vw;}
+}
 </style>
 </head>
 <body>
+
 <div id="authWrap" class="auth">
   <div class="auth-logo">LH</div>
   <div class="auth-t">LH Bygg Kunderegister</div>
-  <div class="auth-s">Logg inn med din Microsoft 365-konto</div>
-  <button class="auth-btn" onclick="signIn()">🔐 Logg inn med Microsoft</button>
-  <div style="font-size:11px;color:var(--tx3)">v4.1 · LH Bygg Entreprenør AS</div>
+  <div class="auth-s">Logg inn med Microsoft 365</div>
+  <button class="auth-btn" id="loginBtn">Logg inn med Microsoft</button>
+  <div style="font-size:11px;color:var(--tx3)">v4.2 - LH Bygg Entreprenør AS</div>
 </div>
 
 <div id="appWrap" style="display:none">
 <header class="hdr">
   <a class="logo" href="#"><div class="lsq">LH</div>Kunderegister</a>
   <div class="hsp"></div>
-  <span class="vbdg">v4.1</span>
-  <button class="hbtn" onclick="exportCSV()">
-    <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-    Eksporter
-  </button>
-  <button class="hbtn" onclick="toggleSP()" id="spBtn">
-    <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
-    Innstillinger
-  </button>
-  <div class="hbtn" onclick="signOut()"><div class="udot" id="uInit">TS</div><span id="uName">Tom Andre</span></div>
+  <span class="vbdg">v4.2</span>
+  <button class="hbtn" id="exportBtn">Eksporter</button>
+  <button class="hbtn" id="settingsBtn">Innstillinger</button>
+  <div class="hbtn" id="userBtn"><div class="udot" id="uInit">TS</div><span id="uName">Laster...</span></div>
 </header>
 
 <div class="stats">
-  <div class="sc"><div class="sc-l">Kunder</div><div class="sc-v cb" id="stK">—</div></div>
-  <div class="sc"><div class="sc-l">Under kalkyle</div><div class="sc-v co" id="stKa">—</div></div>
-  <div class="sc"><div class="sc-l">Aktive prosjekter</div><div class="sc-v cg" id="stA">—</div></div>
-  <div class="sc"><div class="sc-l">Avsluttede</div><div class="sc-v ct" id="stAv">—</div></div>
-  <div class="sc"><div class="sc-l">Aktiv portefølje</div><div class="sc-v ca" id="stP">—</div></div>
+  <div class="sc"><div class="sc-l">Kunder</div><div class="sc-v cb" id="stK">0</div></div>
+  <div class="sc"><div class="sc-l">Under kalkyle</div><div class="sc-v co" id="stKa">0</div></div>
+  <div class="sc"><div class="sc-l">Aktive prosjekter</div><div class="sc-v cg" id="stA">0</div></div>
+  <div class="sc"><div class="sc-l">Avsluttede</div><div class="sc-v ct" id="stAv">0</div></div>
+  <div class="sc"><div class="sc-l">Aktiv portefolje</div><div class="sc-v ca" id="stP">-</div></div>
 </div>
 
 <div class="tbar">
   <div class="srch">
     <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-    <input type="text" id="srchIn" placeholder="Søk kunde, kontaktperson..." oninput="renderTable()">
+    <input type="text" id="srchIn" placeholder="Sok kunde, kontaktperson...">
   </div>
   <div class="ftabs">
-    <button class="ftab on" onclick="setF('alle',this)">Alle</button>
-    <button class="ftab" onclick="setF('kalkyle',this)">Kalkyle</button>
-    <button class="ftab" onclick="setF('aktiv',this)">Aktive</button>
-    <button class="ftab" onclick="setF('avsluttet',this)">Avsluttet</button>
+    <button class="ftab on" data-filter="alle">Alle</button>
+    <button class="ftab" data-filter="kalkyle">Kalkyle</button>
+    <button class="ftab" data-filter="aktiv">Aktive</button>
+    <button class="ftab" data-filter="avsluttet">Avsluttet</button>
   </div>
   <div class="tsp"></div>
-  <button class="btn pri" onclick="openCM()">
-    <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-    Ny kunde
-  </button>
+  <button class="btn pri" id="newCustBtn">+ Ny kunde</button>
 </div>
 
 <div class="tw">
@@ -248,7 +236,7 @@ tr.erow td{padding:0;background:var(--bg2);border-bottom:1px solid var(--br2);}
     <thead><tr>
       <th style="width:34px"></th>
       <th>Kundenavn</th><th>Type</th><th>Kontaktperson</th>
-      <th>Telefon</th><th>E-post</th><th>Prosjekter</th><th>Portefølje</th>
+      <th>Telefon</th><th>E-post</th><th>Prosjekter</th><th>Portef&oslash;lje</th>
       <th style="width:36px"></th>
     </tr></thead>
     <tbody id="tbody"><tr><td colspan="9"><div class="loading"><div class="spin"></div>Laster...</div></td></tr></tbody>
@@ -257,11 +245,11 @@ tr.erow td{padding:0;background:var(--bg2);border-bottom:1px solid var(--br2);}
 </div>
 
 <!-- PROJECT DETAIL PANEL -->
-<div class="pdov" id="pdov" onclick="pdovClick(event)">
+<div class="pdov" id="pdov">
   <div class="pdm">
     <div class="pdmhdr">
-      <div><div class="pdmtitle" id="pdmT">—</div><div class="pdmsub" id="pdmS"></div></div>
-      <button class="pdmclose" onclick="closePD()">✕</button>
+      <div><div class="pdmtitle" id="pdmT">-</div><div class="pdmsub" id="pdmS"></div></div>
+      <button class="pdmclose" id="pdmCloseBtn">x</button>
     </div>
     <div class="pdmbody" id="pdmB"></div>
   </div>
@@ -269,20 +257,20 @@ tr.erow td{padding:0;background:var(--bg2);border-bottom:1px solid var(--br2);}
 
 <!-- SETTINGS PANEL -->
 <div class="sp" id="spPanel">
-  <div class="sphdr">Innstillinger<button class="mclose" onclick="toggleSP()">✕</button></div>
+  <div class="sphdr">Innstillinger<button class="mclose" id="spCloseBtn">x</button></div>
   <div class="spbody">
     <div class="spsec">
       <div class="splbl">Utseende</div>
-      <div class="sprow"><div><div class="sprl">Mørkt tema</div></div><div class="tog on" id="thTog" onclick="toggleTheme(this)"></div></div>
-      <div class="sprow"><div><div class="sprl">Kompakt visning</div><div class="sprs">Tettere rader</div></div><div class="tog" id="cpTog" onclick="toggleCompact(this)"></div></div>
+      <div class="sprow"><div><div class="sprl">Morkt tema</div></div><div class="tog on" id="thTog"></div></div>
+      <div class="sprow"><div><div class="sprl">Kompakt visning</div><div class="sprs">Tettere rader</div></div><div class="tog" id="cpTog"></div></div>
     </div>
     <div class="spsec">
       <div class="splbl">Data</div>
-      <div class="sprow"><div class="sprl">Oppdater data</div><button class="btn sm" onclick="loadData()">↺ Refresh</button></div>
+      <div class="sprow"><div class="sprl">Oppdater data</div><button class="btn sm" id="refreshBtn">Refresh</button></div>
     </div>
     <div class="spsec">
       <div class="splbl">Om appen</div>
-      <div class="spinfo">LH Bygg Kunderegister v4.1<br>LH Bygg Entreprenør AS · lhbe.no<br><br>Innlogget som:<br><span style="color:var(--tx)" id="spUser">—</span></div>
+      <div class="spinfo">LH Bygg Kunderegister v4.2<br>LH Bygg Entreprenor AS<br><br>Innlogget som:<br><span style="color:var(--tx)" id="spUser">-</span></div>
     </div>
   </div>
 </div>
@@ -290,15 +278,15 @@ tr.erow td{padding:0;background:var(--bg2);border-bottom:1px solid var(--br2);}
 <!-- MODAL: KUNDE -->
 <div class="mov hid" id="custMov">
   <div class="mbox">
-    <div class="mhdr"><div class="mhdr-t" id="cmT">Ny kunde</div><button class="mclose" onclick="closeMov('custMov')">✕</button></div>
+    <div class="mhdr"><div class="mhdr-t" id="cmT">Ny kunde</div><button class="mclose" id="custCloseBtn">x</button></div>
     <div class="mbody">
       <div class="ttog" id="typeTog">
-        <button class="ttbtn on" onclick="setType('Firma',this)">🏢 Firmakunde</button>
-        <button class="ttbtn" onclick="setType('Privat',this)">👤 Privatkunde</button>
+        <button class="ttbtn on" id="typeFirma">Firmakunde</button>
+        <button class="ttbtn" id="typePrivat">Privatkunde</button>
       </div>
-      <div class="dupw" id="dupW">⚠️ Lignende kunde finnes: <span id="dupN"></span></div>
+      <div class="dupw" id="dupW">Lignende kunde finnes: <span id="dupN"></span></div>
       <input type="hidden" id="cId">
-      <div class="fg"><label class="fl" id="cFL">Firmanavn</label><input class="fi2" id="cFirma" placeholder="Eks: Haucon AS" oninput="chkDup()"></div>
+      <div class="fg"><label class="fl" id="cFL">Firmanavn</label><input class="fi2" id="cFirma" placeholder="Eks: Haucon AS"></div>
       <div class="fg2">
         <div class="fg"><label class="fl">Kontaktperson</label><input class="fi2" id="cKont" placeholder="Navn"></div>
         <div class="fg"><label class="fl">Telefon</label><input class="fi2" id="cTlf" placeholder="+47 xxx xx xxx"></div>
@@ -307,17 +295,17 @@ tr.erow td{padding:0;background:var(--bg2);border-bottom:1px solid var(--br2);}
       <div class="fg"><label class="fl">Adresse</label><input class="fi2" id="cAdr" placeholder="Gateadresse, postnr sted"></div>
       <div class="fg" id="cOrgG"><label class="fl">Org.nr</label><input class="fi2" id="cOrg" placeholder="123 456 789"></div>
     </div>
-    <div class="mftr"><button class="btn" onclick="closeMov('custMov')">Avbryt</button><button class="btn pri" onclick="saveCust()">Lagre kunde</button></div>
+    <div class="mftr"><button class="btn" id="custCancelBtn">Avbryt</button><button class="btn pri" id="custSaveBtn">Lagre kunde</button></div>
   </div>
 </div>
 
 <!-- MODAL: PROSJEKT -->
 <div class="mov hid" id="projMov">
   <div class="mbox">
-    <div class="mhdr"><div class="mhdr-t" id="pmT">Nytt prosjekt</div><button class="mclose" onclick="closeMov('projMov')">✕</button></div>
+    <div class="mhdr"><div class="mhdr-t" id="pmT">Nytt prosjekt</div><button class="mclose" id="projCloseBtn">x</button></div>
     <div class="mbody">
       <input type="hidden" id="pId"><input type="hidden" id="pKunde">
-      <div class="fg"><label class="fl">Prosjektnavn *</label><input class="fi2" id="pNavn" placeholder="Eks: Orkdalsveien 652 – Nybygg"></div>
+      <div class="fg"><label class="fl">Prosjektnavn *</label><input class="fi2" id="pNavn" placeholder="Eks: Orkdalsveien 652 Nybygg"></div>
       <div class="fg2">
         <div class="fg"><label class="fl">Prosjektnummer *</label><input class="fi2 mono" id="pNr" placeholder="2026-01"></div>
         <div class="fg"><label class="fl">Kalkylenummer *</label><input class="fi2 mono" id="pKalk" placeholder="K2026-01"></div>
@@ -328,15 +316,24 @@ tr.erow td{padding:0;background:var(--bg2);border-bottom:1px solid var(--br2);}
       </div>
       <div class="fg2">
         <div class="fg"><label class="fl">Status</label>
-          <select class="fi2" id="pStat"><option value="Under kalkyle">Under kalkyle</option><option value="Aktiv">Aktiv</option><option value="Avsluttet">Avsluttet</option></select>
+          <select class="fi2" id="pStat">
+            <option value="Under kalkyle">Under kalkyle</option>
+            <option value="Aktiv">Aktiv</option>
+            <option value="Avsluttet">Avsluttet</option>
+          </select>
         </div>
         <div class="fg"><label class="fl">Prosjektleder</label>
-          <select class="fi2" id="pLeder"><option value="">— Velg —</option><option>Tom Andre Søderberg</option><option>Per Ytterhus Sognli</option><option>Magne Vidar Rise</option></select>
+          <select class="fi2" id="pLeder">
+            <option value="">- Velg -</option>
+            <option value="Tom Andre Soderberg">Tom Andre Soderberg</option>
+            <option value="Per Ytterhus Sognli">Per Ytterhus Sognli</option>
+            <option value="Magne Vidar Rise">Magne Vidar Rise</option>
+          </select>
         </div>
       </div>
       <div class="fg"><label class="fl">Notat</label><textarea class="fi2" id="pNotat" rows="3" placeholder="Tilleggsopplysninger..."></textarea></div>
     </div>
-    <div class="mftr"><button class="btn" onclick="closeMov('projMov')">Avbryt</button><button class="btn pri" onclick="saveProj()">Lagre prosjekt</button></div>
+    <div class="mftr"><button class="btn" id="projCancelBtn">Avbryt</button><button class="btn pri" id="projSaveBtn">Lagre prosjekt</button></div>
   </div>
 </div>
 
@@ -344,372 +341,522 @@ tr.erow td{padding:0;background:var(--bg2);border-bottom:1px solid var(--br2);}
 <div class="mov hid" id="confMov">
   <div class="mbox sm">
     <div class="mbody" style="text-align:center;padding:24px 20px 16px">
-      <div style="font-size:28px;margin-bottom:10px" id="confIco">🗑️</div>
+      <div style="font-size:28px;margin-bottom:10px" id="confIco"></div>
       <div style="font-size:15px;font-weight:600;margin-bottom:8px" id="confTit">Slett?</div>
-      <div style="font-size:13px;color:var(--tx2);line-height:1.5" id="confTxt">Er du sikker?</div>
+      <div style="font-size:13px;color:var(--tx2);line-height:1.5" id="confTxt"></div>
     </div>
-    <div class="mftr"><button class="btn" onclick="closeMov('confMov')">Avbryt</button><button class="btn danger" id="confOk">Slett</button></div>
+    <div class="mftr"><button class="btn" id="confCancelBtn">Avbryt</button><button class="btn danger" id="confOk">Slett</button></div>
   </div>
 </div>
 
 <div class="toast" id="toast"></div>
 
 <script>
-const MC={auth:{clientId:'3b2da258-a2f9-41af-baab-f65265f45732',authority:'https://login.microsoftonline.com/c9d89f66-621a-4a0b-9734-8b98789d9791',redirectUri:window.location.href.split('?')[0]},cache:{cacheLocation:'localStorage',storeAuthStateInCookie:false}};
-const SP='https://lhbent.sharepoint.com/sites/Industriveien1ASLHBygg';
-const CL='D702DBE2-269F-41A0-8107-55C681AEC5BF';
-const PL='3DB9CF64-778C-48D8-8F32-044AC6EE249C';
-const SC=['Sites.ReadWrite.All','User.Read'];
-let ms,acc,customers=[],projects=[],activeF='alle',custType='Firma',expanded=new Set(),activePath='',activePID=null;
+var MSAL_CONFIG = {
+  auth: {
+    clientId: '3b2da258-a2f9-41af-baab-f65265f45732',
+    authority: 'https://login.microsoftonline.com/c9d89f66-621a-4a0b-9734-8b98789d9791',
+    redirectUri: 'https://lhbygg.github.io/Kunderegister/lhbe-kunderegister.html'
+  },
+  cache: { cacheLocation: 'localStorage', storeAuthStateInCookie: false }
+};
+var SP = 'https://lhbent.sharepoint.com/sites/Industriveien1ASLHBygg';
+var CL = 'D702DBE2-269F-41A0-8107-55C681AEC5BF';
+var PL = '3DB9CF64-778C-48D8-8F32-044AC6EE249C';
+var SCOPES = ['Sites.ReadWrite.All', 'User.Read'];
+var ms, acc, customers = [], projects = [], activeFilter = 'alle', custType = 'Firma', expanded = {}, activePath = '', activePID = null;
 
-async function init(){
-  try{ms=new msal.PublicClientApplication(MC);await ms.initialize();const a=ms.getAllAccounts();if(a.length){acc=a[0];showApp();await loadData();}}
-  catch(e){console.error(e);}
-}
-async function signIn(){try{const r=await ms.loginPopup({scopes:SC});acc=r.account;showApp();await loadData();}catch(e){console.error(e);}}
-function signOut(){ms.logoutPopup();document.getElementById('appWrap').style.display='none';document.getElementById('authWrap').style.display='flex';}
-function showApp(){
-  document.getElementById('authWrap').style.display='none';document.getElementById('appWrap').style.display='block';
-  const n=acc.name||acc.username;
-  document.getElementById('uName').textContent=n.split(' ').slice(0,2).join(' ');
-  document.getElementById('uInit').textContent=n.split(' ').map(x=>x[0]).slice(0,2).join('').toUpperCase();
-  document.getElementById('spUser').textContent=acc.username;
-}
-async function gt(){try{const r=await ms.acquireTokenSilent({scopes:SC,account:acc});return r.accessToken;}catch{const r=await ms.acquireTokenPopup({scopes:SC});return r.accessToken;}}
-async function spGet(u){const t=await gt();const r=await fetch(u,{headers:{Authorization:'Bearer '+t,Accept:'application/json;odata=nometadata'}});if(!r.ok)throw new Error(await r.text());return r.json();}
-async function spPost(u,b){const t=await gt();const r=await fetch(u,{method:'POST',headers:{Authorization:'Bearer '+t,Accept:'application/json;odata=nometadata','Content-Type':'application/json'},body:JSON.stringify(b)});if(!r.ok)throw new Error(await r.text());const tx=await r.text();return tx?JSON.parse(tx):{};} 
-async function spPatch(u,b){const t=await gt();const r=await fetch(u,{method:'PATCH',headers:{Authorization:'Bearer '+t,Accept:'application/json;odata=nometadata','Content-Type':'application/json','If-Match':'*'},body:JSON.stringify(b)});if(!r.ok)throw new Error(await r.text());}
-async function spDel(u){const t=await gt();const r=await fetch(u,{method:'DELETE',headers:{Authorization:'Bearer '+t,'If-Match':'*'}});if(!r.ok)throw new Error(await r.text());}
+function init() {
+  ms = new msal.PublicClientApplication(MSAL_CONFIG);
+  ms.initialize().then(function() {
+    var accounts = ms.getAllAccounts();
+    if (accounts.length > 0) {
+      acc = accounts[0];
+      showApp();
+      loadData();
+    }
+  }).catch(function(e) { console.error(e); });
 
-async function loadData(){
-  try{
-    const[cd,pd]=await Promise.all([
-      spGet(`${SP}/_api/web/lists(guid'${CL}')/items?$select=ID,Title,Kontaktperson,Telefon,Epost,Adresse,Orgnr,Kundetype&$top=500`),
-      spGet(`${SP}/_api/web/lists(guid'${PL}')/items?$select=ID,Title,Kundenavn,Prosjektnummer,Kalkylenummer,Oppstartsdato,Pris,Status,Prosjektleder,Notat&$top=500`)
-    ]);
-    customers=cd.value||[];projects=pd.value||[];updateStats();renderTable();
-  }catch(e){toast('Feil ved lasting: '+e.message,'e');}
+  document.getElementById('loginBtn').addEventListener('click', signIn);
+  document.getElementById('exportBtn').addEventListener('click', exportCSV);
+  document.getElementById('settingsBtn').addEventListener('click', toggleSP);
+  document.getElementById('userBtn').addEventListener('click', signOut);
+  document.getElementById('newCustBtn').addEventListener('click', function() { openCM(); });
+  document.getElementById('pdmCloseBtn').addEventListener('click', closePD);
+  document.getElementById('pdov').addEventListener('click', function(e) { if (e.target === document.getElementById('pdov')) closePD(); });
+  document.getElementById('spCloseBtn').addEventListener('click', toggleSP);
+  document.getElementById('refreshBtn').addEventListener('click', loadData);
+  document.getElementById('thTog').addEventListener('click', function() { toggleTheme(this); });
+  document.getElementById('cpTog').addEventListener('click', function() { toggleCompact(this); });
+  document.getElementById('custCloseBtn').addEventListener('click', function() { closeMov('custMov'); });
+  document.getElementById('custCancelBtn').addEventListener('click', function() { closeMov('custMov'); });
+  document.getElementById('custSaveBtn').addEventListener('click', saveCust);
+  document.getElementById('typeFirma').addEventListener('click', function() { setType('Firma', this); });
+  document.getElementById('typePrivat').addEventListener('click', function() { setType('Privat', this); });
+  document.getElementById('cFirma').addEventListener('input', chkDup);
+  document.getElementById('projCloseBtn').addEventListener('click', function() { closeMov('projMov'); });
+  document.getElementById('projCancelBtn').addEventListener('click', function() { closeMov('projMov'); });
+  document.getElementById('projSaveBtn').addEventListener('click', saveProj);
+  document.getElementById('confCancelBtn').addEventListener('click', function() { closeMov('confMov'); });
+  document.getElementById('srchIn').addEventListener('input', renderTable);
+  document.querySelectorAll('.ftab').forEach(function(btn) {
+    btn.addEventListener('click', function() { setFilter(this.dataset.filter, this); });
+  });
 }
 
-function updateStats(){
-  document.getElementById('stK').textContent=customers.length;
-  document.getElementById('stKa').textContent=projects.filter(p=>p.Status==='Under kalkyle').length;
-  document.getElementById('stA').textContent=projects.filter(p=>p.Status==='Aktiv').length;
-  document.getElementById('stAv').textContent=projects.filter(p=>p.Status==='Avsluttet').length;
-  document.getElementById('stP').textContent=fc(projects.filter(p=>p.Status==='Aktiv').reduce((s,p)=>s+(parseFloat(p.Pris)||0),0));
+function signIn() {
+  ms.loginPopup({ scopes: SCOPES }).then(function(r) {
+    acc = r.account;
+    showApp();
+    loadData();
+  }).catch(function(e) { console.error(e); });
 }
-function fc(v){if(!v)return'—';return new Intl.NumberFormat('nb-NO',{style:'currency',currency:'NOK',maximumFractionDigits:0}).format(v);}
-function fd(d){return d?d.substring(0,10):'';}
-function esc(s){return(s||'').replace(/'/g,"\\'").replace(/&/g,'&amp;').replace(/</g,'&lt;');}
-function setF(f,el){activeF=f;document.querySelectorAll('.ftab').forEach(t=>t.classList.remove('on'));el.classList.add('on');renderTable();}
 
-function getFiltered(){
-  const q=(document.getElementById('srchIn').value||'').toLowerCase();
-  let c=[...customers];
-  if(q)c=c.filter(x=>(x.Title||'').toLowerCase().includes(q)||(x.Kontaktperson||'').toLowerCase().includes(q));
-  if(activeF!=='alle'){const sm={kalkyle:'Under kalkyle',aktiv:'Aktiv',avsluttet:'Avsluttet'};const s=sm[activeF];c=c.filter(x=>projects.some(p=>p.Kundenavn===x.Title&&p.Status===s));}
+function signOut() {
+  ms.logoutPopup();
+  document.getElementById('appWrap').style.display = 'none';
+  document.getElementById('authWrap').style.display = 'flex';
+}
+
+function showApp() {
+  document.getElementById('authWrap').style.display = 'none';
+  document.getElementById('appWrap').style.display = 'block';
+  var n = acc.name || acc.username;
+  document.getElementById('uName').textContent = n.split(' ').slice(0,2).join(' ');
+  document.getElementById('uInit').textContent = n.split(' ').map(function(x) { return x[0]; }).slice(0,2).join('').toUpperCase();
+  document.getElementById('spUser').textContent = acc.username;
+}
+
+function getToken() {
+  return ms.acquireTokenSilent({ scopes: SCOPES, account: acc }).catch(function() {
+    return ms.acquireTokenPopup({ scopes: SCOPES });
+  }).then(function(r) { return r.accessToken; });
+}
+
+function spGet(url) {
+  return getToken().then(function(t) {
+    return fetch(url, { headers: { Authorization: 'Bearer ' + t, Accept: 'application/json;odata=nometadata' } });
+  }).then(function(r) {
+    if (!r.ok) return r.text().then(function(txt) { throw new Error(txt); });
+    return r.json();
+  });
+}
+
+function spPost(url, body) {
+  return getToken().then(function(t) {
+    return fetch(url, { method: 'POST', headers: { Authorization: 'Bearer ' + t, Accept: 'application/json;odata=nometadata', 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  }).then(function(r) {
+    if (!r.ok) return r.text().then(function(txt) { throw new Error(txt); });
+    return r.text().then(function(txt) { return txt ? JSON.parse(txt) : {}; });
+  });
+}
+
+function spPatch(url, body) {
+  return getToken().then(function(t) {
+    return fetch(url, { method: 'PATCH', headers: { Authorization: 'Bearer ' + t, Accept: 'application/json;odata=nometadata', 'Content-Type': 'application/json', 'If-Match': '*' }, body: JSON.stringify(body) });
+  }).then(function(r) {
+    if (!r.ok) return r.text().then(function(txt) { throw new Error(txt); });
+  });
+}
+
+function spDel(url) {
+  return getToken().then(function(t) {
+    return fetch(url, { method: 'DELETE', headers: { Authorization: 'Bearer ' + t, 'If-Match': '*' } });
+  }).then(function(r) {
+    if (!r.ok) return r.text().then(function(txt) { throw new Error(txt); });
+  });
+}
+
+function loadData() {
+  Promise.all([
+    spGet(SP + '/_api/web/lists(guid\'' + CL + '\')/items?$select=ID,Title,Kontaktperson,Telefon,Epost,Adresse,Orgnr,Kundetype&$top=500'),
+    spGet(SP + '/_api/web/lists(guid\'' + PL + '\')/items?$select=ID,Title,Kundenavn,Prosjektnummer,Kalkylenummer,Oppstartsdato,Pris,Status,Prosjektleder,Notat&$top=500')
+  ]).then(function(results) {
+    customers = results[0].value || [];
+    projects = results[1].value || [];
+    updateStats();
+    renderTable();
+  }).catch(function(e) { toast('Feil ved lasting: ' + e.message, 'e'); });
+}
+
+function updateStats() {
+  document.getElementById('stK').textContent = customers.length;
+  document.getElementById('stKa').textContent = projects.filter(function(p) { return p.Status === 'Under kalkyle'; }).length;
+  document.getElementById('stA').textContent = projects.filter(function(p) { return p.Status === 'Aktiv'; }).length;
+  document.getElementById('stAv').textContent = projects.filter(function(p) { return p.Status === 'Avsluttet'; }).length;
+  var port = projects.filter(function(p) { return p.Status === 'Aktiv'; }).reduce(function(s, p) { return s + (parseFloat(p.Pris) || 0); }, 0);
+  document.getElementById('stP').textContent = fmtCur(port);
+}
+
+function fmtCur(v) {
+  if (!v) return '-';
+  return new Intl.NumberFormat('nb-NO', { style: 'currency', currency: 'NOK', maximumFractionDigits: 0 }).format(v);
+}
+
+function fmtDate(d) { return d ? d.substring(0, 10) : ''; }
+
+function setFilter(f, el) {
+  activeFilter = f;
+  document.querySelectorAll('.ftab').forEach(function(t) { t.classList.remove('on'); });
+  el.classList.add('on');
+  renderTable();
+}
+
+function getFiltered() {
+  var q = (document.getElementById('srchIn').value || '').toLowerCase();
+  var c = customers.slice();
+  if (q) c = c.filter(function(x) { return (x.Title || '').toLowerCase().indexOf(q) > -1 || (x.Kontaktperson || '').toLowerCase().indexOf(q) > -1; });
+  if (activeFilter !== 'alle') {
+    var statusMap = { kalkyle: 'Under kalkyle', aktiv: 'Aktiv', avsluttet: 'Avsluttet' };
+    var s = statusMap[activeFilter];
+    c = c.filter(function(x) { return projects.some(function(p) { return p.Kundenavn === x.Title && p.Status === s; }); });
+  }
   return c;
 }
-function gp(kn){return projects.filter(p=>p.Kundenavn===kn);}
-function gport(kn){return projects.filter(p=>p.Kundenavn===kn&&p.Status==='Aktiv').reduce((s,p)=>s+(parseFloat(p.Pris)||0),0);}
 
-function renderTable(){
-  const list=getFiltered();const tb=document.getElementById('tbody');
-  if(!list.length){tb.innerHTML='<tr><td colspan="9"><div class="empty">Ingen kunder funnet</div></td></tr>';return;}
-  let h='';
-  list.forEach(c=>{
-    const ps=gp(c.Title);const act=ps.filter(p=>p.Status==='Aktiv');const port=gport(c.Title);const io=expanded.has(c.ID);const t=c.Kundetype||'Firma';
-    h+=`<tr class="crow${io?' open':''}" onclick="togExp(${c.ID})">
-      <td><button class="xbtn${io?' on':''}">▶</button></td>
-      <td><div class="cname">${c.Title||'—'}</div><div class="cadr">${c.Adresse||''}</div></td>
-      <td><span class="tbdg ${t==='Firma'?'f':'p'}">${t==='Firma'?'🏢 Firma':'👤 Privat'}</span></td>
-      <td>${c.Kontaktperson||'—'}</td>
-      <td>${c.Telefon?`<a class="al" href="tel:${c.Telefon}" onclick="event.stopPropagation()">${c.Telefon}</a>`:'—'}</td>
-      <td>${c.Epost?`<a class="al" href="mailto:${c.Epost}" onclick="event.stopPropagation()">${c.Epost}</a>`:'—'}</td>
-      <td><div>${ps.length} prosjekter</div>${act.length?`<div class="pa">${act.length} aktive</div>`:''}</td>
-      <td><div class="pv">${port>0?fc(port):'—'}</div></td>
-      <td onclick="event.stopPropagation()"><button class="btn sm" style="padding:4px 8px;font-size:11px" onclick="openEditC(${c.ID})">✏️</button></td>
-    </tr>`;
-    if(io){
-      h+=`<tr class="erow"><td colspan="9"><div class="ebox">
-        <div class="ehdr">
-          <div class="etitle">${esc(c.Title)}</div>
-          <div style="display:flex;gap:6px">
-            <button class="btn sm danger" onclick="event.stopPropagation();cDelC(${c.ID},'${esc(c.Title)}')">🗑 Slett kunde</button>
-            <button class="btn sm pri" onclick="event.stopPropagation();openNP('${esc(c.Title)}')">+ Nytt prosjekt</button>
-          </div>
-        </div>
-        <div class="pgrid">`;
-      if(!ps.length)h+='<div style="color:var(--tx3);font-size:13px;grid-column:1/-1">Ingen prosjekter ennå</div>';
-      ps.forEach(p=>{h+=renderPC(p);});
-      h+=`</div></div></td></tr>`;
+function getProjFor(kn) { return projects.filter(function(p) { return p.Kundenavn === kn; }); }
+function getPort(kn) { return projects.filter(function(p) { return p.Kundenavn === kn && p.Status === 'Aktiv'; }).reduce(function(s, p) { return s + (parseFloat(p.Pris) || 0); }, 0); }
+
+function renderTable() {
+  var list = getFiltered();
+  var tb = document.getElementById('tbody');
+  if (!list.length) { tb.innerHTML = '<tr><td colspan="9"><div class="empty">Ingen kunder funnet</div></td></tr>'; return; }
+  var rows = [];
+  list.forEach(function(c) {
+    var ps = getProjFor(c.Title);
+    var act = ps.filter(function(p) { return p.Status === 'Aktiv'; });
+    var port = getPort(c.Title);
+    var io = !!expanded[c.ID];
+    var t = c.Kundetype || 'Firma';
+    var tclass = t === 'Firma' ? 'f' : 'p';
+    var tlbl = t === 'Firma' ? 'Firma' : 'Privat';
+    var xclass = io ? 'xbtn on' : 'xbtn';
+    var rclass = io ? 'crow open' : 'crow';
+    var tel = c.Telefon ? '<a class="al" href="tel:' + c.Telefon + '" onclick="event.stopPropagation()">' + c.Telefon + '</a>' : '-';
+    var epost = c.Epost ? '<a class="al" href="mailto:' + c.Epost + '" onclick="event.stopPropagation()">' + c.Epost + '</a>' : '-';
+    var pcount = ps.length + ' prosjekter';
+    var pact2 = act.length ? '<div class="pa">' + act.length + ' aktive</div>' : '';
+    var portVal = port > 0 ? '<div class="pv">' + fmtCur(port) + '</div>' : '-';
+    rows.push('<tr class="' + rclass + '" onclick="togExp(' + c.ID + ')">');
+    rows.push('<td><button class="' + xclass + '">&#9654;</button></td>');
+    rows.push('<td><div class="cname">' + (c.Title || '-') + '</div><div class="cadr">' + (c.Adresse || '') + '</div></td>');
+    rows.push('<td><span class="tbdg ' + tclass + '">' + tlbl + '</span></td>');
+    rows.push('<td>' + (c.Kontaktperson || '-') + '</td>');
+    rows.push('<td>' + tel + '</td>');
+    rows.push('<td>' + epost + '</td>');
+    rows.push('<td><div>' + pcount + '</div>' + pact2 + '</td>');
+    rows.push('<td>' + portVal + '</td>');
+    rows.push('<td onclick="event.stopPropagation()"><button class="btn sm" onclick="openEditC(' + c.ID + ')">&#9998;</button></td>');
+    rows.push('</tr>');
+    if (io) {
+      rows.push('<tr class="erow"><td colspan="9"><div class="ebox">');
+      rows.push('<div class="ehdr"><div class="etitle">' + (c.Title || '') + '</div>');
+      rows.push('<div style="display:flex;gap:6px">');
+      rows.push('<button class="btn sm danger" onclick="event.stopPropagation();cDelC(' + c.ID + ',\'' + (c.Title || '').replace(/'/g, '') + '\')">Slett kunde</button>');
+      rows.push('<button class="btn sm pri" onclick="event.stopPropagation();openNP(\'' + (c.Title || '').replace(/'/g, '') + '\')">+ Nytt prosjekt</button>');
+      rows.push('</div></div>');
+      rows.push('<div class="pgrid">');
+      if (!ps.length) rows.push('<div style="color:var(--tx3);font-size:13px;grid-column:1/-1">Ingen prosjekter enná</div>');
+      ps.forEach(function(p) { rows.push(renderPC(p)); });
+      rows.push('</div></div></td></tr>');
     }
   });
-  tb.innerHTML=h;
+  tb.innerHTML = rows.join('');
 }
 
-function renderPC(p){
-  const s=p.Status||'Under kalkyle';const sc=s==='Aktiv'?'aktiv':s==='Avsluttet'?'avsluttet':'kalkyle';
-  const sl=s==='Aktiv'?'✅ Aktiv':s==='Avsluttet'?'🏁 Avsluttet':'⚙️ Under kalkyle';
-  let acts='';
-  if(s==='Under kalkyle')acts+=`<button class="pca grn" onclick="event.stopPropagation();setSt(${p.ID},'Aktiv')">→ Sett Aktiv</button>`;
-  if(s==='Aktiv')acts+=`<button class="pca" onclick="event.stopPropagation();setSt(${p.ID},'Avsluttet')">→ Avsluttet</button>`;
-  acts+=`<button class="pca" onclick="event.stopPropagation();openPD(${p.ID})">📂 Åpne</button>`;
-  acts+=`<button class="pca red" onclick="event.stopPropagation();cDelP(${p.ID},'${esc(p.Title)}')">🗑</button>`;
-  return`<div class="pcard ${sc}" onclick="event.stopPropagation();openPD(${p.ID})">
-    <div class="pctop"><div class="pcname">${p.Title||'—'}</div>${p.Prosjektnummer?`<span class="pcnum">${p.Prosjektnummer}</span>`:''}</div>
-    <div><span class="sbdg ${sc}">${sl}</span></div>
-    <div class="pcinfo">
-      ${p.Pris?`<div class="pcrow">💰 <span class="pcprice">${fc(p.Pris)}</span></div>`:''}
-      ${p.Prosjektleder?`<div class="pcrow">👷 ${p.Prosjektleder}</div>`:''}
-      ${p.Oppstartsdato?`<div class="pcrow">📅 ${fd(p.Oppstartsdato)}</div>`:''}
-    </div>
-    ${p.Notat?`<div class="pcnote">${p.Notat}</div>`:''}
-    <div class="pcacts">${acts}</div>
-  </div>`;
+function renderPC(p) {
+  var s = p.Status || 'Under kalkyle';
+  var sc = s === 'Aktiv' ? 'aktiv' : s === 'Avsluttet' ? 'avsluttet' : 'kalkyle';
+  var sl = s === 'Aktiv' ? 'Aktiv' : s === 'Avsluttet' ? 'Avsluttet' : 'Under kalkyle';
+  var pn = p.Title || '-';
+  var html = [];
+  html.push('<div class="pcard ' + sc + '" onclick="event.stopPropagation();openPD(' + p.ID + ')">');
+  html.push('<div class="pctop"><div class="pcname">' + pn + '</div>');
+  if (p.Prosjektnummer) html.push('<span class="pcnum">' + p.Prosjektnummer + '</span>');
+  html.push('</div>');
+  html.push('<div><span class="sbdg ' + sc + '">' + sl + '</span></div>');
+  html.push('<div class="pcinfo">');
+  if (p.Pris) html.push('<div class="pcrow">Kontraktsum: <span class="pcprice">' + fmtCur(p.Pris) + '</span></div>');
+  if (p.Prosjektleder) html.push('<div class="pcrow">Prosjektleder: ' + p.Prosjektleder + '</div>');
+  if (p.Oppstartsdato) html.push('<div class="pcrow">Oppstart: ' + fmtDate(p.Oppstartsdato) + '</div>');
+  html.push('</div>');
+  if (p.Notat) html.push('<div class="pcnote">' + p.Notat + '</div>');
+  html.push('<div class="pcacts">');
+  if (s === 'Under kalkyle') html.push('<button class="pca grn" onclick="event.stopPropagation();setSt(' + p.ID + ',\'Aktiv\')">Sett Aktiv</button>');
+  if (s === 'Aktiv') html.push('<button class="pca" onclick="event.stopPropagation();setSt(' + p.ID + ',\'Avsluttet\')">Avsluttet</button>');
+  html.push('<button class="pca" onclick="event.stopPropagation();openPD(' + p.ID + ')">Apne</button>');
+  html.push('<button class="pca red" onclick="event.stopPropagation();cDelP(' + p.ID + ',\'' + pn.replace(/'/g, '') + '\')">Slett</button>');
+  html.push('</div></div>');
+  return html.join('');
 }
 
-function togExp(id){if(expanded.has(id))expanded.delete(id);else expanded.add(id);renderTable();}
+function togExp(id) {
+  expanded[id] = !expanded[id];
+  renderTable();
+}
 
-// PROJECT DETAIL
-function openPD(pid){
-  const p=projects.find(x=>x.ID===pid);if(!p)return;
-  activePID=pid;
-  const s=p.Status||'Under kalkyle';const sc=s==='Aktiv'?'aktiv':s==='Avsluttet'?'avsluttet':'kalkyle';
-  const sl=s==='Aktiv'?'✅ Aktiv':s==='Avsluttet'?'🏁 Avsluttet':'⚙️ Under kalkyle';
-  document.getElementById('pdmT').textContent=p.Title||'—';
-  document.getElementById('pdmS').textContent=(p.Kundenavn||'')+(p.Prosjektnummer?' · '+p.Prosjektnummer:'');
-  const allF=['HMS','Tegninger','FDV','Kontrakt','Fremdrift','Faktura','Kalkyle','Korrespondanse'];
-  const avF=s==='Under kalkyle'?['Kalkyle','Korrespondanse']:allF;
-  const lck=s==='Avsluttet';
-  let fg='<div class="fgrid">';
-  allF.forEach(f=>{
-    const av=avF.includes(f);const l=!av||lck;
-    const onclick=l?'':'openF('+pid+',\''+f+'\')';
-    fg+='<button class="fbtn'+(l?' lck':'')+'" id="fb_'+f+'" onclick="'+onclick+'">'+'<span class="fi">📁</span>'+f+'</button>';
+function openPD(pid) {
+  var p = projects.filter(function(x) { return x.ID === pid; })[0];
+  if (!p) return;
+  activePID = pid;
+  var s = p.Status || 'Under kalkyle';
+  var sc = s === 'Aktiv' ? 'aktiv' : s === 'Avsluttet' ? 'avsluttet' : 'kalkyle';
+  document.getElementById('pdmT').textContent = p.Title || '-';
+  document.getElementById('pdmS').textContent = (p.Kundenavn || '') + (p.Prosjektnummer ? ' - ' + p.Prosjektnummer : '');
+  var allF = ['HMS', 'Tegninger', 'FDV', 'Kontrakt', 'Fremdrift', 'Faktura', 'Kalkyle', 'Korrespondanse'];
+  var avF = s === 'Under kalkyle' ? ['Kalkyle', 'Korrespondanse'] : allF;
+  var lck = s === 'Avsluttet';
+  var fgHtml = ['<div class="fgrid">'];
+  allF.forEach(function(f) {
+    var av = avF.indexOf(f) > -1;
+    var l = !av || lck;
+    var cls = 'fbtn' + (l ? ' lck' : '');
+    var onclick = l ? '' : 'openF(' + pid + ',\'' + f + '\')';
+    fgHtml.push('<button class="' + cls + '" id="fb_' + f + '" onclick="' + onclick + '"><span class="fi">&#128193;</span>' + f + '</button>');
   });
-  fg+='</div>';
-  let acts='';
-  if(s==='Under kalkyle')acts+=`<button class="btn" onclick="setSt(${p.ID},'Aktiv');closePD()">→ Sett Aktiv</button>`;
-  if(s==='Aktiv')acts+=`<button class="btn" onclick="setSt(${p.ID},'Avsluttet');closePD()">→ Sett Avsluttet</button>`;
-  acts+=`<button class="btn" onclick="openEditP(${p.ID})">✏️ Rediger</button>`;
-  acts+=`<button class="btn danger" onclick="cDelP(${p.ID},'${esc(p.Title)}')">🗑 Slett prosjekt</button>`;
-  document.getElementById('pdmB').innerHTML=`
-    <div class="pdsec">
-      <div class="pdsect">Detaljer</div>
-      <div class="igrid">
-        <div class="iitem"><div class="ilbl">Status</div><div class="ival"><span class="sbdg ${sc}" style="margin:0">${sl}</span></div></div>
-        <div class="iitem"><div class="ilbl">Kontraktsum</div><div class="ival acc">${fc(p.Pris)}</div></div>
-        <div class="iitem"><div class="ilbl">Prosjektleder</div><div class="ival">${p.Prosjektleder||'—'}</div></div>
-        <div class="iitem"><div class="ilbl">Oppstart</div><div class="ival">${fd(p.Oppstartsdato)||'—'}</div></div>
-        <div class="iitem"><div class="ilbl">Prosjektnummer</div><div class="ival mono">${p.Prosjektnummer||'—'}</div></div>
-        <div class="iitem"><div class="ilbl">Kalkylenummer</div><div class="ival mono">${p.Kalkylenummer||'—'}</div></div>
-      </div>
-      ${p.Notat?`<div style="margin-top:10px;padding:10px 12px;background:var(--bg3);border-radius:var(--r);font-size:13px;color:var(--tx2);line-height:1.5">${p.Notat}</div>`:''}
-    </div>
-    <div class="pdsec">
-      <div class="pdsect">Mapper</div>
-      ${s==='Under kalkyle'?'<div style="font-size:12px;color:var(--tx3);margin-bottom:10px">Under kalkyle er kun Kalkyle og Korrespondanse tilgjengelige</div>':''}
-      ${fg}
-      <div id="fpanel"></div>
-    </div>
-    <div class="pdsec">
-      <div class="pdsect">Handlinger</div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap">${acts}</div>
-    </div>`;
+  fgHtml.push('</div>');
+  var bodyHtml = [];
+  bodyHtml.push('<div class="pdsec"><div class="pdsect">Detaljer</div><div class="igrid">');
+  bodyHtml.push('<div class="iitem"><div class="ilbl">Status</div><div class="ival"><span class="sbdg ' + sc + '" style="margin:0">' + s + '</span></div></div>');
+  bodyHtml.push('<div class="iitem"><div class="ilbl">Kontraktsum</div><div class="ival acc">' + fmtCur(p.Pris) + '</div></div>');
+  bodyHtml.push('<div class="iitem"><div class="ilbl">Prosjektleder</div><div class="ival">' + (p.Prosjektleder || '-') + '</div></div>');
+  bodyHtml.push('<div class="iitem"><div class="ilbl">Oppstart</div><div class="ival">' + (fmtDate(p.Oppstartsdato) || '-') + '</div></div>');
+  bodyHtml.push('<div class="iitem"><div class="ilbl">Prosjektnummer</div><div class="ival mono">' + (p.Prosjektnummer || '-') + '</div></div>');
+  bodyHtml.push('<div class="iitem"><div class="ilbl">Kalkylenummer</div><div class="ival mono">' + (p.Kalkylenummer || '-') + '</div></div>');
+  bodyHtml.push('</div>');
+  if (p.Notat) bodyHtml.push('<div style="margin-top:10px;padding:10px 12px;background:var(--bg3);border-radius:var(--r);font-size:13px;color:var(--tx2);line-height:1.5">' + p.Notat + '</div>');
+  bodyHtml.push('</div>');
+  bodyHtml.push('<div class="pdsec"><div class="pdsect">Mapper</div>');
+  if (s === 'Under kalkyle') bodyHtml.push('<div style="font-size:12px;color:var(--tx3);margin-bottom:10px">Under kalkyle er kun Kalkyle og Korrespondanse tilgjengelige</div>');
+  bodyHtml.push(fgHtml.join(''));
+  bodyHtml.push('<div id="fpanel"></div></div>');
+  bodyHtml.push('<div class="pdsec"><div class="pdsect">Handlinger</div><div style="display:flex;gap:8px;flex-wrap:wrap">');
+  if (s === 'Under kalkyle') bodyHtml.push('<button class="btn" onclick="setSt(' + p.ID + ',\'Aktiv\');closePD()">Sett Aktiv</button>');
+  if (s === 'Aktiv') bodyHtml.push('<button class="btn" onclick="setSt(' + p.ID + ',\'Avsluttet\');closePD()">Sett Avsluttet</button>');
+  bodyHtml.push('<button class="btn" onclick="openEditP(' + p.ID + ')">Rediger</button>');
+  bodyHtml.push('<button class="btn danger" onclick="cDelP(' + p.ID + ',\'' + (p.Title || '').replace(/'/g, '') + '\')">Slett prosjekt</button>');
+  bodyHtml.push('</div></div>');
+  document.getElementById('pdmB').innerHTML = bodyHtml.join('');
   document.getElementById('pdov').classList.add('on');
 }
 
-function pdovClick(e){if(e.target===document.getElementById('pdov'))closePD();}
-function closePD(){document.getElementById('pdov').classList.remove('on');activePID=null;activePath='';}
+function closePD() { document.getElementById('pdov').classList.remove('on'); activePID = null; activePath = ''; }
 
-async function openF(pid,mappenavn){
-  const p=projects.find(x=>x.ID===pid);if(!p)return;
-  const s=p.Status||'Under kalkyle';
-  let base;
-  if(s==='Under kalkyle')base=`Felles/LHBE/Kalkyler/${p.Kalkylenummer} - ${p.Title}/${mappenavn}`;
-  else if(s==='Avsluttet')base=`Felles/LHBE/Avsluttede prosjekter/${p.Prosjektnummer} - ${p.Title}/${mappenavn}`;
-  else base=`Felles/LHBE/Prosjekter/${p.Prosjektnummer} - ${p.Title}/${mappenavn}`;
-  activePath=base;
-  document.querySelectorAll('.fbtn').forEach(b=>b.classList.remove('act'));
-  const fb=document.getElementById('fb_'+mappenavn);if(fb)fb.classList.add('act');
-  const fp=document.getElementById('fpanel');
-  fp.innerHTML=`<div class="fpanel">
-    <div class="fphdr"><div class="fptitle">📁 ${mappenavn}</div><button class="btn sm" onclick="document.getElementById('upIn').click()">⬆️ Last opp</button></div>
-    <div id="flist" class="flist"><div class="fempty"><div class="spin" style="margin:0 auto 8px;width:20px;height:20px;border-width:2px"></div>Laster...</div></div>
-    <div class="uzone" id="uz" ondragover="dov2(event)" ondragleave="dlv2()" ondrop="drop2(event)" onclick="document.getElementById('upIn').click()">
-      <div class="uzone-icon">📎</div>Dra filer hit eller klikk for å laste opp
-    </div>
-    <input type="file" id="upIn" multiple style="display:none" onchange="upF(event)">
-  </div>`;
-  await loadFiles(base);
+function openF(pid, mappenavn) {
+  var p = projects.filter(function(x) { return x.ID === pid; })[0];
+  if (!p) return;
+  var s = p.Status || 'Under kalkyle';
+  var base;
+  if (s === 'Under kalkyle') base = 'Felles/LHBE/Kalkyler/' + (p.Kalkylenummer || '') + ' - ' + (p.Title || '') + '/' + mappenavn;
+  else if (s === 'Avsluttet') base = 'Felles/LHBE/Avsluttede prosjekter/' + (p.Prosjektnummer || '') + ' - ' + (p.Title || '') + '/' + mappenavn;
+  else base = 'Felles/LHBE/Prosjekter/' + (p.Prosjektnummer || '') + ' - ' + (p.Title || '') + '/' + mappenavn;
+  activePath = base;
+  document.querySelectorAll('.fbtn').forEach(function(b) { b.classList.remove('act'); });
+  var fb = document.getElementById('fb_' + mappenavn);
+  if (fb) fb.classList.add('act');
+  var fp = document.getElementById('fpanel');
+  fp.innerHTML = '<div class="fpanel"><div class="fphdr"><div class="fptitle">Mappe: ' + mappenavn + '</div><button class="btn sm" onclick="document.getElementById(\'upIn\').click()">Last opp</button></div><div id="flist" class="flist"><div class="fempty">Laster...</div></div><div class="uzone" id="uz" ondragover="dov2(event)" ondragleave="dlv2()" ondrop="drop2(event)" onclick="document.getElementById(\'upIn\').click()"><div class="uzone-icon">&#128206;</div>Dra filer hit eller klikk for a laste opp</div><input type="file" id="upIn" multiple style="display:none" onchange="upF(event)"></div>';
+  loadFiles(base);
 }
 
-async function loadFiles(path){
-  try{
-    const fp=`/sites/Industriveien1ASLHBygg/Delte dokumenter/${path}`;
-    const d=await spGet(`${SP}/_api/web/GetFolderByServerRelativePath(decodedurl='${encodeURIComponent(fp)}')/Files?$select=Name,Length,TimeLastModified,ServerRelativeUrl`);
-    const files=d.value||[];const el=document.getElementById('flist');
-    if(!files.length){el.innerHTML='<div class="fempty">Mappen er tom</div>';return;}
-    el.innerHTML=files.map(f=>`<div class="fitem"><span>📄</span><a class="fn" href="${SP}${f.ServerRelativeUrl}" target="_blank">${f.Name}</a><span class="fm">${fsz(f.Length)}</span><span class="fm">${fd(f.TimeLastModified)}</span></div>`).join('');
-  }catch(e){const el=document.getElementById('flist');if(el)el.innerHTML='<div class="fempty" style="color:var(--org)">Kunne ikke laste filer. Sjekk at mappen finnes.</div>';}
+function loadFiles(path) {
+  var fp = '/sites/Industriveien1ASLHBygg/Delte dokumenter/' + path;
+  spGet(SP + '/_api/web/GetFolderByServerRelativePath(decodedurl=\'' + encodeURIComponent(fp) + '\')/Files?$select=Name,Length,TimeLastModified,ServerRelativeUrl').then(function(d) {
+    var files = d.value || [];
+    var el = document.getElementById('flist');
+    if (!el) return;
+    if (!files.length) { el.innerHTML = '<div class="fempty">Mappen er tom</div>'; return; }
+    var html = files.map(function(f) {
+      return '<div class="fitem"><span>&#128196;</span><a class="fn" href="' + SP + f.ServerRelativeUrl + '" target="_blank">' + f.Name + '</a><span class="fm">' + fmtSize(f.Length) + '</span><span class="fm">' + fmtDate(f.TimeLastModified) + '</span></div>';
+    });
+    el.innerHTML = html.join('');
+  }).catch(function() {
+    var el = document.getElementById('flist');
+    if (el) el.innerHTML = '<div class="fempty" style="color:var(--org)">Kunne ikke laste filer. Sjekk at mappen finnes.</div>';
+  });
 }
 
-function fsz(b){if(!b)return'';if(b<1024)return b+' B';if(b<1048576)return Math.round(b/1024)+' KB';return(b/1048576).toFixed(1)+' MB';}
-function dov2(e){e.preventDefault();document.getElementById('uz').classList.add('dov');}
-function dlv2(){document.getElementById('uz').classList.remove('dov');}
-async function drop2(e){e.preventDefault();document.getElementById('uz').classList.remove('dov');await upFiles2(e.dataTransfer.files);}
-async function upF(e){await upFiles2(e.target.files);}
-async function upFiles2(files){
-  if(!files||!files.length||!activePath)return;
-  for(const file of files){
-    try{
-      const t=await gt();const ab=await file.arrayBuffer();
-      const url=`${SP}/_api/web/GetFolderByServerRelativePath(decodedurl='/sites/Industriveien1ASLHBygg/Delte dokumenter/${activePath}')/Files/add(url='${encodeURIComponent(file.name)}',overwrite=true)`;
-      const r=await fetch(url,{method:'POST',headers:{Authorization:'Bearer '+t,Accept:'application/json;odata=nometadata'},body:ab});
-      if(r.ok)toast(file.name+' lastet opp ✓','s');else toast('Feil ved opplasting','e');
-    }catch(e){toast('Feil: '+e.message,'e');}
-  }
-  await loadFiles(activePath);
+function fmtSize(b) {
+  if (!b) return '';
+  if (b < 1024) return b + ' B';
+  if (b < 1048576) return Math.round(b / 1024) + ' KB';
+  return (b / 1048576).toFixed(1) + ' MB';
 }
 
-// KUNDE CRUD
-function openCM(id){
-  custType='Firma';
-  document.getElementById('cmT').textContent=id?'Rediger kunde':'Ny kunde';
-  document.getElementById('typeTog').style.display=id?'none':'grid';
-  document.getElementById('cId').value=id||'';
+function dov2(e) { e.preventDefault(); document.getElementById('uz').classList.add('dov'); }
+function dlv2() { document.getElementById('uz').classList.remove('dov'); }
+function drop2(e) { e.preventDefault(); document.getElementById('uz').classList.remove('dov'); upFiles2(e.dataTransfer.files); }
+function upF(e) { upFiles2(e.target.files); }
+
+function upFiles2(files) {
+  if (!files || !files.length || !activePath) return;
+  Array.from(files).forEach(function(file) {
+    file.arrayBuffer().then(function(ab) {
+      return getToken().then(function(t) {
+        var url = SP + '/_api/web/GetFolderByServerRelativePath(decodedurl=\'/sites/Industriveien1ASLHBygg/Delte dokumenter/' + activePath + '\')/Files/add(url=\'' + encodeURIComponent(file.name) + '\',overwrite=true)';
+        return fetch(url, { method: 'POST', headers: { Authorization: 'Bearer ' + t, Accept: 'application/json;odata=nometadata' }, body: ab });
+      });
+    }).then(function(r) {
+      if (r.ok) { toast(file.name + ' lastet opp', 's'); loadFiles(activePath); }
+      else toast('Feil ved opplasting', 'e');
+    }).catch(function(e) { toast('Feil: ' + e.message, 'e'); });
+  });
+}
+
+function openCM(id) {
+  custType = 'Firma';
+  document.getElementById('cmT').textContent = id ? 'Rediger kunde' : 'Ny kunde';
+  document.getElementById('typeTog').style.display = id ? 'none' : 'grid';
+  document.getElementById('cId').value = id || '';
   document.getElementById('dupW').classList.remove('show');
-  if(id){
-    const c=customers.find(x=>x.ID===id);if(!c)return;
-    custType=c.Kundetype||'Firma';
-    document.getElementById('cFirma').value=c.Title||'';
-    document.getElementById('cKont').value=c.Kontaktperson||'';
-    document.getElementById('cTlf').value=c.Telefon||'';
-    document.getElementById('cEpost').value=c.Epost||'';
-    document.getElementById('cAdr').value=c.Adresse||'';
-    document.getElementById('cOrg').value=c.Orgnr||'';
-  }else{
-    ['cFirma','cKont','cTlf','cEpost','cAdr','cOrg'].forEach(x=>document.getElementById(x).value='');
+  if (id) {
+    var c = customers.filter(function(x) { return x.ID === id; })[0];
+    if (!c) return;
+    custType = c.Kundetype || 'Firma';
+    document.getElementById('cFirma').value = c.Title || '';
+    document.getElementById('cKont').value = c.Kontaktperson || '';
+    document.getElementById('cTlf').value = c.Telefon || '';
+    document.getElementById('cEpost').value = c.Epost || '';
+    document.getElementById('cAdr').value = c.Adresse || '';
+    document.getElementById('cOrg').value = c.Orgnr || '';
+  } else {
+    ['cFirma','cKont','cTlf','cEpost','cAdr','cOrg'].forEach(function(x) { document.getElementById(x).value = ''; });
   }
-  document.getElementById('cFL').textContent=custType==='Firma'?'Firmanavn':'Navn';
-  document.getElementById('cOrgG').style.display=custType==='Firma'?'block':'none';
-  document.querySelectorAll('.ttbtn').forEach((b,i)=>b.classList.toggle('on',i===(custType==='Firma'?0:1)));
+  document.getElementById('cFL').textContent = custType === 'Firma' ? 'Firmanavn' : 'Navn';
+  document.getElementById('cOrgG').style.display = custType === 'Firma' ? 'block' : 'none';
+  document.querySelectorAll('.ttbtn').forEach(function(b, i) { b.classList.toggle('on', i === (custType === 'Firma' ? 0 : 1)); });
   openMov('custMov');
 }
-function openEditC(id){openCM(id);}
 
-function setType(t,btn){
-  custType=t;document.querySelectorAll('.ttbtn').forEach(b=>b.classList.remove('on'));btn.classList.add('on');
-  document.getElementById('cFL').textContent=t==='Firma'?'Firmanavn':'Navn';
-  document.getElementById('cOrgG').style.display=t==='Firma'?'block':'none';
+function openEditC(id) { openCM(id); }
+
+function setType(t, btn) {
+  custType = t;
+  document.querySelectorAll('.ttbtn').forEach(function(b) { b.classList.remove('on'); });
+  btn.classList.add('on');
+  document.getElementById('cFL').textContent = t === 'Firma' ? 'Firmanavn' : 'Navn';
+  document.getElementById('cOrgG').style.display = t === 'Firma' ? 'block' : 'none';
 }
 
-function chkDup(){
-  const val=(document.getElementById('cFirma').value||'').toLowerCase();
-  const id=document.getElementById('cId').value;
-  if(val.length<3){document.getElementById('dupW').classList.remove('show');return;}
-  const m=customers.find(c=>c.Title&&c.Title.toLowerCase().includes(val)&&String(c.ID)!==String(id));
-  if(m){document.getElementById('dupN').textContent=m.Title;document.getElementById('dupW').classList.add('show');}
+function chkDup() {
+  var val = (document.getElementById('cFirma').value || '').toLowerCase();
+  var id = document.getElementById('cId').value;
+  if (val.length < 3) { document.getElementById('dupW').classList.remove('show'); return; }
+  var m = customers.filter(function(c) { return c.Title && c.Title.toLowerCase().indexOf(val) > -1 && String(c.ID) !== String(id); })[0];
+  if (m) { document.getElementById('dupN').textContent = m.Title; document.getElementById('dupW').classList.add('show'); }
   else document.getElementById('dupW').classList.remove('show');
 }
 
-async function saveCust(){
-  const id=document.getElementById('cId').value;
-  const navn=document.getElementById('cFirma').value.trim();
-  if(!navn){toast('Navn er påkrevd','w');return;}
-  const b={Title:navn,Kontaktperson:document.getElementById('cKont').value,Telefon:document.getElementById('cTlf').value,Epost:document.getElementById('cEpost').value,Adresse:document.getElementById('cAdr').value,Orgnr:document.getElementById('cOrg').value,Kundetype:custType};
-  try{
-    if(id)await spPatch(`${SP}/_api/web/lists(guid'${CL}')/items(${id})`,b);
-    else await spPost(`${SP}/_api/web/lists(guid'${CL}')/items`,b);
-    toast(id?'Kunde oppdatert ✓':'Kunde opprettet ✓','s');closeMov('custMov');await loadData();
-  }catch(e){toast('Feil: '+e.message,'e');}
+function saveCust() {
+  var id = document.getElementById('cId').value;
+  var navn = (document.getElementById('cFirma').value || '').trim();
+  if (!navn) { toast('Navn er pakrevd', 'w'); return; }
+  var body = { Title: navn, Kontaktperson: document.getElementById('cKont').value, Telefon: document.getElementById('cTlf').value, Epost: document.getElementById('cEpost').value, Adresse: document.getElementById('cAdr').value, Orgnr: document.getElementById('cOrg').value, Kundetype: custType };
+  var url = id ? SP + '/_api/web/lists(guid\'' + CL + '\')/items(' + id + ')' : SP + '/_api/web/lists(guid\'' + CL + '\')/items';
+  var req = id ? spPatch(url, body) : spPost(url, body);
+  req.then(function() { toast(id ? 'Kunde oppdatert' : 'Kunde opprettet', 's'); closeMov('custMov'); loadData(); }).catch(function(e) { toast('Feil: ' + e.message, 'e'); });
 }
 
-// PROSJEKT CRUD
-function openNP(kn){
-  document.getElementById('pmT').textContent='Nytt prosjekt';
-  document.getElementById('pId').value='';document.getElementById('pKunde').value=kn;
-  ['pNavn','pNr','pKalk','pPris','pDato','pNotat'].forEach(x=>document.getElementById(x).value='');
-  document.getElementById('pStat').value='Under kalkyle';document.getElementById('pLeder').value='';
-  openMov('projMov');
-}
-function openEditP(id){
-  const p=projects.find(x=>x.ID===id);if(!p)return;
-  document.getElementById('pmT').textContent='Rediger prosjekt';
-  document.getElementById('pId').value=p.ID;document.getElementById('pKunde').value=p.Kundenavn||'';
-  document.getElementById('pNavn').value=p.Title||'';document.getElementById('pNr').value=p.Prosjektnummer||'';
-  document.getElementById('pKalk').value=p.Kalkylenummer||'';document.getElementById('pPris').value=p.Pris||'';
-  document.getElementById('pDato').value=fd(p.Oppstartsdato);document.getElementById('pStat').value=p.Status||'Under kalkyle';
-  document.getElementById('pLeder').value=p.Prosjektleder||'';document.getElementById('pNotat').value=p.Notat||'';
+function openNP(kn) {
+  document.getElementById('pmT').textContent = 'Nytt prosjekt';
+  document.getElementById('pId').value = '';
+  document.getElementById('pKunde').value = kn;
+  ['pNavn','pNr','pKalk','pPris','pDato','pNotat'].forEach(function(x) { document.getElementById(x).value = ''; });
+  document.getElementById('pStat').value = 'Under kalkyle';
+  document.getElementById('pLeder').value = '';
   openMov('projMov');
 }
 
-async function saveProj(){
-  const id=document.getElementById('pId').value;
-  const navn=document.getElementById('pNavn').value.trim();
-  const nr=document.getElementById('pNr').value.trim();
-  const kalk=document.getElementById('pKalk').value.trim();
-  if(!navn){toast('Prosjektnavn er påkrevd','w');return;}
-  if(!nr){toast('Prosjektnummer er påkrevd','w');return;}
-  if(!kalk){toast('Kalkylenummer er påkrevd','w');return;}
-  const b={Title:navn,Kundenavn:document.getElementById('pKunde').value,Prosjektnummer:nr,Kalkylenummer:kalk,Pris:parseFloat(document.getElementById('pPris').value)||null,Oppstartsdato:document.getElementById('pDato').value||null,Status:document.getElementById('pStat').value,Prosjektleder:document.getElementById('pLeder').value,Notat:document.getElementById('pNotat').value};
-  try{
-    if(id)await spPatch(`${SP}/_api/web/lists(guid'${PL}')/items(${id})`,b);
-    else await spPost(`${SP}/_api/web/lists(guid'${PL}')/items`,b);
-    toast(id?'Prosjekt oppdatert ✓':'Prosjekt opprettet ✓','s');closeMov('projMov');await loadData();
-  }catch(e){toast('Feil: '+e.message,'e');}
+function openEditP(id) {
+  var p = projects.filter(function(x) { return x.ID === id; })[0];
+  if (!p) return;
+  document.getElementById('pmT').textContent = 'Rediger prosjekt';
+  document.getElementById('pId').value = p.ID;
+  document.getElementById('pKunde').value = p.Kundenavn || '';
+  document.getElementById('pNavn').value = p.Title || '';
+  document.getElementById('pNr').value = p.Prosjektnummer || '';
+  document.getElementById('pKalk').value = p.Kalkylenummer || '';
+  document.getElementById('pPris').value = p.Pris || '';
+  document.getElementById('pDato').value = fmtDate(p.Oppstartsdato);
+  document.getElementById('pStat').value = p.Status || 'Under kalkyle';
+  document.getElementById('pLeder').value = p.Prosjektleder || '';
+  document.getElementById('pNotat').value = p.Notat || '';
+  openMov('projMov');
 }
 
-async function setSt(id,s){
-  try{await spPatch(`${SP}/_api/web/lists(guid'${PL}')/items(${id})`,{Status:s});toast('Status: '+s+' ✓','s');await loadData();}
-  catch(e){toast('Feil: '+e.message,'e');}
+function saveProj() {
+  var id = document.getElementById('pId').value;
+  var navn = (document.getElementById('pNavn').value || '').trim();
+  var nr = (document.getElementById('pNr').value || '').trim();
+  var kalk = (document.getElementById('pKalk').value || '').trim();
+  if (!navn) { toast('Prosjektnavn er pakrevd', 'w'); return; }
+  if (!nr) { toast('Prosjektnummer er pakrevd', 'w'); return; }
+  if (!kalk) { toast('Kalkylenummer er pakrevd', 'w'); return; }
+  var body = { Title: navn, Kundenavn: document.getElementById('pKunde').value, Prosjektnummer: nr, Kalkylenummer: kalk, Pris: parseFloat(document.getElementById('pPris').value) || null, Oppstartsdato: document.getElementById('pDato').value || null, Status: document.getElementById('pStat').value, Prosjektleder: document.getElementById('pLeder').value, Notat: document.getElementById('pNotat').value };
+  var url = id ? SP + '/_api/web/lists(guid\'' + PL + '\')/items(' + id + ')' : SP + '/_api/web/lists(guid\'' + PL + '\')/items';
+  var req = id ? spPatch(url, body) : spPost(url, body);
+  req.then(function() { toast(id ? 'Prosjekt oppdatert' : 'Prosjekt opprettet', 's'); closeMov('projMov'); loadData(); }).catch(function(e) { toast('Feil: ' + e.message, 'e'); });
 }
 
-function cDelC(id,navn){
-  document.getElementById('confIco').textContent='⚠️';
-  document.getElementById('confTit').textContent='Slett kunde?';
-  document.getElementById('confTxt').innerHTML=`Er du sikker på at du vil slette <strong>${navn}</strong>?<br><small style="color:var(--org)">Prosjekter slettes ikke automatisk.</small>`;
-  document.getElementById('confOk').onclick=async()=>{
-    try{await spDel(`${SP}/_api/web/lists(guid'${CL}')/items(${id})`);toast('Kunde slettet','s');closeMov('confMov');expanded.delete(id);await loadData();}
-    catch(e){toast('Feil: '+e.message,'e');}
-  };openMov('confMov');
-}
-function cDelP(id,navn){
-  document.getElementById('confIco').textContent='🗑️';
-  document.getElementById('confTit').textContent='Slett prosjekt?';
-  document.getElementById('confTxt').innerHTML=`Er du sikker på at du vil slette <strong>${navn}</strong>?<br><small style="color:var(--tx3)">Mapper i OneDrive slettes ikke.</small>`;
-  document.getElementById('confOk').onclick=async()=>{
-    try{await spDel(`${SP}/_api/web/lists(guid'${PL}')/items(${id})`);toast('Prosjekt slettet','s');closeMov('confMov');closePD();await loadData();}
-    catch(e){toast('Feil: '+e.message,'e');}
-  };openMov('confMov');
+function setSt(id, s) {
+  spPatch(SP + '/_api/web/lists(guid\'' + PL + '\')/items(' + id + ')', { Status: s }).then(function() { toast('Status: ' + s, 's'); loadData(); }).catch(function(e) { toast('Feil: ' + e.message, 'e'); });
 }
 
-// SETTINGS
-function toggleSP(){document.getElementById('spPanel').classList.toggle('on');}
-function toggleTheme(el){el.classList.toggle('on');document.body.classList.toggle('light',!el.classList.contains('on'));}
-function toggleCompact(el){
+function cDelC(id, navn) {
+  document.getElementById('confIco').textContent = '';
+  document.getElementById('confTit').textContent = 'Slett kunde?';
+  document.getElementById('confTxt').textContent = 'Er du sikker pa at du vil slette ' + navn + '? Prosjekter slettes ikke automatisk.';
+  document.getElementById('confOk').onclick = function() {
+    spDel(SP + '/_api/web/lists(guid\'' + CL + '\')/items(' + id + ')').then(function() { toast('Kunde slettet', 's'); closeMov('confMov'); expanded[id] = false; loadData(); }).catch(function(e) { toast('Feil: ' + e.message, 'e'); });
+  };
+  openMov('confMov');
+}
+
+function cDelP(id, navn) {
+  document.getElementById('confIco').textContent = '';
+  document.getElementById('confTit').textContent = 'Slett prosjekt?';
+  document.getElementById('confTxt').textContent = 'Er du sikker pa at du vil slette ' + navn + '? Mapper i OneDrive slettes ikke.';
+  document.getElementById('confOk').onclick = function() {
+    spDel(SP + '/_api/web/lists(guid\'' + PL + '\')/items(' + id + ')').then(function() { toast('Prosjekt slettet', 's'); closeMov('confMov'); closePD(); loadData(); }).catch(function(e) { toast('Feil: ' + e.message, 'e'); });
+  };
+  openMov('confMov');
+}
+
+function toggleSP() { document.getElementById('spPanel').classList.toggle('on'); }
+function toggleTheme(el) { el.classList.toggle('on'); document.body.classList.toggle('light', !el.classList.contains('on')); }
+function toggleCompact(el) {
   el.classList.toggle('on');
-  const v=el.classList.contains('on');
-  document.querySelectorAll('table.ct tbody td').forEach(td=>{td.style.padding=v?'7px 12px':'11px 12px';});
+  var v = el.classList.contains('on');
+  document.querySelectorAll('table.ct tbody td').forEach(function(td) { td.style.padding = v ? '7px 12px' : '11px 12px'; });
 }
 
-function exportCSV(){
-  const rows=[['Kundenavn','Type','Kontaktperson','Telefon','E-post','Adresse','Prosjekter','Aktive','Portefølje NOK']];
-  getFiltered().forEach(c=>{const ps=gp(c.Title);const act=ps.filter(p=>p.Status==='Aktiv').length;const port=gport(c.Title);rows.push([c.Title,c.Kundetype||'',c.Kontaktperson||'',c.Telefon||'',c.Epost||'',c.Adresse||'',ps.length,act,port]);});
-  const csv=rows.map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(';')).join('\n');
-  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8;'}));a.download=`LHBE_Kunder_${new Date().toISOString().substring(0,10)}.csv`;a.click();
+function exportCSV() {
+  var rows = [['Kundenavn','Type','Kontaktperson','Telefon','E-post','Adresse','Prosjekter','Aktive','Portefolje NOK']];
+  getFiltered().forEach(function(c) {
+    var ps = getProjFor(c.Title);
+    var act = ps.filter(function(p) { return p.Status === 'Aktiv'; }).length;
+    var port = getPort(c.Title);
+    rows.push([c.Title, c.Kundetype || '', c.Kontaktperson || '', c.Telefon || '', c.Epost || '', c.Adresse || '', ps.length, act, port]);
+  });
+  var csv = rows.map(function(r) { return r.map(function(v) { return '"' + String(v).replace(/"/g, '""') + '"'; }).join(';'); }).join('\n');
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' }));
+  a.download = 'LHBE_Kunder_' + new Date().toISOString().substring(0, 10) + '.csv';
+  a.click();
 }
 
-function openMov(id){document.getElementById(id).classList.remove('hid');}
-function closeMov(id){document.getElementById(id).classList.add('hid');}
+function openMov(id) { document.getElementById(id).classList.remove('hid'); }
+function closeMov(id) { document.getElementById(id).classList.add('hid'); }
 
-function toast(msg,type='s'){
-  const t=document.getElementById('toast');t.textContent=(type==='s'?'✓ ':type==='e'?'✕ ':'⚠ ')+msg;
-  t.className='toast '+type+' on';setTimeout(()=>t.className='toast',3500);
+function toast(msg, type) {
+  type = type || 's';
+  var t = document.getElementById('toast');
+  t.textContent = (type === 's' ? 'OK: ' : type === 'e' ? 'Feil: ' : 'NB: ') + msg;
+  t.className = 'toast ' + type + ' on';
+  setTimeout(function() { t.className = 'toast'; }, 3500);
 }
 
-init();
+window.addEventListener('DOMContentLoaded', init);
 </script>
 </body>
 </html>
