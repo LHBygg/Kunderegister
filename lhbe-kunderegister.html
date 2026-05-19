@@ -800,6 +800,11 @@ function saveProj() {
 }
 
 function setSt(id, s) {
+  if (s === 'Aktiv') {
+    var p = projects.filter(function(x) { return x.ID === id; })[0];
+    if (!p || !p.Prosjektnummer) { toast('Prosjektnummer er pakrevd for a sette Aktiv. Rediger prosjektet forst.', 'w'); return; }
+    if (!p.Kalkylenummer) { toast('Kalkylenummer er pakrevd for a sette Aktiv. Rediger prosjektet forst.', 'w'); return; }
+  }
   spPatch(SP + '/_api/web/lists(guid\'' + PL + '\')/items(' + id + ')', { Status: s }).then(function() { toast('Status: ' + s, 's'); loadData(); }).catch(function(e) { toast('Feil: ' + e.message, 'e'); });
 }
 
