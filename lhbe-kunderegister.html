@@ -582,7 +582,14 @@ function renderPC(p) {
   html.push('</div>');
   if (p.Notat) html.push('<div class="pcnote">' + p.Notat + '</div>');
   html.push('<div class="pcacts">');
-  if (s === 'Under kalkyle') html.push('<button class="pca grn" onclick="event.stopPropagation();setSt(' + p.ID + ',\'Aktiv\')">Sett Aktiv</button>');
+  if (s === 'Under kalkyle') {
+    var kanSetteAktiv = p.Prosjektnummer && p.Kalkylenummer;
+    if (kanSetteAktiv) {
+      html.push('<button class="pca grn" onclick="event.stopPropagation();setSt(' + p.ID + ',\'Aktiv\')">Sett Aktiv</button>');
+    } else {
+      html.push('<button class="pca" style="opacity:.4;cursor:not-allowed;" title="Fyll inn Prosjektnummer og Kalkylenummer forst" disabled>Sett Aktiv</button>');
+    }
+  }
   if (s === 'Aktiv') html.push('<button class="pca" onclick="event.stopPropagation();setSt(' + p.ID + ',\'Avsluttet\')">Avsluttet</button>');
   html.push('<button class="pca" onclick="event.stopPropagation();openPD(' + p.ID + ')">Apne</button>');
   html.push('<button class="pca red" onclick="event.stopPropagation();cDelP(' + p.ID + ',\'' + pn.replace(/'/g, '') + '\')">Slett</button>');
@@ -631,7 +638,13 @@ function openPD(pid) {
   bodyHtml.push(fgHtml.join(''));
   bodyHtml.push('<div id="fpanel"></div></div>');
   bodyHtml.push('<div class="pdsec"><div class="pdsect">Handlinger</div><div style="display:flex;gap:8px;flex-wrap:wrap">');
-  if (s === 'Under kalkyle') bodyHtml.push('<button class="btn" onclick="setSt(' + p.ID + ',\'Aktiv\');closePD()">Sett Aktiv</button>');
+  if (s === 'Under kalkyle') {
+    if (p.Prosjektnummer && p.Kalkylenummer) {
+      bodyHtml.push('<button class="btn" onclick="setSt(' + p.ID + ',\'Aktiv\');closePD()">Sett Aktiv</button>');
+    } else {
+      bodyHtml.push('<button class="btn" style="opacity:.4;cursor:not-allowed;" title="Fyll inn Prosjektnummer og Kalkylenummer forst" disabled>Sett Aktiv (mangler nr)</button>');
+    }
+  }
   if (s === 'Aktiv') bodyHtml.push('<button class="btn" onclick="setSt(' + p.ID + ',\'Avsluttet\');closePD()">Sett Avsluttet</button>');
   bodyHtml.push('<button class="btn" onclick="openEditP(' + p.ID + ')">Rediger</button>');
   bodyHtml.push('<button class="btn danger" onclick="cDelP(' + p.ID + ',\'' + (p.Title || '').replace(/'/g, '') + '\')">Slett prosjekt</button>');
@@ -800,12 +813,25 @@ function saveProj() {
 }
 
 function setSt(id, s) {
+  var p = projects.filter(function(x) { return x.ID === id; })[0];
+  if (!p) return;
   if (s === 'Aktiv') {
-    var p = projects.filter(function(x) { return x.ID === id; })[0];
-    if (!p || !p.Prosjektnummer) { toast('Prosjektnummer er pakrevd for a sette Aktiv. Rediger prosjektet forst.', 'w'); return; }
-    if (!p.Kalkylenummer) { toast('Kalkylenummer er pakrevd for a sette Aktiv. Rediger prosjektet forst.', 'w'); return; }
+    if (!p.Prosjektnummer) { toast('Du ma legge inn Prosjektnummer forst. Trykk Rediger pa prosjektet.', 'w'); return; }
+    if (!p.Kalkylenummer) { toast('Du ma legge inn Kalkylenummer forst. Trykk Rediger pa prosjektet.', 'w'); return; }
   }
-  spPatch(SP + '/_api/web/lists(guid\'' + PL + '\')/items(' + id + ')', { Status: s }).then(function() { toast('Status: ' + s, 's'); loadData(); }).catch(function(e) { toast('Feil: ' + e.message, 'e'); });
+  var fra = p.Status || 'Under kalkyle';
+  document.getElementById('confIco').textContent = s === 'Aktiv' ? '✅' : s === 'Avsluttet' ? '🏁' : '⚙️';
+  document.getElementById('confTit').textContent = 'Endre status?';
+  document.getElementById('confTxt').textContent = 'Vil du endre status pa ' + (p.Title || '') + ' fra "' + fra + '" til "' + s + '"?';
+  document.getElementById('confOk').textContent = 'Ja, endre status';
+  document.getElementById('confOk').onclick = function() {
+    spPatch(SP + '/_api/web/lists(guid\'' + PL + '\')/items(' + id + ')', { Status: s }).then(function() {
+      toast('Status endret til ' + s, 's');
+      closeMov('confMov');
+      loadData();
+    }).catch(function(e) { toast('Feil: ' + e.message, 'e'); });
+  };
+  openMov('confMov');
 }
 
 function cDelC(id, navn) {
