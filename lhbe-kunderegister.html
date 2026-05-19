@@ -363,7 +363,7 @@ var MSAL_CONFIG = {
 var SP = 'https://lhbent.sharepoint.com/sites/Industriveien1ASLHBygg';
 var CL = 'D702DBE2-269F-41A0-8107-55C681AEC5BF';
 var PL = '3DB9CF64-778C-48D8-8F32-044AC6EE249C';
-var SCOPES = ['Sites.ReadWrite.All', 'User.Read'];
+var SCOPES = ['https://lhbent.sharepoint.com/AllSites.Write', 'User.Read'];
 var ms, acc, customers = [], projects = [], activeFilter = 'alle', custType = 'Firma', expanded = {}, activePath = '', activePID = null;
 
 function init() {
