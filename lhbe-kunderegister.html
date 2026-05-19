@@ -575,11 +575,11 @@ async function fetchKunder() {
   return data.value.map(item => ({
     id: item.id,
     firmanavn: item.fields.Title || '',
-    kontakt: item.fields.Kontaktperson || '',
-    telefon: item.fields.Telefon || '',
-    epost: item.fields.Epost || '',
+    kontakt: item.fields.TomAndreS_x00f8_derberg || '',
+    telefon: item.fields._x0034_1102093 || '',
+    epost: item.fields.E_x002d_post || '',
     adresse: item.fields.Adresse || '',
-    orgnr: item.fields.Orgnr || '',
+    orgnr: item.fields.Org_x002e_nr || '',
     pnr: item.fields.Prosjektnummer || '',
     status: item.fields.Status || 'Under kalkyle',
     mapper: item.fields.Mapperopprettet === 'Ja',
@@ -591,16 +591,15 @@ async function fetchKunder() {
 function buildFields(data) {
   const fields = {
     Title: data.firmanavn,
-    Kontaktperson: data.kontakt,
-    Telefon: data.telefon,
-    Epost: data.epost,
+    TomAndreS_x00f8_derberg: data.kontakt,
+    _x0034_1102093: data.telefon,
+    E_x002d_post: data.epost,
     Adresse: data.adresse,
-    Orgnr: data.orgnr,
+    Org_x002e_nr: data.orgnr,
     Prosjektnummer: data.pnr,
     Status: data.status,
     Notat: data.notat,
   };
-  // Only add Kundetype if it's not empty
   if (data.type) fields.Kundetype = data.type;
   return fields;
 }
