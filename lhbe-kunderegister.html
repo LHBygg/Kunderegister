@@ -22,6 +22,7 @@
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; transition: background 0.2s, color 0.2s; }
 
+  /* LOGIN */
   .login-screen { min-height: 100vh; display: flex; align-items: center; justify-content: center; }
   .login-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 48px; text-align: center; width: 360px; }
   .login-logo { width: 64px; height: 64px; background: var(--accent); border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 800; color: #0f1117; margin: 0 auto 24px; }
@@ -31,8 +32,9 @@
   .btn-login:disabled { opacity: 0.5; cursor: not-allowed; }
   .login-note { font-size: 12px; color: var(--text3); margin-top: 16px; }
 
-  #app { display: none; }
-  header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 24px; height: 60px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+  /* APP LAYOUT */
+  #app { display: none; flex-direction: column; height: 100vh; }
+  header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 24px; height: 60px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
   .logo { display: flex; align-items: center; gap: 12px; font-size: 16px; font-weight: 700; }
   .logo-icon { width: 36px; height: 36px; background: var(--accent); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 800; color: #0f1117; }
   .logo span { color: var(--accent); }
@@ -42,161 +44,134 @@
   .btn-icon:hover { border-color: var(--text2); color: var(--text); }
   .btn-logout { background: none; border: 1px solid var(--border); border-radius: 8px; padding: 6px 12px; font-size: 13px; color: var(--text2); cursor: pointer; font-family: inherit; }
 
-  .main { max-width: 1200px; margin: 0 auto; padding: 28px 24px; }
-  .topbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; gap: 16px; flex-wrap: wrap; }
-  .page-title { font-size: 22px; font-weight: 700; letter-spacing: -0.5px; }
-  .topbar-right { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .app-body { display: grid; grid-template-columns: 320px 1fr; flex: 1; overflow: hidden; }
 
-  .search-wrap { position: relative; }
-  .search-wrap svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text3); }
-  input[type="text"], input[type="number"] { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 9px 14px 9px 38px; color: var(--text); font-family: inherit; font-size: 14px; width: 220px; outline: none; transition: border-color 0.2s; }
-  input[type="text"]:focus, input[type="number"]:focus { border-color: var(--accent); }
-  input[type="text"]::placeholder, input[type="number"]::placeholder { color: var(--text3); }
+  /* LEFT PANEL */
+  .left-panel { background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; }
+  .left-header { padding: 14px; border-bottom: 1px solid var(--border); }
+  .left-title { font-size: 12px; font-weight: 700; color: var(--text3); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; }
+  .search-input { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; color: var(--text); font-family: inherit; font-size: 13px; outline: none; margin-bottom: 8px; }
+  .search-input:focus { border-color: var(--accent); }
+  .search-input::placeholder { color: var(--text3); }
+  .btn-new-kunde { width: 100%; background: var(--accent); color: #0f1117; border: none; border-radius: 8px; padding: 9px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; }
 
-  .filter-tabs { display: flex; gap: 4px; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 4px; }
-  .filter-tab { padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; color: var(--text2); border: none; background: none; font-family: inherit; }
-  .filter-tab.active { background: var(--surface); color: var(--text); box-shadow: 0 1px 3px rgba(0,0,0,0.15); }
+  .kunde-list { flex: 1; overflow-y: auto; }
+  .kunde-item { padding: 12px 14px; border-bottom: 1px solid var(--border); cursor: pointer; transition: background 0.1s; }
+  .kunde-item:hover { background: var(--surface2); }
+  .kunde-item.active { background: rgba(232,184,75,0.08); border-left: 3px solid var(--accent); padding-left: 11px; }
+  .kunde-name { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+  .kunde-meta { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .kunde-kontakt { font-size: 12px; color: var(--text2); }
+  .tag { font-size: 11px; font-weight: 600; padding: 2px 7px; border-radius: 20px; }
+  .tag-blue { background: rgba(59,130,246,0.12); color: var(--accent2); }
+  .tag-gold { background: rgba(232,184,75,0.12); color: var(--accent); }
+  .tag-green { background: rgba(34,197,94,0.12); color: var(--green); }
 
-  .btn-primary { background: var(--accent); color: #0f1117; border: none; border-radius: 8px; padding: 9px 18px; font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit; display: flex; align-items: center; gap: 6px; }
-  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
-  .btn-ghost { background: none; color: var(--text2); border: 1px solid var(--border); border-radius: 8px; padding: 8px 16px; font-size: 13px; font-weight: 500; cursor: pointer; font-family: inherit; }
-  .btn-ghost:hover { border-color: var(--text2); color: var(--text); }
-  .btn-excel { background: rgba(34,197,94,0.1); color: var(--green); border: 1px solid rgba(34,197,94,0.3); border-radius: 8px; padding: 9px 16px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; display: flex; align-items: center; gap: 6px; }
+  .loading-overlay { padding: 40px; text-align: center; color: var(--text3); }
+  .spinner { width: 20px; height: 20px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; display: inline-block; margin-right: 8px; vertical-align: middle; }
+  @keyframes spin { to { transform: rotate(360deg); } }
 
-  .stats-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 24px; }
-  .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px 18px; }
-  .stat-card.highlight { border-color: rgba(232,184,75,0.4); background: rgba(232,184,75,0.05); }
-  .stat-label { font-size: 11px; color: var(--text2); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
-  .stat-value { font-size: 24px; font-weight: 700; letter-spacing: -1px; }
-  .stat-value.gold { color: var(--accent); }
-  .stat-value.blue { color: var(--accent2); }
-  .stat-value.green { color: var(--green); }
-  .stat-sub { font-size: 11px; color: var(--text3); margin-top: 4px; }
+  /* RIGHT PANEL */
+  .right-panel { overflow-y: auto; padding: 28px; }
+  .empty-right { display: flex; align-items: center; justify-content: center; height: 100%; color: var(--text3); flex-direction: column; gap: 12px; }
+  .empty-right-icon { font-size: 48px; }
 
-  .table-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
-  table { width: 100%; border-collapse: collapse; }
-  thead tr { border-bottom: 1px solid var(--border); }
-  th { padding: 12px 16px; font-size: 11px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.6px; text-align: left; cursor: pointer; user-select: none; white-space: nowrap; }
-  th.sorted { color: var(--accent); }
-  body.compact tbody tr td { padding: 8px 16px; }
-  tbody tr { border-bottom: 1px solid var(--border); cursor: pointer; transition: background 0.1s; }
-  tbody tr:last-child { border-bottom: none; }
-  tbody tr:hover { background: var(--surface2); }
-  td { padding: 14px 16px; font-size: 14px; }
-  .firm-name { font-weight: 600; }
-  .pnr { font-family: 'DM Mono', monospace; font-size: 13px; color: var(--accent); font-weight: 500; }
-  .contact { color: var(--text2); font-size: 13px; }
-  .value-cell { font-family: 'DM Mono', monospace; font-size: 13px; color: var(--accent); }
+  /* CUSTOMER DETAIL */
+  .kunde-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 20px; gap: 16px; }
+  .kunde-header-title { font-size: 22px; font-weight: 700; letter-spacing: -0.5px; margin-bottom: 4px; display: flex; align-items: center; gap: 10px; }
+  .kunde-header-sub { font-size: 13px; color: var(--text2); }
+  .kunde-header-actions { display: flex; gap: 8px; flex-shrink: 0; }
 
-  .badge { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; }
-  .badge-dot { width: 6px; height: 6px; border-radius: 50%; }
+  .info-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
+  .info-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; }
+  .info-label { font-size: 11px; color: var(--text3); font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 4px; }
+  .info-value { font-size: 13px; color: var(--text); }
+  .info-value a { color: var(--accent2); text-decoration: none; }
+
+  .stats-strip { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
+  .stat-pill { display: inline-flex; align-items: center; gap: 5px; padding: 5px 12px; background: var(--surface2); border: 1px solid var(--border); border-radius: 20px; font-size: 12px; color: var(--text2); }
+  .stat-pill strong { color: var(--text); }
+
+  /* PROJECTS */
+  .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .section-title { font-size: 12px; font-weight: 700; color: var(--text3); text-transform: uppercase; letter-spacing: 0.5px; }
+
+  .prosjekt-list { display: flex; flex-direction: column; gap: 10px; }
+  .prosjekt-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px; transition: border-color 0.15s; }
+  .prosjekt-card:hover { border-color: rgba(232,184,75,0.4); }
+  .prosjekt-card-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 10px; }
+  .prosjekt-card-title { font-size: 15px; font-weight: 600; margin-bottom: 3px; }
+  .prosjekt-card-pnr { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--accent); }
+  .prosjekt-card-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+  .prosjekt-card-verdi { font-family: 'DM Mono', monospace; font-size: 13px; color: var(--accent); font-weight: 600; }
+  .prosjekt-meta { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+  .prosjekt-meta-item { font-size: 12px; color: var(--text2); }
+
+  .mapper-mini { display: flex; gap: 5px; flex-wrap: wrap; }
+  .mappe-mini { background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; padding: 3px 9px; font-size: 11px; color: var(--text2); cursor: pointer; transition: all 0.15s; }
+  .mappe-mini:hover { border-color: var(--accent); color: var(--accent); }
+  .mappe-mini.locked { opacity: 0.35; cursor: not-allowed; pointer-events: none; }
+
+  .badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border-radius: 20px; font-size: 11px; font-weight: 600; white-space: nowrap; }
+  .badge-dot { width: 5px; height: 5px; border-radius: 50%; }
   .badge.aktiv { background: rgba(34,197,94,0.12); color: var(--green); }
   .badge.aktiv .badge-dot { background: var(--green); }
   .badge.kalkyle { background: rgba(249,115,22,0.12); color: var(--orange); }
   .badge.kalkyle .badge-dot { background: var(--orange); }
   .badge.avsluttet { background: rgba(139,146,168,0.12); color: var(--text2); }
   .badge.avsluttet .badge-dot { background: var(--text2); }
-  .type-badge-privat { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 600; background: rgba(59,130,246,0.12); color: var(--accent2); }
-  .type-badge-firma { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 600; background: rgba(232,184,75,0.12); color: var(--accent); }
-  .mapper-check { font-size: 13px; color: var(--text3); }
-  .mapper-check.done { color: var(--green); }
 
-  .loading-row td { text-align: center; padding: 40px; color: var(--text3); }
-  .spinner { width: 20px; height: 20px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; display: inline-block; margin-right: 8px; vertical-align: middle; }
-  @keyframes spin { to { transform: rotate(360deg); } }
+  /* BUTTONS */
+  .btn-primary { background: var(--accent); color: #0f1117; border: none; border-radius: 8px; padding: 9px 16px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; display: flex; align-items: center; gap: 6px; }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-ghost { background: none; color: var(--text2); border: 1px solid var(--border); border-radius: 8px; padding: 7px 14px; font-size: 13px; font-weight: 500; cursor: pointer; font-family: inherit; }
+  .btn-ghost:hover { border-color: var(--text2); color: var(--text); }
+  .btn-danger { background: rgba(239,68,68,0.1); color: var(--red); border: 1px solid rgba(239,68,68,0.3); border-radius: 8px; padding: 7px 14px; font-size: 13px; font-weight: 500; cursor: pointer; font-family: inherit; }
 
+  /* MODALS */
   .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 200; align-items: flex-start; justify-content: center; padding: 40px 16px; overflow-y: auto; }
   .modal-overlay.open { display: flex; }
-  .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; width: 100%; max-width: 720px; animation: slideUp 0.2s ease; }
+  .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; width: 100%; max-width: 580px; animation: slideUp 0.2s ease; }
   @keyframes slideUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
-  .modal-header { padding: 20px 24px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
-  .modal-title { font-size: 17px; font-weight: 700; }
-  .modal-close { width: 32px; height: 32px; border-radius: 8px; border: none; background: var(--surface2); color: var(--text2); cursor: pointer; font-size: 18px; display: flex; align-items: center; justify-content: center; }
+  .modal-header { padding: 18px 24px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+  .modal-title { font-size: 16px; font-weight: 700; }
+  .modal-close { width: 30px; height: 30px; border-radius: 6px; border: none; background: var(--surface2); color: var(--text2); cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; }
   .modal-close:hover { background: var(--border); color: var(--text); }
-  .modal-body { padding: 24px; }
+  .modal-body { padding: 20px 24px; }
 
-  .kunde-type-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px; }
-  .kunde-type-btn { padding: 16px; border-radius: 10px; border: 2px solid var(--border); background: var(--surface2); color: var(--text2); font-family: inherit; font-size: 14px; font-weight: 600; cursor: pointer; text-align: center; }
-  .kunde-type-btn.selected { border-color: var(--accent); color: var(--accent); background: rgba(232,184,75,0.08); }
-  .kunde-type-icon { font-size: 28px; display: block; margin-bottom: 6px; }
+  .type-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+  .type-btn { padding: 14px; border-radius: 10px; border: 2px solid var(--border); background: var(--surface2); color: var(--text2); font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer; text-align: center; transition: all 0.15s; }
+  .type-btn.selected { border-color: var(--accent); color: var(--accent); background: rgba(232,184,75,0.08); }
+  .type-icon { font-size: 24px; display: block; margin-bottom: 4px; }
 
-  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-  .form-group { display: flex; flex-direction: column; gap: 6px; }
-  .form-group.full { grid-column: 1 / -1; }
-  label { font-size: 12px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: 0.4px; }
-  .form-input { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; color: var(--text); font-family: inherit; font-size: 14px; outline: none; width: 100%; }
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .form-group { display: flex; flex-direction: column; gap: 5px; }
+  .form-group.full { grid-column: 1/-1; }
+  label { font-size: 11px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: 0.4px; }
+  .form-input { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 9px 12px; color: var(--text); font-family: inherit; font-size: 13px; outline: none; width: 100%; }
   .form-input:focus { border-color: var(--accent); }
   .form-input::placeholder { color: var(--text3); }
-  select.form-input { cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%238b92a8' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px; }
-  textarea.form-input { resize: vertical; min-height: 80px; }
-  .form-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border); }
-
-  /* DETAIL MODAL */
-  .detail-tabs { display: flex; gap: 4px; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 4px; margin-bottom: 20px; }
-  .detail-tab { padding: 7px 16px; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; color: var(--text2); border: none; background: none; font-family: inherit; }
-  .detail-tab.active { background: var(--surface); color: var(--text); box-shadow: 0 1px 3px rgba(0,0,0,0.15); }
-  .detail-panel { display: none; }
-  .detail-panel.active { display: block; }
-
-  .detail-info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
-  .detail-field { display: flex; flex-direction: column; gap: 4px; }
-  .detail-label { font-size: 11px; color: var(--text3); font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; }
-  .detail-value { font-size: 14px; color: var(--text); }
-  .section-title { font-size: 13px; font-weight: 700; color: var(--text2); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; }
-
-  .action-btns { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
-  .action-btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; text-decoration: none; border: none; font-family: inherit; }
-  .action-btn.phone { background: rgba(34,197,94,0.12); color: var(--green); border: 1px solid rgba(34,197,94,0.3); }
-  .action-btn.email { background: rgba(59,130,246,0.12); color: var(--accent2); border: 1px solid rgba(59,130,246,0.3); }
-
-  .status-row { display: flex; align-items: center; gap: 10px; padding: 14px 16px; background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; margin-bottom: 16px; flex-wrap: wrap; }
-  .status-label { font-size: 13px; color: var(--text2); }
-  .status-btn { padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; border: 1px solid var(--border); background: none; color: var(--text2); }
-  .status-btn.aktiv-btn { color: var(--green); border-color: rgba(34,197,94,0.3); }
-  .status-btn.aktiv-btn:hover { background: rgba(34,197,94,0.1); }
-
-  /* MAPPER */
-  .mapper-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px; }
-  .mappe-card { background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 14px; text-align: center; cursor: pointer; transition: all 0.15s; }
-  .mappe-card:hover { border-color: var(--accent); background: rgba(232,184,75,0.06); }
-  .mappe-card.locked { opacity: 0.4; cursor: not-allowed; }
-  .mappe-card.locked:hover { border-color: var(--border); background: var(--surface2); }
-  .mappe-card.active-folder { border-color: var(--accent); background: rgba(232,184,75,0.08); }
-  .mappe-icon { font-size: 24px; margin-bottom: 6px; }
-  .mappe-name { font-size: 12px; font-weight: 600; color: var(--text2); }
+  select.form-input { cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%238b92a8' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; padding-right: 28px; }
+  textarea.form-input { resize: vertical; min-height: 70px; }
+  .form-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); }
 
   /* FILE BROWSER */
-  .file-browser { background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
-  .file-browser-header { padding: 12px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
-  .file-browser-title { font-size: 13px; font-weight: 600; color: var(--text); display: flex; align-items: center; gap: 8px; }
-  .file-browser-back { background: none; border: none; color: var(--text2); cursor: pointer; font-size: 13px; padding: 4px 8px; border-radius: 6px; font-family: inherit; }
-  .file-browser-back:hover { background: var(--border); color: var(--text); }
-
-  .drop-zone { border: 2px dashed var(--border); border-radius: 8px; padding: 20px; text-align: center; margin: 12px; color: var(--text3); font-size: 13px; transition: all 0.15s; cursor: pointer; }
+  .file-modal .modal { max-width: 640px; }
+  .drop-zone { border: 2px dashed var(--border); border-radius: 8px; padding: 20px; text-align: center; margin-bottom: 12px; color: var(--text3); font-size: 13px; cursor: pointer; transition: all 0.15s; }
   .drop-zone:hover, .drop-zone.drag-over { border-color: var(--accent); color: var(--accent); background: rgba(232,184,75,0.05); }
   .drop-zone input { display: none; }
-
-  .file-list { }
-  .file-item { display: flex; align-items: center; gap: 12px; padding: 10px 16px; border-bottom: 1px solid var(--border); transition: background 0.1s; }
+  .file-item { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--border); }
   .file-item:last-child { border-bottom: none; }
-  .file-item:hover { background: rgba(232,184,75,0.04); }
-  .file-icon { font-size: 20px; flex-shrink: 0; }
-  .file-info { flex: 1; min-width: 0; }
-  .file-name { font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .file-meta { font-size: 11px; color: var(--text3); margin-top: 2px; }
-  .file-empty { padding: 24px; text-align: center; color: var(--text3); font-size: 13px; }
-  .file-loading { padding: 24px; text-align: center; color: var(--text3); font-size: 13px; }
-  .upload-progress { background: rgba(232,184,75,0.1); border: 1px solid rgba(232,184,75,0.3); border-radius: 8px; padding: 10px 14px; margin: 8px 12px; font-size: 13px; color: var(--accent); display: none; }
+  .file-icon { font-size: 18px; flex-shrink: 0; }
+  .file-name { font-size: 13px; font-weight: 500; flex: 1; }
+  .file-name a { color: var(--text); text-decoration: none; }
+  .file-name a:hover { color: var(--accent2); }
+  .file-meta { font-size: 11px; color: var(--text3); }
+  .upload-progress { background: rgba(232,184,75,0.1); border: 1px solid rgba(232,184,75,0.3); border-radius: 8px; padding: 10px 14px; font-size: 13px; color: var(--accent); margin-bottom: 10px; display: none; }
   .upload-progress.show { display: block; }
 
-  .empty-state { padding: 60px; text-align: center; color: var(--text3); }
-  .empty-state-icon { font-size: 40px; margin-bottom: 12px; }
-
-  .toast { position: fixed; bottom: 24px; right: 24px; background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 14px 18px; font-size: 14px; color: var(--text); z-index: 300; display: flex; align-items: center; gap: 10px; transform: translateY(80px); opacity: 0; transition: all 0.3s ease; max-width: 340px; }
-  .toast.show { transform: translateY(0); opacity: 1; }
-  .error-banner { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); border-radius: 8px; padding: 12px 16px; font-size: 13px; color: var(--red); margin-bottom: 16px; }
-
-  .settings-section { margin-bottom: 28px; }
+  /* SETTINGS */
+  .settings-section { margin-bottom: 24px; }
   .settings-section-title { font-size: 12px; font-weight: 700; color: var(--text3); text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
   .settings-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border); gap: 16px; }
   .settings-row:last-child { border-bottom: none; }
@@ -206,18 +181,16 @@
   .toggle.on { background: var(--accent); }
   .toggle::after { content: ''; position: absolute; width: 18px; height: 18px; background: white; border-radius: 50%; top: 3px; left: 3px; transition: left 0.2s; }
   .toggle.on::after { left: 23px; }
-  .col-toggles { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-  .col-toggle-btn { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; cursor: pointer; font-family: inherit; font-size: 13px; color: var(--text2); }
-  .col-toggle-btn.active { border-color: var(--accent); color: var(--text); background: rgba(232,184,75,0.06); }
-  .sort-select { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; color: var(--text); font-family: inherit; font-size: 13px; outline: none; cursor: pointer; }
+
+  .toast { position: fixed; bottom: 24px; right: 24px; background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; font-size: 13px; color: var(--text); z-index: 300; display: flex; align-items: center; gap: 8px; transform: translateY(60px); opacity: 0; transition: all 0.3s ease; max-width: 320px; }
+  .toast.show { transform: translateY(0); opacity: 1; }
+  .error-banner { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); border-radius: 8px; padding: 10px 14px; font-size: 13px; color: var(--red); margin-bottom: 12px; }
 
   @media (max-width: 768px) {
-    .stats-row { grid-template-columns: 1fr 1fr; }
-    .mapper-grid { grid-template-columns: repeat(2, 1fr); }
+    .app-body { grid-template-columns: 1fr; }
+    .left-panel { display: none; }
+    .info-row { grid-template-columns: 1fr 1fr; }
     .form-grid { grid-template-columns: 1fr; }
-    .detail-info-grid { grid-template-columns: 1fr; }
-    input[type="text"] { width: 140px; }
-    .col-toggles { grid-template-columns: 1fr; }
   }
 </style>
 </head>
@@ -250,139 +223,120 @@
     </div>
   </header>
 
-  <div class="main">
-    <div id="errorBanner"></div>
-    <div class="topbar">
-      <div class="page-title">Kunderegister</div>
-      <div class="topbar-right">
-        <div class="search-wrap">
-          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-          <input type="text" id="searchInput" placeholder="Søk firma, kontakt...">
-        </div>
-        <div class="filter-tabs">
-          <button class="filter-tab active" onclick="setFilter('alle', this)">Alle</button>
-          <button class="filter-tab" onclick="setFilter('Under kalkyle', this)">Kalkyle</button>
-          <button class="filter-tab" onclick="setFilter('Aktiv', this)">Aktive</button>
-          <button class="filter-tab" onclick="setFilter('Avsluttet', this)">Avsluttet</button>
-        </div>
-        <button class="btn-excel" onclick="exportExcel()">📊 Excel</button>
-        <button class="btn-primary" onclick="openNewModal()">+ Ny kunde</button>
+  <div class="app-body">
+    <div class="left-panel">
+      <div class="left-header">
+        <div class="left-title">Kunder</div>
+        <input class="search-input" placeholder="Søk kunde..." oninput="filterKunder(this.value)" id="kundeSearch">
+        <button class="btn-new-kunde" onclick="openNyKundeModal()">+ Ny kunde</button>
+      </div>
+      <div class="kunde-list" id="kundeList">
+        <div class="loading-overlay"><span class="spinner"></span> Laster...</div>
       </div>
     </div>
 
-    <div class="stats-row">
-      <div class="stat-card"><div class="stat-label">Totalt</div><div class="stat-value" id="statTotal">–</div></div>
-      <div class="stat-card"><div class="stat-label">Under kalkyle</div><div class="stat-value gold" id="statKalkyle">–</div></div>
-      <div class="stat-card"><div class="stat-label">Aktive</div><div class="stat-value blue" id="statAktiv">–</div></div>
-      <div class="stat-card"><div class="stat-label">Avsluttet</div><div class="stat-value green" id="statAvsluttet">–</div></div>
-      <div class="stat-card highlight">
-        <div class="stat-label">💰 Aktiv portefølje</div>
-        <div class="stat-value gold" id="statPortefolje">–</div>
-        <div class="stat-sub">ekskl. mva</div>
-      </div>
-    </div>
-
-    <div class="table-wrap">
-      <table>
-        <thead id="tableHead"></thead>
-        <tbody id="tableBody">
-          <tr class="loading-row"><td colspan="8"><span class="spinner"></span> Laster kunder...</td></tr>
-        </tbody>
-      </table>
-      <div class="empty-state" id="emptyState" style="display:none">
-        <div class="empty-state-icon">📋</div>
-        <div style="font-size:14px">Ingen kunder funnet</div>
+    <div class="right-panel" id="rightPanel">
+      <div id="errorBanner"></div>
+      <div class="empty-right">
+        <div class="empty-right-icon">🏢</div>
+        <div style="font-size:15px;font-weight:600">Velg en kunde</div>
+        <div style="font-size:13px;color:var(--text3)">Klikk på en kunde til venstre</div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- FORM MODAL -->
-<div class="modal-overlay" id="formModal">
+<!-- NY/REDIGER KUNDE MODAL -->
+<div class="modal-overlay" id="kundeModal">
   <div class="modal">
     <div class="modal-header">
-      <div class="modal-title" id="formModalTitle">Ny kunde</div>
-      <button class="modal-close" onclick="closeModal('formModal')">×</button>
+      <div class="modal-title" id="kundeModalTitle">Ny kunde</div>
+      <button class="modal-close" onclick="closeModal('kundeModal')">×</button>
     </div>
     <div class="modal-body">
-      <div class="kunde-type-row" id="kundeTypeRow">
-        <button class="kunde-type-btn selected" onclick="setKundeType('firma', this)"><span class="kunde-type-icon">🏢</span>Firmakunde</button>
-        <button class="kunde-type-btn" onclick="setKundeType('privat', this)"><span class="kunde-type-icon">👤</span>Privatkunde</button>
+      <div class="type-row" id="kundeTypeRow">
+        <button class="type-btn selected" id="typeFirmaBtn" onclick="setKundeType('firma')">
+          <span class="type-icon">🏢</span>Firmakunde
+        </button>
+        <button class="type-btn" id="typePrivatBtn" onclick="setKundeType('privat')">
+          <span class="type-icon">👤</span>Privatkunde
+        </button>
       </div>
       <div class="form-grid">
-        <div class="form-group full"><label id="firmanavnLabel">Firmanavn *</label><input type="text" class="form-input" id="f_firmanavn" placeholder="Bedrift AS"></div>
-        <div class="form-group"><label>Kontaktperson</label><input type="text" class="form-input" id="f_kontakt" placeholder="Ola Nordmann"></div>
-        <div class="form-group"><label>Telefon</label><input type="text" class="form-input" id="f_telefon" placeholder="900 00 000"></div>
-        <div class="form-group"><label>E-post</label><input type="text" class="form-input" id="f_epost" placeholder="ola@bedrift.no"></div>
-        <div class="form-group" id="orgnrGroup"><label>Org.nr</label><input type="text" class="form-input" id="f_orgnr" placeholder="123 456 789"></div>
-        <div class="form-group full"><label>Adresse</label><input type="text" class="form-input" id="f_adresse" placeholder="Gateveien 1, 7000 Trondheim"></div>
-        <div class="form-group"><label>Prosjektnummer</label><input type="text" class="form-input" id="f_pnr" placeholder="501"></div>
-        <div class="form-group"><label>Kontraktsum (NOK ekskl. mva)</label><input type="number" class="form-input" id="f_pris" placeholder="0" style="padding-left:14px"></div>
+        <div class="form-group full"><label id="k_navnLabel">Firmanavn *</label><input type="text" class="form-input" id="k_navn" placeholder="TrønderEnergi Kraft AS"></div>
+        <div class="form-group"><label>Kontaktperson</label><input type="text" class="form-input" id="k_kontakt" placeholder="Ola Nordmann"></div>
+        <div class="form-group"><label>Telefon</label><input type="text" class="form-input" id="k_tlf" placeholder="900 00 000"></div>
+        <div class="form-group full"><label>E-post</label><input type="text" class="form-input" id="k_epost" placeholder="post@firma.no"></div>
+        <div class="form-group full"><label>Adresse</label><input type="text" class="form-input" id="k_adresse" placeholder="Gateveien 1, 7000 Trondheim"></div>
+        <div class="form-group" id="k_orgnrGroup"><label>Org.nr</label><input type="text" class="form-input" id="k_orgnr" placeholder="123 456 789"></div>
+      </div>
+      <div class="form-actions">
+        <button class="btn-ghost" onclick="closeModal('kundeModal')">Avbryt</button>
+        <button class="btn-primary" id="kundeModalSaveBtn" onclick="lagreKunde()">Lagre</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- NY/REDIGER PROSJEKT MODAL -->
+<div class="modal-overlay" id="prosjektModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="prosjektModalTitle">Nytt prosjekt</div>
+      <button class="modal-close" onclick="closeModal('prosjektModal')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group full"><label>Prosjektnavn *</label><input type="text" class="form-input" id="p_navn" placeholder="Omløpsluke Sokna rehabilitering"></div>
+        <div class="form-group"><label>Prosjektnummer</label><input type="text" class="form-input" id="p_pnr" placeholder="501"></div>
+        <div class="form-group"><label>Kontraktsum (NOK)</label><input type="number" class="form-input" id="p_pris" placeholder="0" style="padding-left:12px"></div>
         <div class="form-group"><label>Status</label>
-          <select class="form-input" id="f_status">
+          <select class="form-input" id="p_status">
             <option value="Under kalkyle">Under kalkyle</option>
             <option value="Aktiv">Aktiv</option>
             <option value="Avsluttet">Avsluttet</option>
           </select>
         </div>
-        <div class="form-group full"><label>Notat</label><textarea class="form-input" id="f_notat" placeholder="Kommentarer..."></textarea></div>
+        <div class="form-group"><label>Prosjektleder</label>
+          <select class="form-input" id="p_prosjektleder">
+            <option value="">Ikke tildelt</option>
+            <option value="Tom Andre Søderberg">Tom Andre Søderberg</option>
+            <option value="Per Ytterhus Sognli">Per Ytterhus Sognli</option>
+            <option value="Magne Vidar Rise">Magne Vidar Rise</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Oppstartsdato</label><input type="text" class="form-input" id="p_dato" placeholder="26.05.2026"></div>
+        <div class="form-group full"><label>Notat</label><textarea class="form-input" id="p_notat" placeholder="Beskrivelse..."></textarea></div>
       </div>
       <div class="form-actions">
-        <button class="btn-ghost" onclick="closeModal('formModal')">Avbryt</button>
-        <button class="btn-primary" id="saveBtn" onclick="saveKunde()">Lagre</button>
+        <button class="btn-ghost" onclick="closeModal('prosjektModal')">Avbryt</button>
+        <button class="btn-primary" id="prosjektModalSaveBtn" onclick="lagreProsjekt()">Lagre</button>
       </div>
     </div>
   </div>
 </div>
 
-<!-- DETAIL MODAL -->
-<div class="modal-overlay" id="detailModal">
-  <div class="modal" style="max-width:780px">
+<!-- MAPPE/FIL MODAL -->
+<div class="modal-overlay file-modal" id="filModal">
+  <div class="modal" style="max-width:640px">
     <div class="modal-header">
-      <div>
-        <div class="modal-title" id="detailFirma"></div>
-        <div style="font-size:12px;color:var(--text3);margin-top:2px" id="detailPnr"></div>
-      </div>
-      <div style="display:flex;gap:8px;align-items:center">
-        <button class="btn-ghost" style="font-size:12px;padding:6px 12px" onclick="editKunde()">Rediger</button>
-        <button class="modal-close" onclick="closeModal('detailModal')">×</button>
-      </div>
+      <div class="modal-title" id="filModalTitle">📁 Mappe</div>
+      <button class="modal-close" onclick="closeModal('filModal')">×</button>
     </div>
     <div class="modal-body">
-      <div class="status-row" id="statusRow"></div>
-      <div class="detail-tabs">
-        <button class="detail-tab active" onclick="showTab('info', this)">📋 Info</button>
-        <button class="detail-tab" onclick="showTab('mapper', this)">📁 Mapper</button>
+      <div class="upload-progress" id="uploadProgress">⏳ Laster opp...</div>
+      <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)">
+        <input type="file" id="fileInput" multiple onchange="handleFileSelect(event)">
+        📎 Dra og slipp filer her, eller klikk for å velge
       </div>
-      <div class="detail-panel active" id="panel-info">
-        <div class="action-btns" id="actionBtns"></div>
-        <div class="detail-info-grid" id="detailInfo"></div>
-        <div id="notatSection"></div>
-      </div>
-      <div class="detail-panel" id="panel-mapper">
-        <div class="mapper-grid" id="mapperGrid"></div>
-        <div class="file-browser" id="fileBrowser" style="display:none">
-          <div class="file-browser-header">
-            <div class="file-browser-title">
-              <button class="file-browser-back" onclick="closeFolderView()">← Tilbake</button>
-              <span id="currentFolderName"></span>
-            </div>
-          </div>
-          <div class="upload-progress" id="uploadProgress">⏳ Laster opp...</div>
-          <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)">
-            <input type="file" id="fileInput" multiple onchange="handleFileSelect(event)">
-            📎 Dra og slipp filer her, eller klikk for å velge
-          </div>
-          <div class="file-list" id="fileList"></div>
-        </div>
-      </div>
+      <div id="filList"></div>
     </div>
   </div>
 </div>
 
 <!-- SETTINGS MODAL -->
 <div class="modal-overlay" id="settingsModal">
-  <div class="modal" style="max-width:520px">
+  <div class="modal" style="max-width:480px">
     <div class="modal-header">
       <div class="modal-title">⚙️ Innstillinger</div>
       <button class="modal-close" onclick="closeModal('settingsModal')">×</button>
@@ -391,42 +345,21 @@
       <div class="settings-section">
         <div class="settings-section-title">Utseende</div>
         <div class="settings-row">
-          <div><div class="settings-row-label">Mørkt tema</div><div class="settings-row-sub">Bytt mellom mørkt og lyst grensesnitt</div></div>
+          <div><div class="settings-row-label">Mørkt tema</div><div class="settings-row-sub">Bytt mellom mørkt og lyst</div></div>
           <button class="toggle on" id="darkModeToggle" onclick="toggleTheme()"></button>
         </div>
-        <div class="settings-row">
-          <div><div class="settings-row-label">Kompakt visning</div><div class="settings-row-sub">Tettere rader i tabellen</div></div>
-          <button class="toggle" id="compactToggle" onclick="toggleCompact()"></button>
-        </div>
       </div>
       <div class="settings-section">
-        <div class="settings-section-title">Kolonner</div>
-        <div class="col-toggles" id="colToggles"></div>
-      </div>
-      <div class="settings-section">
-        <div class="settings-section-title">Sortering</div>
+        <div class="settings-section-title">System</div>
         <div class="settings-row">
-          <div><div class="settings-row-label">Standard sortering</div></div>
-          <select class="sort-select" id="sortSelect" onchange="setSortPref()">
-            <option value="pnr-asc">Pnr stigende</option>
-            <option value="pnr-desc">Pnr synkende</option>
-            <option value="navn-asc">Navn A–Å</option>
-            <option value="navn-desc">Navn Å–A</option>
-            <option value="status-asc">Status</option>
-          </select>
-        </div>
-      </div>
-      <div class="settings-section">
-        <div class="settings-section-title">Data</div>
-        <div class="settings-row">
-          <div><div class="settings-row-label">Eksporter til Excel</div></div>
-          <button class="btn-excel" onclick="exportExcel(); closeModal('settingsModal')">📊 Last ned</button>
+          <div><div class="settings-row-label">Tilkobling</div><div class="settings-row-sub">SharePoint · Industriveien 1 AS (LH Bygg)</div></div>
+          <span style="color:var(--green);font-size:13px;font-weight:600">● Aktiv</span>
         </div>
         <div class="settings-row">
           <div><div class="settings-row-label">Innlogget som</div><div class="settings-row-sub" id="settingsUser">–</div></div>
         </div>
         <div class="settings-row">
-          <div><div class="settings-row-label">Versjon</div><div class="settings-row-sub">LH Bygg Kunderegister v2.0</div></div>
+          <div><div class="settings-row-label">Versjon</div><div class="settings-row-sub">LH Bygg Kunderegister v3.0</div></div>
         </div>
       </div>
     </div>
@@ -436,44 +369,28 @@
 <div class="toast" id="toast"><span id="toastIcon">✅</span><span id="toastMsg"></span></div>
 
 <script>
-const CLIENT_ID = '3b2da258-a2f9-41af-baab-f65265f45732';
-const TENANT_ID = 'c9d89f66-621a-4a0b-9734-8b98789d9791';
-const SITE_URL  = 'lhbent.sharepoint.com';
-const SITE_PATH = '/sites/Industriveien1ASLHBygg';
-const LIST_NAME = 'Kunderegister';
-const SHAREPOINT_HOST = 'https://lhbent.sharepoint.com';
-const DOC_LIB = 'Delte dokumenter';
-const PROSJEKT_BASE = `Felles/LHBE/Prosjekter`;
+// ─── CONFIG ───────────────────────────────────────────────
+const CLIENT_ID  = '3b2da258-a2f9-41af-baab-f65265f45732';
+const TENANT_ID  = 'c9d89f66-621a-4a0b-9734-8b98789d9791';
+const SITE_URL   = 'lhbent.sharepoint.com';
+const SITE_PATH  = '/sites/Industriveien1ASLHBygg';
+const KUNDER_LIST    = 'Kunder';
+const PROSJEKTER_LIST = 'Prosjekter';
+const PROSJEKT_BASE  = 'Felles/LHBE/Prosjekter';
 const VIEWID = '4445a462-2859-4c56-8451-24b4acf6d034';
-
 const MAPPER = ['HMS','Tegninger','FDV','Kontrakt','Kalkyle','Fremdrift','Faktura','Korrespondanse'];
 const MAPPER_ICONS = {HMS:'🦺',Tegninger:'📐',FDV:'📋',Kontrakt:'📝',Kalkyle:'🧮',Fremdrift:'📅',Faktura:'💰',Korrespondanse:'✉️'};
 
-const COLUMNS = [
-  { key: 'pnr',     label: 'Pnr',       show: true },
-  { key: 'navn',    label: 'Navn/Firma', show: true },
-  { key: 'type',    label: 'Type',       show: true },
-  { key: 'kontakt', label: 'Kontakt',    show: true },
-  { key: 'telefon', label: 'Telefon',    show: true },
-  { key: 'pris',    label: 'Verdi',      show: true },
-  { key: 'status',  label: 'Status',     show: true },
-  { key: 'mapper',  label: 'Mapper',     show: true },
-];
-
+// ─── STATE ────────────────────────────────────────────────
 let msalInstance = null;
-const scopes = ['https://graph.microsoft.com/Sites.ReadWrite.All', 'User.Read'];
-let currentUser = null, kunder = [], currentFilter = 'alle', currentSearch = '';
-let selectedId = null, editMode = false, siteId = null, listId = null, driveId = null, kundeType = 'firma';
-let sortKey = 'pnr', sortDir = 'asc';
-let currentFolder = null, currentKunde = null;
+const scopes = ['https://graph.microsoft.com/Sites.ReadWrite.All','User.Read'];
+let currentUser = null, siteId = null, kunderId = null, prosjekterId = null, driveId = null;
+let kunder = [], prosjekter = [], selectedKundeId = null;
+let kundeSearch = '', kundeTypeModal = 'firma', editKundeId = null, editProsjektId = null;
+let currentFolder = null, currentProsjekt = null;
 let darkMode = localStorage.getItem('theme') !== 'light';
-let compactMode = localStorage.getItem('compact') === 'true';
 
-const savedCols = localStorage.getItem('columns');
-if (savedCols) { try { const c = JSON.parse(savedCols); COLUMNS.forEach(col => { if (c[col.key] !== undefined) col.show = c[col.key]; }); } catch(e){} }
-const savedSort = localStorage.getItem('sort');
-if (savedSort) { const p = savedSort.split('-'); sortKey = p[0]; sortDir = p[1]||'asc'; }
-
+// ─── INIT ─────────────────────────────────────────────────
 async function init() {
   try {
     msalInstance = new msal.PublicClientApplication({
@@ -487,9 +404,9 @@ async function init() {
     await msalInstance.initialize();
     await msalInstance.handleRedirectPromise();
     const accounts = msalInstance.getAllAccounts();
-    if (accounts.length > 0) { currentUser = accounts[0]; applyTheme(); applyCompact(); showApp(); }
+    if (accounts.length > 0) { currentUser = accounts[0]; applyTheme(); showApp(); }
     else applyTheme();
-  } catch(e) { console.error('Init error:', e); }
+  } catch(e) { console.error(e); }
 }
 
 function applyTheme() {
@@ -502,43 +419,9 @@ function applyTheme() {
 }
 function toggleTheme() { darkMode = !darkMode; applyTheme(); }
 
-function applyCompact() {
-  document.body.classList.toggle('compact', compactMode);
-  const t = document.getElementById('compactToggle');
-  if (t) t.classList.toggle('on', compactMode);
-  localStorage.setItem('compact', compactMode);
-}
-function toggleCompact() { compactMode = !compactMode; applyCompact(); }
-
-function setSortPref() {
-  const val = document.getElementById('sortSelect').value;
-  const p = val.split('-'); sortKey = p[0]; sortDir = p[1]||'asc';
-  localStorage.setItem('sort', val); render();
-}
-
-function toggleColumn(key) {
-  const col = COLUMNS.find(c => c.key === key);
-  if (col) col.show = !col.show;
-  const saved = {}; COLUMNS.forEach(c => saved[c.key] = c.show);
-  localStorage.setItem('columns', JSON.stringify(saved));
-  renderColToggles(); render();
-}
-
-function renderColToggles() {
-  const el = document.getElementById('colToggles');
-  if (!el) return;
-  el.innerHTML = COLUMNS.map(col => `
-    <button class="col-toggle-btn ${col.show?'active':''}" onclick="toggleColumn('${col.key}')">
-      <span>${col.label}</span><span>${col.show?'✓':'○'}</span>
-    </button>`).join('');
-}
-
 function openSettings() {
   document.getElementById('settingsUser').textContent = currentUser ? (currentUser.name||currentUser.username) : '–';
   document.getElementById('darkModeToggle').classList.toggle('on', darkMode);
-  document.getElementById('compactToggle').classList.toggle('on', compactMode);
-  document.getElementById('sortSelect').value = `${sortKey}-${sortDir}`;
-  renderColToggles();
   document.getElementById('settingsModal').classList.add('open');
 }
 
@@ -546,9 +429,8 @@ async function signIn() {
   document.getElementById('loginBtn').disabled = true;
   document.getElementById('loginBtn').innerHTML = '<span class="spinner"></span> Logger inn...';
   try {
-    const response = await msalInstance.loginPopup({ scopes });
-    currentUser = response.account;
-    applyTheme(); applyCompact(); showApp();
+    const r = await msalInstance.loginPopup({ scopes });
+    currentUser = r.account; applyTheme(); showApp();
   } catch(e) {
     console.error(e);
     document.getElementById('loginBtn').disabled = false;
@@ -558,13 +440,12 @@ async function signIn() {
 
 function signOut() {
   msalInstance.logoutPopup({ account: currentUser });
-  currentUser = null;
   document.getElementById('app').style.display = 'none';
   document.getElementById('loginScreen').style.display = 'flex';
 }
 
+// ─── GRAPH API ────────────────────────────────────────────
 async function getToken() {
-  if (!currentUser) throw new Error('Ikke innlogget');
   try {
     const r = await msalInstance.acquireTokenSilent({ scopes, account: currentUser });
     if (!r.accessToken) throw new Error('Tom token');
@@ -593,102 +474,124 @@ async function graphPatch(url, body) {
   return res.json();
 }
 
-async function graphPut(url, data, contentType) {
-  const token = await getToken();
-  const res = await fetch(`https://graph.microsoft.com/v1.0${url}`, { method: 'PUT', headers: { Authorization: `Bearer ${token}`, 'Content-Type': contentType||'application/octet-stream' }, body: data });
+async function graphPut(url, data, ct) {
+  const res = await fetch(`https://graph.microsoft.com/v1.0${url}`, { method: 'PUT', headers: { Authorization: `Bearer ${await getToken()}`, 'Content-Type': ct||'application/octet-stream' }, body: data });
   if (!res.ok) throw new Error(`${res.status}: ${await res.text()}`);
   return res.json();
 }
 
-async function getSiteAndList() {
-  if (siteId && listId && driveId) return;
+// ─── SHAREPOINT SETUP ─────────────────────────────────────
+async function setup() {
+  if (siteId && kunderId && prosjekterId && driveId) return;
   const site = await graphGet(`/sites/${SITE_URL}:${SITE_PATH}`);
   siteId = site.id;
-  const lists = await graphGet(`/sites/${siteId}/lists?$filter=displayName eq '${LIST_NAME}'`);
-  listId = lists.value[0].id;
+  const lists = await graphGet(`/sites/${siteId}/lists?$top=50`);
+  const kList = lists.value.find(l => l.displayName === KUNDER_LIST);
+  const pList = lists.value.find(l => l.displayName === PROSJEKTER_LIST);
+  if (!kList) throw new Error('Kunder-listen ikke funnet');
+  if (!pList) throw new Error('Prosjekter-listen ikke funnet');
+  kunderId = kList.id;
+  prosjekterId = pList.id;
   const drives = await graphGet(`/sites/${siteId}/drives`);
   const d = drives.value.find(x => x.name === 'Delte dokumenter' || x.name === 'Documents');
   driveId = d ? d.id : drives.value[0].id;
 }
 
+// ─── DATA FETCH ───────────────────────────────────────────
 async function fetchKunder() {
-  await getSiteAndList();
-  const data = await graphGet(`/sites/${siteId}/lists/${listId}/items?$expand=fields&$top=500`);
+  const data = await graphGet(`/sites/${siteId}/lists/${kunderId}/items?$expand=fields&$top=500`);
   return data.value.map(item => ({
     id: item.id,
-    firmanavn: item.fields.Title || '',
-    kontakt: item.fields.TomAndreS_x00f8_derberg || '',
-    telefon: item.fields._x0034_1102093 || '',
-    epost: item.fields.E_x002d_post || '',
+    navn: item.fields.Title || '',
+    kontakt: item.fields.Kontaktperson || '',
+    tlf: item.fields.Telefon || '',
+    epost: item.fields.Epost || '',
     adresse: item.fields.Adresse || '',
-    orgnr: item.fields.Org_x002e_nr || '',
-    pnr: item.fields.Prosjektnummer || '',
-    status: item.fields.Status || 'Under kalkyle',
-    mapper: item.fields.Mapperopprettet === 'Ja',
-    notat: item.fields.Notat || '',
+    orgnr: item.fields.Orgnr || '',
     type: item.fields.Kundetype || 'firma',
-    pris: item.fields.Pris || 0,
   }));
 }
 
-function buildFields(data) {
-  const f = {
-    Title: data.firmanavn,
-    TomAndreS_x00f8_derberg: data.kontakt,
-    _x0034_1102093: data.telefon,
-    E_x002d_post: data.epost,
+async function fetchProsjekter() {
+  const data = await graphGet(`/sites/${siteId}/lists/${prosjekterId}/items?$expand=fields&$top=500`);
+  return data.value.map(item => ({
+    id: item.id,
+    navn: item.fields.Title || '',
+    kundenavn: item.fields.Kundenavn || '',
+    pnr: item.fields.Prosjektnummer || '',
+    pris: item.fields.Pris || 0,
+    status: item.fields.Status || 'Under kalkyle',
+    prosjektleder: item.fields.Prosjektleder || '',
+    dato: item.fields.Oppstartsdato || '',
+    notat: item.fields.Notat || '',
+    mapper: item.fields.Mapperopprettet === true,
+  }));
+}
+
+// ─── SAVE ─────────────────────────────────────────────────
+async function saveKundeToSP(data, id) {
+  const fields = {
+    Title: data.navn,
+    Kontaktperson: data.kontakt,
+    Telefon: data.tlf,
+    Epost: data.epost,
     Adresse: data.adresse,
-    Org_x002e_nr: data.orgnr,
-    Prosjektnummer: data.pnr,
-    Status: data.status,
-    Notat: data.notat,
-    Pris: data.pris ? parseFloat(data.pris) : 0,
+    Orgnr: data.orgnr,
+    Kundetype: data.type,
   };
-  if (data.type) f.Kundetype = data.type;
-  return f;
+  if (id) return graphPatch(`/sites/${siteId}/lists/${kunderId}/items/${id}/fields`, fields);
+  return graphPost(`/sites/${siteId}/lists/${kunderId}/items`, { fields });
 }
 
-async function createKunde(data) {
-  await getSiteAndList();
-  return graphPost(`/sites/${siteId}/lists/${listId}/items`, { fields: buildFields(data) });
+async function saveProsjektToSP(data, id) {
+  const fields = {
+    Title: data.navn,
+    Kundenavn: data.kundenavn,
+    Prosjektnummer: data.pnr,
+    Pris: parseFloat(data.pris)||0,
+    Status: data.status,
+    Prosjektleder: data.prosjektleder,
+    Oppstartsdato: data.dato,
+    Notat: data.notat,
+  };
+  if (id) return graphPatch(`/sites/${siteId}/lists/${prosjekterId}/items/${id}/fields`, fields);
+  return graphPost(`/sites/${siteId}/lists/${prosjekterId}/items`, { fields });
 }
 
-async function updateKunde(id, data) {
-  await getSiteAndList();
-  return graphPatch(`/sites/${siteId}/lists/${listId}/items/${id}/fields`, buildFields(data));
+async function updateProsjektStatus(id, status) {
+  return graphPatch(`/sites/${siteId}/lists/${prosjekterId}/items/${id}/fields`, { Status: status });
 }
 
-async function updateStatus(id, status) {
-  await getSiteAndList();
-  return graphPatch(`/sites/${siteId}/lists/${listId}/items/${id}/fields`, { Status: status });
-}
-
-// FILE OPERATIONS
+// ─── FILES ────────────────────────────────────────────────
 async function listFiles(folderPath) {
-  await getSiteAndList();
-  const encoded = encodeURIComponent(folderPath);
   const data = await graphGet(`/drives/${driveId}/root:/${folderPath}:/children`);
   return data.value || [];
 }
 
 async function uploadFile(folderPath, file) {
-  await getSiteAndList();
-  const path = `${folderPath}/${file.name}`;
-  return graphPut(`/drives/${driveId}/root:/${path}:/content`, file, file.type);
+  return graphPut(`/drives/${driveId}/root:/${folderPath}/${file.name}:/content`, file, file.type||'application/octet-stream');
 }
 
+// ─── APP ──────────────────────────────────────────────────
 async function showApp() {
   document.getElementById('loginScreen').style.display = 'none';
-  document.getElementById('app').style.display = 'block';
+  document.getElementById('app').style.display = 'flex';
   document.getElementById('userBadge').textContent = `👤 ${currentUser.name||currentUser.username}`;
-  document.getElementById('searchInput').addEventListener('input', e => { currentSearch = e.target.value.toLowerCase(); render(); });
-  await loadKunder();
+  await loadAll();
 }
 
-async function loadKunder() {
-  document.getElementById('tableBody').innerHTML = '<tr class="loading-row"><td colspan="8"><span class="spinner"></span> Laster kunder...</td></tr>';
-  try { kunder = await fetchKunder(); render(); }
-  catch(e) { console.error(e); showError('Kunne ikke laste kunder: '+e.message); document.getElementById('tableBody').innerHTML = '<tr class="loading-row"><td colspan="8">Feil – prøv å laste siden på nytt</td></tr>'; }
+async function loadAll() {
+  document.getElementById('kundeList').innerHTML = '<div class="loading-overlay"><span class="spinner"></span> Laster...</div>';
+  try {
+    await setup();
+    [kunder, prosjekter] = await Promise.all([fetchKunder(), fetchProsjekter()]);
+    renderKundeList();
+    if (selectedKundeId) renderKundeDetail(selectedKundeId);
+  } catch(e) {
+    console.error(e);
+    showError('Kunne ikke laste data: '+e.message);
+    document.getElementById('kundeList').innerHTML = '<div class="loading-overlay">Feil – prøv igjen</div>';
+  }
 }
 
 function showError(msg) {
@@ -696,324 +599,322 @@ function showError(msg) {
   setTimeout(() => document.getElementById('errorBanner').innerHTML = '', 8000);
 }
 
-function setFilter(f, btn) {
-  currentFilter = f;
-  document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
-  btn.classList.add('active'); render();
-}
+// ─── RENDER ───────────────────────────────────────────────
+function filterKunder(val) { kundeSearch = val; renderKundeList(); }
 
-function formatPris(pris) {
-  if (!pris || pris === 0) return '—';
-  return new Intl.NumberFormat('no-NO').format(pris) + ' kr';
-}
+function renderKundeList() {
+  const list = kunder.filter(k => !kundeSearch || k.navn.toLowerCase().includes(kundeSearch.toLowerCase()) || k.kontakt.toLowerCase().includes(kundeSearch.toLowerCase()));
+  if (list.length === 0) { document.getElementById('kundeList').innerHTML = '<div class="loading-overlay" style="color:var(--text3)">Ingen kunder funnet</div>'; return; }
 
-function sortedFiltered() {
-  let list = kunder.filter(k => {
-    const mf = currentFilter === 'alle' || k.status === currentFilter;
-    const ms = !currentSearch || k.firmanavn.toLowerCase().includes(currentSearch) || k.kontakt.toLowerCase().includes(currentSearch) || k.pnr.includes(currentSearch);
-    return mf && ms;
-  });
-  list.sort((a, b) => {
-    let av, bv;
-    if (sortKey==='pnr') { av=parseInt(a.pnr)||0; bv=parseInt(b.pnr)||0; }
-    else if (sortKey==='navn') { av=a.firmanavn.toLowerCase(); bv=b.firmanavn.toLowerCase(); }
-    else if (sortKey==='status') { const o={'Aktiv':0,'Under kalkyle':1,'Avsluttet':2}; av=o[a.status]||3; bv=o[b.status]||3; }
-    else { av=a[sortKey]||''; bv=b[sortKey]||''; }
-    if (av<bv) return sortDir==='asc'?-1:1;
-    if (av>bv) return sortDir==='asc'?1:-1;
-    return 0;
-  });
-  return list;
-}
-
-function sortBy(key) {
-  if (sortKey===key) sortDir=sortDir==='asc'?'desc':'asc';
-  else { sortKey=key; sortDir='asc'; }
-  localStorage.setItem('sort', `${sortKey}-${sortDir}`);
-  render();
-}
-
-function render() {
-  const list = sortedFiltered();
-  const visCols = COLUMNS.filter(c => c.show);
-  const aktive = kunder.filter(k => k.status==='Aktiv');
-  const portefolje = aktive.reduce((sum, k) => sum + (k.pris||0), 0);
-
-  document.getElementById('statTotal').textContent = kunder.length;
-  document.getElementById('statKalkyle').textContent = kunder.filter(k=>k.status==='Under kalkyle').length;
-  document.getElementById('statAktiv').textContent = aktive.length;
-  document.getElementById('statAvsluttet').textContent = kunder.filter(k=>k.status==='Avsluttet').length;
-  document.getElementById('statPortefolje').textContent = portefolje > 0 ? new Intl.NumberFormat('no-NO').format(portefolje)+' kr' : '—';
-
-  const sortable = ['pnr','navn','status'];
-  document.getElementById('tableHead').innerHTML = '<tr>' + visCols.map(col => {
-    const s = sortable.includes(col.key);
-    const a = sortKey===col.key;
-    return `<th ${s?`onclick="sortBy('${col.key}')"`:''} class="${a?'sorted':''}">${col.label}${s?(a?(sortDir==='asc'?' ↑':' ↓'):' ↕'):''}</th>`;
-  }).join('') + '</tr>';
-
-  const tbody = document.getElementById('tableBody');
-  const empty = document.getElementById('emptyState');
-  if (list.length===0) { tbody.innerHTML=''; empty.style.display='block'; return; }
-  empty.style.display='none';
-
-  tbody.innerHTML = list.map(k => {
-    const cells = visCols.map(col => {
-      if (col.key==='pnr') return `<td><span class="pnr">${k.pnr||'—'}</span></td>`;
-      if (col.key==='navn') return `<td><span class="firm-name">${k.firmanavn}</span></td>`;
-      if (col.key==='type') return `<td><span class="${k.type==='privat'?'type-badge-privat':'type-badge-firma'}">${k.type==='privat'?'👤 Privat':'🏢 Firma'}</span></td>`;
-      if (col.key==='kontakt') return `<td><span class="contact">${k.kontakt||'—'}</span></td>`;
-      if (col.key==='telefon') return `<td><span class="contact">${k.telefon||'—'}</span></td>`;
-      if (col.key==='pris') return `<td><span class="value-cell">${formatPris(k.pris)}</span></td>`;
-      if (col.key==='status') return `<td>${badgeHtml(k.status)}</td>`;
-      if (col.key==='mapper') return `<td><span class="mapper-check ${k.mapper?'done':''}">${k.mapper?'✓ Opprettet':'— Ikke opprettet'}</span></td>`;
-      return '<td>—</td>';
-    });
-    return `<tr onclick="openDetail('${k.id}')">${cells.join('')}</tr>`;
-  }).join('');
-}
-
-function badgeHtml(status) {
-  const cls = status==='Aktiv'?'aktiv':status==='Under kalkyle'?'kalkyle':'avsluttet';
-  return `<span class="badge ${cls}"><span class="badge-dot"></span>${status}</span>`;
-}
-
-function exportExcel() {
-  const headers = ['Pnr','Firmanavn','Type','Kontakt','Telefon','E-post','Adresse','Org.nr','Kontraktsum','Status','Mapper','Notat'];
-  const rows = kunder.map(k => [k.pnr, k.firmanavn, k.type==='privat'?'Privat':'Firma', k.kontakt, k.telefon, k.epost, k.adresse, k.orgnr, k.pris||0, k.status, k.mapper?'Ja':'Nei', k.notat]);
-  const ws = XLSX.utils.aoa_to_sheet([headers,...rows]);
-  ws['!cols'] = headers.map(()=>({wch:18}));
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'Kunderegister');
-  XLSX.writeFile(wb, `LHBygg_Kunderegister_${new Date().toISOString().slice(0,10)}.xlsx`);
-  toast('📊','Kunderegister eksportert til Excel');
-}
-
-function showTab(tab, btn) {
-  document.querySelectorAll('.detail-tab').forEach(t=>t.classList.remove('active'));
-  document.querySelectorAll('.detail-panel').forEach(p=>p.classList.remove('active'));
-  btn.classList.add('active');
-  document.getElementById(`panel-${tab}`).classList.add('active');
-}
-
-function setKundeType(type, btn) {
-  kundeType = type;
-  document.querySelectorAll('.kunde-type-btn').forEach(b=>b.classList.remove('selected'));
-  btn.classList.add('selected');
-  document.getElementById('firmanavnLabel').textContent = type==='privat'?'Navn *':'Firmanavn *';
-  document.getElementById('f_firmanavn').placeholder = type==='privat'?'Ola Nordmann':'Bedrift AS';
-  document.getElementById('orgnrGroup').style.display = type==='privat'?'none':'';
-}
-
-function openDetail(id) {
-  selectedId = id;
-  currentKunde = kunder.find(x=>x.id===id);
-  const k = currentKunde;
-
-  document.getElementById('detailFirma').textContent = k.firmanavn;
-  document.getElementById('detailPnr').textContent = `Pnr: ${k.pnr||'—'} · ${k.type==='privat'?'👤 Privatkunde':'🏢 Firmakunde'}${k.pris?' · 💰 '+formatPris(k.pris):''}`;
-
-  let btns = `<span class="status-label">Status:</span> ${badgeHtml(k.status)} &nbsp;`;
-  if (k.status==='Under kalkyle') btns += `<button class="status-btn aktiv-btn" onclick="changeStatus('${id}','Aktiv')">→ Sett Aktiv</button>`;
-  else if (k.status==='Aktiv') btns += `<button class="status-btn" onclick="changeStatus('${id}','Avsluttet')">→ Sett Avsluttet</button>`;
-  document.getElementById('statusRow').innerHTML = btns;
-
-  // Action buttons
-  let actions = '';
-  if (k.telefon) actions += `<a class="action-btn phone" href="tel:${k.telefon}">📞 Ring ${k.telefon}</a>`;
-  if (k.epost) actions += `<a class="action-btn email" href="mailto:${k.epost}">✉️ Send e-post</a>`;
-  document.getElementById('actionBtns').innerHTML = actions;
-
-  document.getElementById('detailInfo').innerHTML = `
-    <div class="detail-field"><div class="detail-label">Kontaktperson</div><div class="detail-value">${k.kontakt||'—'}</div></div>
-    <div class="detail-field"><div class="detail-label">Kontraktsum</div><div class="detail-value" style="font-size:16px;font-weight:700;color:var(--accent)">${formatPris(k.pris)}</div></div>
-    <div class="detail-field"><div class="detail-label">E-post</div><div class="detail-value">${k.epost||'—'}</div></div>
-    <div class="detail-field"><div class="detail-label">Org.nr</div><div class="detail-value">${k.orgnr||'—'}</div></div>
-    <div class="detail-field" style="grid-column:1/-1"><div class="detail-label">Adresse</div><div class="detail-value">${k.adresse||'—'}</div></div>
-  `;
-
-  document.getElementById('notatSection').innerHTML = k.notat ? `
-    <div class="section-title" style="margin-top:20px">Notat</div>
-    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:14px;font-size:14px;color:var(--text2);line-height:1.6">${k.notat}</div>
-  ` : '';
-
-  // Mapper
-  const locked = k.status==='Under kalkyle';
-  document.getElementById('mapperGrid').innerHTML = MAPPER.map(m=>{
-    if (locked) return `<div class="mappe-card locked" title="Låst – sett til Aktiv"><div class="mappe-icon">${MAPPER_ICONS[m]}</div><div class="mappe-name">${m}</div></div>`;
-    return `<div class="mappe-card" onclick="openFolder('${m}')" title="Åpne ${m}"><div class="mappe-icon">${MAPPER_ICONS[m]}</div><div class="mappe-name">${m}</div></div>`;
-  }).join('');
-
-  document.getElementById('fileBrowser').style.display = 'none';
-
-  // Reset tabs
-  document.querySelectorAll('.detail-tab').forEach((t,i)=>t.classList.toggle('active',i===0));
-  document.querySelectorAll('.detail-panel').forEach((p,i)=>p.classList.toggle('active',i===0));
-
-  document.getElementById('detailModal').classList.add('open');
-}
-
-async function openFolder(mappeNavn) {
-  const k = currentKunde;
-  currentFolder = `${PROSJEKT_BASE}/${k.pnr} - ${k.firmanavn}/${mappeNavn}`;
-
-  document.querySelectorAll('.mappe-card').forEach(c=>c.classList.remove('active-folder'));
-  event.currentTarget.classList.add('active-folder');
-
-  const browser = document.getElementById('fileBrowser');
-  browser.style.display = 'block';
-  document.getElementById('currentFolderName').textContent = `📁 ${mappeNavn}`;
-  document.getElementById('fileList').innerHTML = '<div class="file-loading"><span class="spinner"></span> Laster filer...</div>';
-
-  // Switch to mapper tab
-  document.querySelectorAll('.detail-tab').forEach((t,i)=>t.classList.toggle('active',i===1));
-  document.querySelectorAll('.detail-panel').forEach((p,i)=>p.classList.toggle('active',i===1));
-
-  try {
-    const files = await listFiles(currentFolder);
-    renderFileList(files);
-  } catch(e) {
-    document.getElementById('fileList').innerHTML = '<div class="file-empty">Ingen filer funnet</div>';
-  }
-}
-
-function closeFolderView() {
-  document.getElementById('fileBrowser').style.display = 'none';
-  document.querySelectorAll('.mappe-card').forEach(c=>c.classList.remove('active-folder'));
-  currentFolder = null;
-}
-
-function getFileIcon(name) {
-  const ext = name.split('.').pop().toLowerCase();
-  if (['pdf'].includes(ext)) return '📄';
-  if (['doc','docx'].includes(ext)) return '📝';
-  if (['xls','xlsx'].includes(ext)) return '📊';
-  if (['ppt','pptx'].includes(ext)) return '📑';
-  if (['jpg','jpeg','png','gif','webp'].includes(ext)) return '🖼️';
-  if (['zip','rar','7z'].includes(ext)) return '🗜️';
-  return '📎';
-}
-
-function renderFileList(files) {
-  const list = document.getElementById('fileList');
-  if (files.length === 0) { list.innerHTML = '<div class="file-empty">Ingen filer i denne mappen ennå</div>'; return; }
-  list.innerHTML = files.filter(f=>f.file).map(f => {
-    const dato = new Date(f.lastModifiedDateTime).toLocaleDateString('no-NO');
-    const size = f.size > 1024*1024 ? (f.size/1024/1024).toFixed(1)+' MB' : Math.round(f.size/1024)+' KB';
-    return `<div class="file-item">
-      <div class="file-icon">${getFileIcon(f.name)}</div>
-      <div class="file-info">
-        <div class="file-name"><a href="${f.webUrl}" target="_blank" style="color:var(--text);text-decoration:none">${f.name}</a></div>
-        <div class="file-meta">${dato} · ${size}</div>
+  document.getElementById('kundeList').innerHTML = list.map(k => {
+    const kProsjekter = prosjekter.filter(p => p.kundenavn === k.navn);
+    const aktive = kProsjekter.filter(p => p.status === 'Aktiv').length;
+    const port = kProsjekter.filter(p=>p.status==='Aktiv').reduce((s,p)=>s+(p.pris||0),0);
+    return `<div class="kunde-item ${selectedKundeId===k.id?'active':''}" onclick="selectKunde('${k.id}')">
+      <div class="kunde-name">${k.navn}</div>
+      <div class="kunde-meta">
+        <span class="kunde-kontakt">${k.kontakt||'—'}</span>
+        ${kProsjekter.length>0?`<span class="tag tag-blue">${kProsjekter.length} prosjekt${kProsjekter.length!==1?'er':''}</span>`:''}
+        ${aktive>0?`<span class="tag tag-green">${aktive} aktiv${aktive!==1?'e':''}</span>`:''}
+        ${port>0?`<span class="tag tag-gold">${formatPris(port)}</span>`:''}
       </div>
     </div>`;
   }).join('');
 }
 
-function handleDragOver(e) { e.preventDefault(); document.getElementById('dropZone').classList.add('drag-over'); }
-function handleDragLeave(e) { document.getElementById('dropZone').classList.remove('drag-over'); }
-function handleDrop(e) { e.preventDefault(); document.getElementById('dropZone').classList.remove('drag-over'); uploadFiles(e.dataTransfer.files); }
-function handleFileSelect(e) { uploadFiles(e.target.files); }
-
-async function uploadFiles(files) {
-  if (!currentFolder || !files.length) return;
-  const progress = document.getElementById('uploadProgress');
-  progress.classList.add('show');
-  let uploaded = 0;
-  for (const file of files) {
-    try {
-      progress.textContent = `⏳ Laster opp ${file.name}...`;
-      await uploadFile(currentFolder, file);
-      uploaded++;
-    } catch(e) { showError('Feil ved opplasting av '+file.name+': '+e.message); }
-  }
-  progress.classList.remove('show');
-  document.getElementById('fileInput').value = '';
-  if (uploaded > 0) {
-    toast('✅', `${uploaded} fil${uploaded>1?'er':''} lastet opp`);
-    const updatedFiles = await listFiles(currentFolder);
-    renderFileList(updatedFiles);
-  }
+function selectKunde(id) {
+  selectedKundeId = id;
+  renderKundeList();
+  renderKundeDetail(id);
 }
 
-async function changeStatus(id, newStatus) {
+function renderKundeDetail(id) {
+  const k = kunder.find(x=>x.id===id);
+  if (!k) return;
+  const kProsjekter = prosjekter.filter(p => p.kundenavn === k.navn);
+  const aktive = kProsjekter.filter(p=>p.status==='Aktiv').length;
+  const underKalkyle = kProsjekter.filter(p=>p.status==='Under kalkyle').length;
+  const avsluttede = kProsjekter.filter(p=>p.status==='Avsluttet').length;
+  const port = kProsjekter.filter(p=>p.status==='Aktiv').reduce((s,p)=>s+(p.pris||0),0);
+
+  document.getElementById('rightPanel').innerHTML = `
+    <div id="errorBanner"></div>
+    <div class="kunde-header">
+      <div>
+        <div class="kunde-header-title">
+          ${k.navn}
+          <span class="tag ${k.type==='privat'?'tag-blue':'tag-gold'}">${k.type==='privat'?'👤 Privat':'🏢 Firma'}</span>
+        </div>
+        <div class="kunde-header-sub">${k.orgnr?k.orgnr+' · ':''}${k.adresse||''}</div>
+      </div>
+      <div class="kunde-header-actions">
+        <button class="btn-ghost" onclick="openRedigerKunde('${k.id}')">✏️ Rediger</button>
+        <button class="btn-primary" onclick="openNyProsjektModal('${k.id}')">+ Nytt prosjekt</button>
+      </div>
+    </div>
+
+    <div class="info-row">
+      <div class="info-card"><div class="info-label">Kontaktperson</div><div class="info-value">${k.kontakt||'—'}</div></div>
+      <div class="info-card"><div class="info-label">Telefon</div><div class="info-value">${k.tlf?`<a href="tel:${k.tlf}">📞 ${k.tlf}</a>`:'—'}</div></div>
+      <div class="info-card"><div class="info-label">E-post</div><div class="info-value">${k.epost?`<a href="mailto:${k.epost}">✉️ ${k.epost}</a>`:'—'}</div></div>
+    </div>
+
+    <div class="stats-strip">
+      <div class="stat-pill">📋 <strong>${kProsjekter.length}</strong> prosjekter</div>
+      ${aktive>0?`<div class="stat-pill">✅ <strong>${aktive}</strong> aktive</div>`:''}
+      ${underKalkyle>0?`<div class="stat-pill">⏳ <strong>${underKalkyle}</strong> under kalkyle</div>`:''}
+      ${avsluttede>0?`<div class="stat-pill">🏁 <strong>${avsluttede}</strong> avsluttet</div>`:''}
+      ${port>0?`<div class="stat-pill">💰 Portefølje: <strong style="color:var(--accent)">${formatPris(port)}</strong></div>`:''}
+    </div>
+
+    <div class="section-header">
+      <div class="section-title">Prosjekter</div>
+    </div>
+
+    <div class="prosjekt-list">
+      ${kProsjekter.length===0?`
+        <div style="padding:32px;text-align:center;color:var(--text3);background:var(--surface);border:1px solid var(--border);border-radius:10px">
+          <div style="font-size:32px;margin-bottom:8px">📋</div>
+          <div style="font-size:13px">Ingen prosjekter ennå – klikk "+ Nytt prosjekt"</div>
+        </div>
+      `:kProsjekter.map(p => `
+        <div class="prosjekt-card">
+          <div class="prosjekt-card-top">
+            <div>
+              <div class="prosjekt-card-title">${p.navn}</div>
+              <div class="prosjekt-card-pnr">Pnr: ${p.pnr||'—'}</div>
+            </div>
+            <div class="prosjekt-card-right">
+              ${p.pris>0?`<span class="prosjekt-card-verdi">${formatPris(p.pris)}</span>`:''}
+              <span class="badge ${p.status==='Aktiv'?'aktiv':p.status==='Under kalkyle'?'kalkyle':'avsluttet'}">
+                <span class="badge-dot"></span>${p.status}
+              </span>
+              <button class="btn-ghost" style="padding:4px 10px;font-size:12px" onclick="openRedigerProsjekt('${p.id}','${k.id}')">✏️</button>
+            </div>
+          </div>
+          <div class="prosjekt-meta">
+            ${p.prosjektleder?`<span class="prosjekt-meta-item">👷 ${p.prosjektleder}</span>`:''}
+            ${p.dato?`<span class="prosjekt-meta-item">📅 Oppstart ${p.dato}</span>`:''}
+            ${p.notat?`<span class="prosjekt-meta-item" style="color:var(--text3)">📝 ${p.notat.substring(0,80)}${p.notat.length>80?'...':''}</span>`:''}
+          </div>
+          ${p.status!=='Under kalkyle'?`
+            <div style="margin-bottom:8px;display:flex;gap:8px">
+              ${p.status==='Aktiv'?`<button class="btn-ghost" style="font-size:12px;padding:4px 10px" onclick="endreStatus('${p.id}','Avsluttet')">→ Sett Avsluttet</button>`:''}
+              ${p.status==='Avsluttet'?`<span style="font-size:12px;color:var(--text3)">🏁 Avsluttet</span>`:''}
+            </div>
+          `:`<div style="margin-bottom:8px"><button class="btn-ghost" style="font-size:12px;padding:4px 10px;color:var(--green);border-color:rgba(34,197,94,0.3)" onclick="endreStatus('${p.id}','Aktiv')">→ Sett Aktiv</button></div>`}
+          <div class="mapper-mini">
+            ${MAPPER.map(m => {
+              if (p.status==='Under kalkyle') return `<div class="mappe-mini locked">${MAPPER_ICONS[m]} ${m}</div>`;
+              return `<div class="mappe-mini" onclick="apneMappe('${p.id}','${m}','${p.pnr}','${p.navn.replace(/'/g,"\\'")}')"> ${MAPPER_ICONS[m]} ${m}</div>`;
+            }).join('')}
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+function formatPris(p) {
+  if (!p||p===0) return '—';
+  if (p>=1000000) return (p/1000000).toFixed(1).replace('.',',')+' MNOK';
+  return new Intl.NumberFormat('no-NO').format(p)+' kr';
+}
+
+// ─── STATUS ───────────────────────────────────────────────
+async function endreStatus(prosjektId, nyStatus) {
   try {
-    await updateStatus(id, newStatus);
-    const k = kunder.find(x=>x.id===id);
-    k.status = newStatus;
-    if (newStatus==='Aktiv') toast('✅','Satt til Aktiv – mapper opprettes automatisk');
-    else if (newStatus==='Avsluttet') toast('📁','Satt til Avsluttet – mappe flyttes automatisk');
-    render(); openDetail(id);
+    await updateProsjektStatus(prosjektId, nyStatus);
+    const p = prosjekter.find(x=>x.id===prosjektId);
+    p.status = nyStatus;
+    if (nyStatus==='Aktiv') toast('✅','Satt til Aktiv – mapper opprettes automatisk');
+    else toast('📁','Satt til Avsluttet – mappe flyttes automatisk');
+    renderKundeList();
+    renderKundeDetail(selectedKundeId);
   } catch(e) { showError('Kunne ikke oppdatere: '+e.message); }
 }
 
-function editKunde() {
-  closeModal('detailModal');
-  const k = kunder.find(x=>x.id===selectedId);
-  editMode = true; kundeType = k.type||'firma';
-  document.getElementById('formModalTitle').textContent = 'Rediger kunde';
-  document.getElementById('kundeTypeRow').style.display = 'none';
-  document.getElementById('f_firmanavn').value = k.firmanavn;
-  document.getElementById('f_kontakt').value = k.kontakt;
-  document.getElementById('f_telefon').value = k.telefon;
-  document.getElementById('f_epost').value = k.epost;
-  document.getElementById('f_orgnr').value = k.orgnr;
-  document.getElementById('f_adresse').value = k.adresse;
-  document.getElementById('f_pnr').value = k.pnr;
-  document.getElementById('f_pris').value = k.pris||'';
-  document.getElementById('f_status').value = k.status;
-  document.getElementById('f_notat').value = k.notat;
-  document.getElementById('orgnrGroup').style.display = kundeType==='privat'?'none':'';
-  document.getElementById('formModal').classList.add('open');
+// ─── MAPPER / FILER ───────────────────────────────────────
+async function apneMappe(prosjektId, mappeNavn, pnr, prosjektNavn) {
+  currentFolder = `${PROSJEKT_BASE}/${pnr} - ${prosjektNavn}/${mappeNavn}`;
+  document.getElementById('filModalTitle').textContent = `📁 ${mappeNavn} – ${prosjektNavn}`;
+  document.getElementById('filList').innerHTML = '<div style="padding:16px;text-align:center;color:var(--text3)"><span class="spinner"></span> Laster filer...</div>';
+  document.getElementById('filModal').classList.add('open');
+  try {
+    const files = await listFiles(currentFolder);
+    renderFiler(files);
+  } catch(e) {
+    document.getElementById('filList').innerHTML = '<div style="padding:16px;text-align:center;color:var(--text3)">Ingen filer ennå</div>';
+  }
 }
 
-function openNewModal() {
-  editMode = false; selectedId = null; kundeType = 'firma';
-  document.getElementById('formModalTitle').textContent = 'Ny kunde';
+function renderFiler(files) {
+  const filer = files.filter(f=>f.file);
+  if (filer.length===0) { document.getElementById('filList').innerHTML = '<div style="padding:16px;text-align:center;color:var(--text3)">Ingen filer ennå – last opp en fil ovenfor</div>'; return; }
+  document.getElementById('filList').innerHTML = filer.map(f => {
+    const dato = new Date(f.lastModifiedDateTime).toLocaleDateString('no-NO');
+    const size = f.size>1024*1024?(f.size/1024/1024).toFixed(1)+' MB':Math.round(f.size/1024)+' KB';
+    const ext = f.name.split('.').pop().toLowerCase();
+    const icon = ['pdf'].includes(ext)?'📄':['doc','docx'].includes(ext)?'📝':['xls','xlsx'].includes(ext)?'📊':['jpg','jpeg','png'].includes(ext)?'🖼️':'📎';
+    return `<div class="file-item">
+      <div class="file-icon">${icon}</div>
+      <div class="file-name"><a href="${f.webUrl}" target="_blank">${f.name}</a></div>
+      <div class="file-meta">${dato} · ${size}</div>
+    </div>`;
+  }).join('');
+}
+
+function handleDragOver(e) { e.preventDefault(); document.getElementById('dropZone').classList.add('drag-over'); }
+function handleDragLeave() { document.getElementById('dropZone').classList.remove('drag-over'); }
+function handleDrop(e) { e.preventDefault(); document.getElementById('dropZone').classList.remove('drag-over'); uploadFiler(e.dataTransfer.files); }
+function handleFileSelect(e) { uploadFiler(e.target.files); }
+
+async function uploadFiler(files) {
+  if (!currentFolder||!files.length) return;
+  const prog = document.getElementById('uploadProgress');
+  prog.classList.add('show');
+  let n = 0;
+  for (const f of files) {
+    try { prog.textContent = `⏳ Laster opp ${f.name}...`; await uploadFile(currentFolder, f); n++; }
+    catch(e) { showError('Feil: '+e.message); }
+  }
+  prog.classList.remove('show');
+  document.getElementById('fileInput').value = '';
+  if (n>0) {
+    toast('✅', `${n} fil${n>1?'er':''} lastet opp`);
+    const updated = await listFiles(currentFolder);
+    renderFiler(updated);
+  }
+}
+
+// ─── KUNDE MODAL ──────────────────────────────────────────
+function setKundeType(type) {
+  kundeTypeModal = type;
+  document.getElementById('typeFirmaBtn').className = `type-btn ${type==='firma'?'selected':''}`;
+  document.getElementById('typePrivatBtn').className = `type-btn ${type==='privat'?'selected':''}`;
+  document.getElementById('k_navnLabel').textContent = type==='privat'?'Navn *':'Firmanavn *';
+  document.getElementById('k_navn').placeholder = type==='privat'?'Ola Nordmann':'TrønderEnergi Kraft AS';
+  document.getElementById('k_orgnrGroup').style.display = type==='privat'?'none':'';
+}
+
+function openNyKundeModal() {
+  editKundeId = null;
+  kundeTypeModal = 'firma';
+  document.getElementById('kundeModalTitle').textContent = 'Ny kunde';
   document.getElementById('kundeTypeRow').style.display = '';
-  ['firmanavn','kontakt','telefon','epost','orgnr','adresse','pnr','notat'].forEach(f=>document.getElementById('f_'+f).value='');
-  document.getElementById('f_pris').value = '';
-  document.getElementById('f_status').value = 'Under kalkyle';
-  document.getElementById('orgnrGroup').style.display = '';
-  document.getElementById('firmanavnLabel').textContent = 'Firmanavn *';
-  document.getElementById('f_firmanavn').placeholder = 'Bedrift AS';
-  document.querySelectorAll('.kunde-type-btn').forEach((b,i)=>b.classList.toggle('selected',i===0));
-  document.getElementById('formModal').classList.add('open');
+  ['k_navn','k_kontakt','k_tlf','k_epost','k_adresse','k_orgnr'].forEach(id=>document.getElementById(id).value='');
+  setKundeType('firma');
+  document.getElementById('kundeModal').classList.add('open');
 }
 
-async function saveKunde() {
-  const firma = document.getElementById('f_firmanavn').value.trim();
-  if (!firma) { alert('Navn er påkrevd'); return; }
+function openRedigerKunde(id) {
+  editKundeId = id;
+  const k = kunder.find(x=>x.id===id);
+  kundeTypeModal = k.type||'firma';
+  document.getElementById('kundeModalTitle').textContent = 'Rediger kunde';
+  document.getElementById('kundeTypeRow').style.display = 'none';
+  document.getElementById('k_navn').value = k.navn;
+  document.getElementById('k_kontakt').value = k.kontakt;
+  document.getElementById('k_tlf').value = k.tlf;
+  document.getElementById('k_epost').value = k.epost;
+  document.getElementById('k_adresse').value = k.adresse;
+  document.getElementById('k_orgnr').value = k.orgnr;
+  document.getElementById('k_orgnrGroup').style.display = kundeTypeModal==='privat'?'none':'';
+  document.getElementById('kundeModal').classList.add('open');
+}
+
+async function lagreKunde() {
+  const navn = document.getElementById('k_navn').value.trim();
+  if (!navn) { alert('Navn er påkrevd'); return; }
   const data = {
-    firmanavn: firma,
-    kontakt: document.getElementById('f_kontakt').value,
-    telefon: document.getElementById('f_telefon').value,
-    epost: document.getElementById('f_epost').value,
-    orgnr: document.getElementById('f_orgnr').value,
-    adresse: document.getElementById('f_adresse').value,
-    pnr: document.getElementById('f_pnr').value,
-    pris: document.getElementById('f_pris').value,
-    status: document.getElementById('f_status').value,
-    notat: document.getElementById('f_notat').value,
-    type: kundeType
+    navn, type: kundeTypeModal,
+    kontakt: document.getElementById('k_kontakt').value,
+    tlf: document.getElementById('k_tlf').value,
+    epost: document.getElementById('k_epost').value,
+    adresse: document.getElementById('k_adresse').value,
+    orgnr: document.getElementById('k_orgnr').value,
   };
-  const btn = document.getElementById('saveBtn');
+  const btn = document.getElementById('kundeModalSaveBtn');
   btn.disabled = true; btn.textContent = 'Lagrer...';
   try {
-    if (editMode && selectedId) {
-      await updateKunde(selectedId, data);
-      Object.assign(kunder.find(x=>x.id===selectedId), data);
-      toast('✅', `${data.firmanavn} oppdatert`);
+    if (editKundeId) {
+      await saveKundeToSP(data, editKundeId);
+      Object.assign(kunder.find(x=>x.id===editKundeId), data);
+      toast('✅', `${data.navn} oppdatert`);
     } else {
-      const created = await createKunde(data);
-      kunder.push({ id: created.id, mapper: false, ...data });
-      toast('✅', `${data.firmanavn} lagt til`);
+      const created = await saveKundeToSP(data);
+      kunder.push({ id: created.id, ...data });
+      toast('✅', `${data.navn} lagt til`);
     }
-    closeModal('formModal'); render();
-  } catch(e) { console.error(e); showError('Kunne ikke lagre: '+e.message); }
+    closeModal('kundeModal');
+    renderKundeList();
+    if (editKundeId && selectedKundeId===editKundeId) renderKundeDetail(editKundeId);
+  } catch(e) { showError('Kunne ikke lagre: '+e.message); }
   finally { btn.disabled = false; btn.textContent = 'Lagre'; }
 }
 
+// ─── PROSJEKT MODAL ───────────────────────────────────────
+function openNyProsjektModal(kundeId) {
+  editProsjektId = null;
+  selectedKundeId = kundeId;
+  const k = kunder.find(x=>x.id===kundeId);
+  document.getElementById('prosjektModalTitle').textContent = `Nytt prosjekt – ${k.navn}`;
+  ['p_navn','p_pnr','p_dato','p_notat'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('p_pris').value = '';
+  document.getElementById('p_status').value = 'Under kalkyle';
+  document.getElementById('p_prosjektleder').value = '';
+  document.getElementById('prosjektModal').classList.add('open');
+}
+
+function openRedigerProsjekt(prosjektId, kundeId) {
+  editProsjektId = prosjektId;
+  selectedKundeId = kundeId;
+  const p = prosjekter.find(x=>x.id===prosjektId);
+  const k = kunder.find(x=>x.id===kundeId);
+  document.getElementById('prosjektModalTitle').textContent = `Rediger – ${p.navn}`;
+  document.getElementById('p_navn').value = p.navn;
+  document.getElementById('p_pnr').value = p.pnr;
+  document.getElementById('p_pris').value = p.pris||'';
+  document.getElementById('p_status').value = p.status;
+  document.getElementById('p_prosjektleder').value = p.prosjektleder||'';
+  document.getElementById('p_dato').value = p.dato||'';
+  document.getElementById('p_notat').value = p.notat||'';
+  document.getElementById('prosjektModal').classList.add('open');
+}
+
+async function lagreProsjekt() {
+  const navn = document.getElementById('p_navn').value.trim();
+  if (!navn) { alert('Prosjektnavn er påkrevd'); return; }
+  const k = kunder.find(x=>x.id===selectedKundeId);
+  const data = {
+    navn, kundenavn: k.navn,
+    pnr: document.getElementById('p_pnr').value,
+    pris: document.getElementById('p_pris').value,
+    status: document.getElementById('p_status').value,
+    prosjektleder: document.getElementById('p_prosjektleder').value,
+    dato: document.getElementById('p_dato').value,
+    notat: document.getElementById('p_notat').value,
+  };
+  const btn = document.getElementById('prosjektModalSaveBtn');
+  btn.disabled = true; btn.textContent = 'Lagrer...';
+  try {
+    if (editProsjektId) {
+      await saveProsjektToSP(data, editProsjektId);
+      Object.assign(prosjekter.find(x=>x.id===editProsjektId), data);
+      toast('✅', `${data.navn} oppdatert`);
+    } else {
+      const created = await saveProsjektToSP(data);
+      prosjekter.push({ id: created.id, mapper: false, ...data });
+      toast('✅', `${data.navn} lagt til under ${k.navn}`);
+    }
+    closeModal('prosjektModal');
+    renderKundeList();
+    renderKundeDetail(selectedKundeId);
+  } catch(e) { showError('Kunne ikke lagre: '+e.message); }
+  finally { btn.disabled = false; btn.textContent = 'Lagre'; }
+}
+
+// ─── UTILS ────────────────────────────────────────────────
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }
 
 function toast(icon, msg) {
@@ -1025,7 +926,9 @@ function toast(icon, msg) {
 }
 
 document.querySelectorAll('.modal-overlay').forEach(o => {
-  o.addEventListener('click', e => { if (e.target===o) o.classList.remove('open'); });
+  o.addEventListener('click', e => {
+    if (e.target===o && o.id!=='kundeModal' && o.id!=='prosjektModal') o.classList.remove('open');
+  });
 });
 
 init();
