@@ -38,10 +38,9 @@
   .logo span { color: var(--accent); }
   .header-right { display: flex; align-items: center; gap: 10px; }
   .user-badge { background: var(--surface2); border: 1px solid var(--border); border-radius: 20px; padding: 6px 14px; font-size: 13px; }
-  .btn-icon { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 7px 10px; font-size: 16px; cursor: pointer; color: var(--text2); transition: all 0.15s; line-height: 1; }
+  .btn-icon { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 7px 10px; font-size: 16px; cursor: pointer; color: var(--text2); line-height: 1; }
   .btn-icon:hover { border-color: var(--text2); color: var(--text); }
   .btn-logout { background: none; border: 1px solid var(--border); border-radius: 8px; padding: 6px 12px; font-size: 13px; color: var(--text2); cursor: pointer; font-family: inherit; }
-  .btn-logout:hover { border-color: var(--text2); color: var(--text); }
 
   .main { max-width: 1200px; margin: 0 auto; padding: 28px 24px; }
   .topbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; gap: 16px; flex-wrap: wrap; }
@@ -50,42 +49,44 @@
 
   .search-wrap { position: relative; }
   .search-wrap svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text3); }
-  input[type="text"] { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 9px 14px 9px 38px; color: var(--text); font-family: inherit; font-size: 14px; width: 220px; outline: none; transition: border-color 0.2s; }
-  input[type="text"]:focus { border-color: var(--accent); }
-  input[type="text"]::placeholder { color: var(--text3); }
+  input[type="text"], input[type="number"] { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 9px 14px 9px 38px; color: var(--text); font-family: inherit; font-size: 14px; width: 220px; outline: none; transition: border-color 0.2s; }
+  input[type="text"]:focus, input[type="number"]:focus { border-color: var(--accent); }
+  input[type="text"]::placeholder, input[type="number"]::placeholder { color: var(--text3); }
 
   .filter-tabs { display: flex; gap: 4px; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 4px; }
-  .filter-tab { padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; color: var(--text2); transition: all 0.15s; border: none; background: none; font-family: inherit; }
+  .filter-tab { padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; color: var(--text2); border: none; background: none; font-family: inherit; }
   .filter-tab.active { background: var(--surface); color: var(--text); box-shadow: 0 1px 3px rgba(0,0,0,0.15); }
 
   .btn-primary { background: var(--accent); color: #0f1117; border: none; border-radius: 8px; padding: 9px 18px; font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit; display: flex; align-items: center; gap: 6px; }
   .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
-  .btn-ghost { background: none; color: var(--text2); border: 1px solid var(--border); border-radius: 8px; padding: 8px 16px; font-size: 13px; font-weight: 500; cursor: pointer; font-family: inherit; transition: all 0.15s; }
+  .btn-ghost { background: none; color: var(--text2); border: 1px solid var(--border); border-radius: 8px; padding: 8px 16px; font-size: 13px; font-weight: 500; cursor: pointer; font-family: inherit; }
   .btn-ghost:hover { border-color: var(--text2); color: var(--text); }
   .btn-excel { background: rgba(34,197,94,0.1); color: var(--green); border: 1px solid rgba(34,197,94,0.3); border-radius: 8px; padding: 9px 16px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; display: flex; align-items: center; gap: 6px; }
 
-  .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px; }
+  .stats-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 24px; }
   .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px 18px; }
-  .stat-label { font-size: 12px; color: var(--text2); font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
-  .stat-value { font-size: 26px; font-weight: 700; letter-spacing: -1px; }
+  .stat-card.highlight { border-color: rgba(232,184,75,0.4); background: rgba(232,184,75,0.05); }
+  .stat-label { font-size: 11px; color: var(--text2); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+  .stat-value { font-size: 24px; font-weight: 700; letter-spacing: -1px; }
   .stat-value.gold { color: var(--accent); }
   .stat-value.blue { color: var(--accent2); }
   .stat-value.green { color: var(--green); }
+  .stat-sub { font-size: 11px; color: var(--text3); margin-top: 4px; }
 
   .table-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
   table { width: 100%; border-collapse: collapse; }
   thead tr { border-bottom: 1px solid var(--border); }
   th { padding: 12px 16px; font-size: 11px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.6px; text-align: left; cursor: pointer; user-select: none; white-space: nowrap; }
-  th:hover { color: var(--text2); }
   th.sorted { color: var(--accent); }
   body.compact tbody tr td { padding: 8px 16px; }
   tbody tr { border-bottom: 1px solid var(--border); cursor: pointer; transition: background 0.1s; }
   tbody tr:last-child { border-bottom: none; }
   tbody tr:hover { background: var(--surface2); }
-  td { padding: 14px 16px; font-size: 14px; transition: padding 0.2s; }
+  td { padding: 14px 16px; font-size: 14px; }
   .firm-name { font-weight: 600; }
   .pnr { font-family: 'DM Mono', monospace; font-size: 13px; color: var(--accent); font-weight: 500; }
   .contact { color: var(--text2); font-size: 13px; }
+  .value-cell { font-family: 'DM Mono', monospace; font-size: 13px; color: var(--accent); }
 
   .badge { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; }
   .badge-dot { width: 6px; height: 6px; border-radius: 50%; }
@@ -97,7 +98,6 @@
   .badge.avsluttet .badge-dot { background: var(--text2); }
   .type-badge-privat { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 600; background: rgba(59,130,246,0.12); color: var(--accent2); }
   .type-badge-firma { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 600; background: rgba(232,184,75,0.12); color: var(--accent); }
-
   .mapper-check { font-size: 13px; color: var(--text3); }
   .mapper-check.done { color: var(--green); }
 
@@ -107,7 +107,7 @@
 
   .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 200; align-items: flex-start; justify-content: center; padding: 40px 16px; overflow-y: auto; }
   .modal-overlay.open { display: flex; }
-  .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; width: 100%; max-width: 680px; animation: slideUp 0.2s ease; }
+  .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; width: 100%; max-width: 720px; animation: slideUp 0.2s ease; }
   @keyframes slideUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
   .modal-header { padding: 20px 24px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
   .modal-title { font-size: 17px; font-weight: 700; }
@@ -116,7 +116,7 @@
   .modal-body { padding: 24px; }
 
   .kunde-type-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px; }
-  .kunde-type-btn { padding: 16px; border-radius: 10px; border: 2px solid var(--border); background: var(--surface2); color: var(--text2); font-family: inherit; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.15s; text-align: center; }
+  .kunde-type-btn { padding: 16px; border-radius: 10px; border: 2px solid var(--border); background: var(--surface2); color: var(--text2); font-family: inherit; font-size: 14px; font-weight: 600; cursor: pointer; text-align: center; }
   .kunde-type-btn.selected { border-color: var(--accent); color: var(--accent); background: rgba(232,184,75,0.08); }
   .kunde-type-icon { font-size: 28px; display: block; margin-bottom: 6px; }
 
@@ -124,32 +124,70 @@
   .form-group { display: flex; flex-direction: column; gap: 6px; }
   .form-group.full { grid-column: 1 / -1; }
   label { font-size: 12px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: 0.4px; }
-  .form-input { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; color: var(--text); font-family: inherit; font-size: 14px; outline: none; transition: border-color 0.2s; width: 100%; }
+  .form-input { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; color: var(--text); font-family: inherit; font-size: 14px; outline: none; width: 100%; }
   .form-input:focus { border-color: var(--accent); }
   .form-input::placeholder { color: var(--text3); }
   select.form-input { cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%238b92a8' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px; }
   textarea.form-input { resize: vertical; min-height: 80px; }
   .form-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border); }
 
-  .detail-info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px; }
+  /* DETAIL MODAL */
+  .detail-tabs { display: flex; gap: 4px; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 4px; margin-bottom: 20px; }
+  .detail-tab { padding: 7px 16px; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; color: var(--text2); border: none; background: none; font-family: inherit; }
+  .detail-tab.active { background: var(--surface); color: var(--text); box-shadow: 0 1px 3px rgba(0,0,0,0.15); }
+  .detail-panel { display: none; }
+  .detail-panel.active { display: block; }
+
+  .detail-info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
   .detail-field { display: flex; flex-direction: column; gap: 4px; }
   .detail-label { font-size: 11px; color: var(--text3); font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; }
   .detail-value { font-size: 14px; color: var(--text); }
   .section-title { font-size: 13px; font-weight: 700; color: var(--text2); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; }
 
-  .mapper-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 24px; }
-  .mappe-card { background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 14px; text-align: center; cursor: pointer; transition: all 0.15s; }
-  .mappe-card:hover { border-color: var(--accent); }
-  .mappe-card.locked { opacity: 0.4; cursor: not-allowed; }
-  .mappe-card.locked:hover { border-color: var(--border); }
-  .mappe-icon { font-size: 24px; margin-bottom: 6px; }
-  .mappe-name { font-size: 12px; font-weight: 600; color: var(--text2); }
+  .action-btns { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
+  .action-btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; text-decoration: none; border: none; font-family: inherit; }
+  .action-btn.phone { background: rgba(34,197,94,0.12); color: var(--green); border: 1px solid rgba(34,197,94,0.3); }
+  .action-btn.email { background: rgba(59,130,246,0.12); color: var(--accent2); border: 1px solid rgba(59,130,246,0.3); }
 
-  .status-row { display: flex; align-items: center; gap: 10px; padding: 16px; background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+  .status-row { display: flex; align-items: center; gap: 10px; padding: 14px 16px; background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; margin-bottom: 16px; flex-wrap: wrap; }
   .status-label { font-size: 13px; color: var(--text2); }
   .status-btn { padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; border: 1px solid var(--border); background: none; color: var(--text2); }
   .status-btn.aktiv-btn { color: var(--green); border-color: rgba(34,197,94,0.3); }
   .status-btn.aktiv-btn:hover { background: rgba(34,197,94,0.1); }
+
+  /* MAPPER */
+  .mapper-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px; }
+  .mappe-card { background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 14px; text-align: center; cursor: pointer; transition: all 0.15s; }
+  .mappe-card:hover { border-color: var(--accent); background: rgba(232,184,75,0.06); }
+  .mappe-card.locked { opacity: 0.4; cursor: not-allowed; }
+  .mappe-card.locked:hover { border-color: var(--border); background: var(--surface2); }
+  .mappe-card.active-folder { border-color: var(--accent); background: rgba(232,184,75,0.08); }
+  .mappe-icon { font-size: 24px; margin-bottom: 6px; }
+  .mappe-name { font-size: 12px; font-weight: 600; color: var(--text2); }
+
+  /* FILE BROWSER */
+  .file-browser { background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+  .file-browser-header { padding: 12px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+  .file-browser-title { font-size: 13px; font-weight: 600; color: var(--text); display: flex; align-items: center; gap: 8px; }
+  .file-browser-back { background: none; border: none; color: var(--text2); cursor: pointer; font-size: 13px; padding: 4px 8px; border-radius: 6px; font-family: inherit; }
+  .file-browser-back:hover { background: var(--border); color: var(--text); }
+
+  .drop-zone { border: 2px dashed var(--border); border-radius: 8px; padding: 20px; text-align: center; margin: 12px; color: var(--text3); font-size: 13px; transition: all 0.15s; cursor: pointer; }
+  .drop-zone:hover, .drop-zone.drag-over { border-color: var(--accent); color: var(--accent); background: rgba(232,184,75,0.05); }
+  .drop-zone input { display: none; }
+
+  .file-list { }
+  .file-item { display: flex; align-items: center; gap: 12px; padding: 10px 16px; border-bottom: 1px solid var(--border); transition: background 0.1s; }
+  .file-item:last-child { border-bottom: none; }
+  .file-item:hover { background: rgba(232,184,75,0.04); }
+  .file-icon { font-size: 20px; flex-shrink: 0; }
+  .file-info { flex: 1; min-width: 0; }
+  .file-name { font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .file-meta { font-size: 11px; color: var(--text3); margin-top: 2px; }
+  .file-empty { padding: 24px; text-align: center; color: var(--text3); font-size: 13px; }
+  .file-loading { padding: 24px; text-align: center; color: var(--text3); font-size: 13px; }
+  .upload-progress { background: rgba(232,184,75,0.1); border: 1px solid rgba(232,184,75,0.3); border-radius: 8px; padding: 10px 14px; margin: 8px 12px; font-size: 13px; color: var(--accent); display: none; }
+  .upload-progress.show { display: block; }
 
   .empty-state { padding: 60px; text-align: center; color: var(--text3); }
   .empty-state-icon { font-size: 40px; margin-bottom: 12px; }
@@ -169,11 +207,11 @@
   .toggle::after { content: ''; position: absolute; width: 18px; height: 18px; background: white; border-radius: 50%; top: 3px; left: 3px; transition: left 0.2s; }
   .toggle.on::after { left: 23px; }
   .col-toggles { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-  .col-toggle-btn { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; cursor: pointer; font-family: inherit; font-size: 13px; color: var(--text2); transition: all 0.15s; }
+  .col-toggle-btn { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; cursor: pointer; font-family: inherit; font-size: 13px; color: var(--text2); }
   .col-toggle-btn.active { border-color: var(--accent); color: var(--text); background: rgba(232,184,75,0.06); }
   .sort-select { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; color: var(--text); font-family: inherit; font-size: 13px; outline: none; cursor: pointer; }
 
-  @media (max-width: 600px) {
+  @media (max-width: 768px) {
     .stats-row { grid-template-columns: 1fr 1fr; }
     .mapper-grid { grid-template-columns: repeat(2, 1fr); }
     .form-grid { grid-template-columns: 1fr; }
@@ -205,8 +243,8 @@
       <div>LH Bygg <span>Entreprenør</span></div>
     </div>
     <div class="header-right">
-      <button class="btn-icon" onclick="toggleTheme()" id="themeBtn" title="Bytt tema">🌙</button>
-      <button class="btn-icon" onclick="openSettings()" title="Innstillinger">⚙️</button>
+      <button class="btn-icon" onclick="toggleTheme()" id="themeBtn">🌙</button>
+      <button class="btn-icon" onclick="openSettings()">⚙️</button>
       <span class="user-badge" id="userBadge">👤</span>
       <button class="btn-logout" onclick="signOut()">Logg ut</button>
     </div>
@@ -237,13 +275,18 @@
       <div class="stat-card"><div class="stat-label">Under kalkyle</div><div class="stat-value gold" id="statKalkyle">–</div></div>
       <div class="stat-card"><div class="stat-label">Aktive</div><div class="stat-value blue" id="statAktiv">–</div></div>
       <div class="stat-card"><div class="stat-label">Avsluttet</div><div class="stat-value green" id="statAvsluttet">–</div></div>
+      <div class="stat-card highlight">
+        <div class="stat-label">💰 Aktiv portefølje</div>
+        <div class="stat-value gold" id="statPortefolje">–</div>
+        <div class="stat-sub">ekskl. mva</div>
+      </div>
     </div>
 
     <div class="table-wrap">
       <table>
         <thead id="tableHead"></thead>
         <tbody id="tableBody">
-          <tr class="loading-row"><td colspan="7"><span class="spinner"></span> Laster kunder...</td></tr>
+          <tr class="loading-row"><td colspan="8"><span class="spinner"></span> Laster kunder...</td></tr>
         </tbody>
       </table>
       <div class="empty-state" id="emptyState" style="display:none">
@@ -274,6 +317,7 @@
         <div class="form-group" id="orgnrGroup"><label>Org.nr</label><input type="text" class="form-input" id="f_orgnr" placeholder="123 456 789"></div>
         <div class="form-group full"><label>Adresse</label><input type="text" class="form-input" id="f_adresse" placeholder="Gateveien 1, 7000 Trondheim"></div>
         <div class="form-group"><label>Prosjektnummer</label><input type="text" class="form-input" id="f_pnr" placeholder="501"></div>
+        <div class="form-group"><label>Kontraktsum (NOK ekskl. mva)</label><input type="number" class="form-input" id="f_pris" placeholder="0" style="padding-left:14px"></div>
         <div class="form-group"><label>Status</label>
           <select class="form-input" id="f_status">
             <option value="Under kalkyle">Under kalkyle</option>
@@ -293,7 +337,7 @@
 
 <!-- DETAIL MODAL -->
 <div class="modal-overlay" id="detailModal">
-  <div class="modal">
+  <div class="modal" style="max-width:780px">
     <div class="modal-header">
       <div>
         <div class="modal-title" id="detailFirma"></div>
@@ -306,10 +350,32 @@
     </div>
     <div class="modal-body">
       <div class="status-row" id="statusRow"></div>
-      <div class="detail-info-grid" id="detailInfo"></div>
-      <div class="section-title">Prosjektmapper</div>
-      <div class="mapper-grid" id="mapperGrid"></div>
-      <div id="notatSection"></div>
+      <div class="detail-tabs">
+        <button class="detail-tab active" onclick="showTab('info', this)">📋 Info</button>
+        <button class="detail-tab" onclick="showTab('mapper', this)">📁 Mapper</button>
+      </div>
+      <div class="detail-panel active" id="panel-info">
+        <div class="action-btns" id="actionBtns"></div>
+        <div class="detail-info-grid" id="detailInfo"></div>
+        <div id="notatSection"></div>
+      </div>
+      <div class="detail-panel" id="panel-mapper">
+        <div class="mapper-grid" id="mapperGrid"></div>
+        <div class="file-browser" id="fileBrowser" style="display:none">
+          <div class="file-browser-header">
+            <div class="file-browser-title">
+              <button class="file-browser-back" onclick="closeFolderView()">← Tilbake</button>
+              <span id="currentFolderName"></span>
+            </div>
+          </div>
+          <div class="upload-progress" id="uploadProgress">⏳ Laster opp...</div>
+          <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)">
+            <input type="file" id="fileInput" multiple onchange="handleFileSelect(event)">
+            📎 Dra og slipp filer her, eller klikk for å velge
+          </div>
+          <div class="file-list" id="fileList"></div>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -353,14 +419,14 @@
       <div class="settings-section">
         <div class="settings-section-title">Data</div>
         <div class="settings-row">
-          <div><div class="settings-row-label">Eksporter til Excel</div><div class="settings-row-sub">Last ned hele kundelisten som .xlsx</div></div>
+          <div><div class="settings-row-label">Eksporter til Excel</div></div>
           <button class="btn-excel" onclick="exportExcel(); closeModal('settingsModal')">📊 Last ned</button>
         </div>
         <div class="settings-row">
           <div><div class="settings-row-label">Innlogget som</div><div class="settings-row-sub" id="settingsUser">–</div></div>
         </div>
         <div class="settings-row">
-          <div><div class="settings-row-label">Versjon</div><div class="settings-row-sub">LH Bygg Kunderegister v1.2</div></div>
+          <div><div class="settings-row-label">Versjon</div><div class="settings-row-sub">LH Bygg Kunderegister v2.0</div></div>
         </div>
       </div>
     </div>
@@ -375,6 +441,11 @@ const TENANT_ID = 'c9d89f66-621a-4a0b-9734-8b98789d9791';
 const SITE_URL  = 'lhbent.sharepoint.com';
 const SITE_PATH = '/sites/Industriveien1ASLHBygg';
 const LIST_NAME = 'Kunderegister';
+const SHAREPOINT_HOST = 'https://lhbent.sharepoint.com';
+const DOC_LIB = 'Delte dokumenter';
+const PROSJEKT_BASE = `Felles/LHBE/Prosjekter`;
+const VIEWID = '4445a462-2859-4c56-8451-24b4acf6d034';
+
 const MAPPER = ['HMS','Tegninger','FDV','Kontrakt','Kalkyle','Fremdrift','Faktura','Korrespondanse'];
 const MAPPER_ICONS = {HMS:'🦺',Tegninger:'📐',FDV:'📋',Kontrakt:'📝',Kalkyle:'🧮',Fremdrift:'📅',Faktura:'💰',Korrespondanse:'✉️'};
 
@@ -384,50 +455,41 @@ const COLUMNS = [
   { key: 'type',    label: 'Type',       show: true },
   { key: 'kontakt', label: 'Kontakt',    show: true },
   { key: 'telefon', label: 'Telefon',    show: true },
+  { key: 'pris',    label: 'Verdi',      show: true },
   { key: 'status',  label: 'Status',     show: true },
   { key: 'mapper',  label: 'Mapper',     show: true },
 ];
 
 let msalInstance = null;
 const scopes = ['https://graph.microsoft.com/Sites.ReadWrite.All', 'User.Read'];
-
 let currentUser = null, kunder = [], currentFilter = 'alle', currentSearch = '';
-let selectedId = null, editMode = false, siteId = null, listId = null, kundeType = 'firma';
+let selectedId = null, editMode = false, siteId = null, listId = null, driveId = null, kundeType = 'firma';
 let sortKey = 'pnr', sortDir = 'asc';
+let currentFolder = null, currentKunde = null;
 let darkMode = localStorage.getItem('theme') !== 'light';
 let compactMode = localStorage.getItem('compact') === 'true';
 
 const savedCols = localStorage.getItem('columns');
 if (savedCols) { try { const c = JSON.parse(savedCols); COLUMNS.forEach(col => { if (c[col.key] !== undefined) col.show = c[col.key]; }); } catch(e){} }
 const savedSort = localStorage.getItem('sort');
-if (savedSort) { const parts = savedSort.split('-'); sortKey = parts[0]; sortDir = parts[1] || 'asc'; }
+if (savedSort) { const p = savedSort.split('-'); sortKey = p[0]; sortDir = p[1]||'asc'; }
 
 async function init() {
   try {
-    const msalConfig = {
+    msalInstance = new msal.PublicClientApplication({
       auth: {
         clientId: CLIENT_ID,
         authority: `https://login.microsoftonline.com/${TENANT_ID}`,
         redirectUri: window.location.href.split('?')[0].split('#')[0],
       },
       cache: { cacheLocation: 'localStorage', storeAuthStateInCookie: true }
-    };
-
-    msalInstance = new msal.PublicClientApplication(msalConfig);
+    });
     await msalInstance.initialize();
     await msalInstance.handleRedirectPromise();
-
     const accounts = msalInstance.getAllAccounts();
-    if (accounts.length > 0) {
-      currentUser = accounts[0];
-      applyTheme(); applyCompact();
-      showApp();
-    } else {
-      applyTheme();
-    }
-  } catch(e) {
-    console.error('Init error:', e);
-  }
+    if (accounts.length > 0) { currentUser = accounts[0]; applyTheme(); applyCompact(); showApp(); }
+    else applyTheme();
+  } catch(e) { console.error('Init error:', e); }
 }
 
 function applyTheme() {
@@ -438,7 +500,6 @@ function applyTheme() {
   if (t) t.classList.toggle('on', darkMode);
   localStorage.setItem('theme', darkMode ? 'dark' : 'light');
 }
-
 function toggleTheme() { darkMode = !darkMode; applyTheme(); }
 
 function applyCompact() {
@@ -447,15 +508,12 @@ function applyCompact() {
   if (t) t.classList.toggle('on', compactMode);
   localStorage.setItem('compact', compactMode);
 }
-
 function toggleCompact() { compactMode = !compactMode; applyCompact(); }
 
 function setSortPref() {
   const val = document.getElementById('sortSelect').value;
-  const parts = val.split('-');
-  sortKey = parts[0]; sortDir = parts[1] || 'asc';
-  localStorage.setItem('sort', val);
-  render();
+  const p = val.split('-'); sortKey = p[0]; sortDir = p[1]||'asc';
+  localStorage.setItem('sort', val); render();
 }
 
 function toggleColumn(key) {
@@ -470,14 +528,13 @@ function renderColToggles() {
   const el = document.getElementById('colToggles');
   if (!el) return;
   el.innerHTML = COLUMNS.map(col => `
-    <button class="col-toggle-btn ${col.show ? 'active' : ''}" onclick="toggleColumn('${col.key}')">
-      <span>${col.label}</span><span>${col.show ? '✓' : '○'}</span>
-    </button>
-  `).join('');
+    <button class="col-toggle-btn ${col.show?'active':''}" onclick="toggleColumn('${col.key}')">
+      <span>${col.label}</span><span>${col.show?'✓':'○'}</span>
+    </button>`).join('');
 }
 
 function openSettings() {
-  document.getElementById('settingsUser').textContent = currentUser ? (currentUser.name || currentUser.username) : '–';
+  document.getElementById('settingsUser').textContent = currentUser ? (currentUser.name||currentUser.username) : '–';
   document.getElementById('darkModeToggle').classList.toggle('on', darkMode);
   document.getElementById('compactToggle').classList.toggle('on', compactMode);
   document.getElementById('sortSelect').value = `${sortKey}-${sortDir}`;
@@ -491,10 +548,9 @@ async function signIn() {
   try {
     const response = await msalInstance.loginPopup({ scopes });
     currentUser = response.account;
-    applyTheme(); applyCompact();
-    showApp();
+    applyTheme(); applyCompact(); showApp();
   } catch(e) {
-    console.error('Login error:', e);
+    console.error(e);
     document.getElementById('loginBtn').disabled = false;
     document.getElementById('loginBtn').innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M11.4 24H0V12.6L11.4 24zM12.6 24H24V12.6L12.6 24zM0 11.4V0h11.4L0 11.4zM24 11.4L12.6 0H24v11.4z"/></svg> Logg inn med Microsoft';
   }
@@ -510,63 +566,49 @@ function signOut() {
 async function getToken() {
   if (!currentUser) throw new Error('Ikke innlogget');
   try {
-    const result = await msalInstance.acquireTokenSilent({ scopes, account: currentUser });
-    if (!result.accessToken) throw new Error('Tom token');
-    return result.accessToken;
+    const r = await msalInstance.acquireTokenSilent({ scopes, account: currentUser });
+    if (!r.accessToken) throw new Error('Tom token');
+    return r.accessToken;
   } catch(e) {
-    console.log('Silent token failed, trying popup:', e);
-    const result = await msalInstance.acquireTokenPopup({ scopes });
-    return result.accessToken;
+    const r = await msalInstance.acquireTokenPopup({ scopes });
+    return r.accessToken;
   }
 }
 
 async function graphGet(url) {
-  const token = await getToken();
-  const res = await fetch(`https://graph.microsoft.com/v1.0${url}`, {
-    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }
-  });
-  if (!res.ok) {
-    const err = await res.text();
-    throw new Error(`${res.status}: ${err}`);
-  }
+  const res = await fetch(`https://graph.microsoft.com/v1.0${url}`, { headers: { Authorization: `Bearer ${await getToken()}` } });
+  if (!res.ok) throw new Error(`${res.status}: ${await res.text()}`);
   return res.json();
 }
 
 async function graphPost(url, body) {
-  const token = await getToken();
-  const res = await fetch(`https://graph.microsoft.com/v1.0${url}`, {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify(body)
-  });
-  if (!res.ok) {
-    const err = await res.text();
-    throw new Error(`${res.status}: ${err}`);
-  }
+  const res = await fetch(`https://graph.microsoft.com/v1.0${url}`, { method: 'POST', headers: { Authorization: `Bearer ${await getToken()}`, 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  if (!res.ok) throw new Error(`${res.status}: ${await res.text()}`);
   return res.json();
 }
 
 async function graphPatch(url, body) {
+  const res = await fetch(`https://graph.microsoft.com/v1.0${url}`, { method: 'PATCH', headers: { Authorization: `Bearer ${await getToken()}`, 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  if (!res.ok) throw new Error(`${res.status}: ${await res.text()}`);
+  return res.json();
+}
+
+async function graphPut(url, data, contentType) {
   const token = await getToken();
-  const res = await fetch(`https://graph.microsoft.com/v1.0${url}`, {
-    method: 'PATCH',
-    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify(body)
-  });
-  if (!res.ok) {
-    const err = await res.text();
-    throw new Error(`${res.status}: ${err}`);
-  }
+  const res = await fetch(`https://graph.microsoft.com/v1.0${url}`, { method: 'PUT', headers: { Authorization: `Bearer ${token}`, 'Content-Type': contentType||'application/octet-stream' }, body: data });
+  if (!res.ok) throw new Error(`${res.status}: ${await res.text()}`);
   return res.json();
 }
 
 async function getSiteAndList() {
-  if (siteId && listId) return;
+  if (siteId && listId && driveId) return;
   const site = await graphGet(`/sites/${SITE_URL}:${SITE_PATH}`);
   siteId = site.id;
   const lists = await graphGet(`/sites/${siteId}/lists?$filter=displayName eq '${LIST_NAME}'`);
-  if (!lists.value || lists.value.length === 0) throw new Error('Kunderegister-listen ble ikke funnet');
   listId = lists.value[0].id;
+  const drives = await graphGet(`/sites/${siteId}/drives`);
+  const d = drives.value.find(x => x.name === 'Delte dokumenter' || x.name === 'Documents');
+  driveId = d ? d.id : drives.value[0].id;
 }
 
 async function fetchKunder() {
@@ -585,11 +627,12 @@ async function fetchKunder() {
     mapper: item.fields.Mapperopprettet === 'Ja',
     notat: item.fields.Notat || '',
     type: item.fields.Kundetype || 'firma',
+    pris: item.fields.Pris || 0,
   }));
 }
 
 function buildFields(data) {
-  const fields = {
+  const f = {
     Title: data.firmanavn,
     TomAndreS_x00f8_derberg: data.kontakt,
     _x0034_1102093: data.telefon,
@@ -599,9 +642,10 @@ function buildFields(data) {
     Prosjektnummer: data.pnr,
     Status: data.status,
     Notat: data.notat,
+    Pris: data.pris ? parseFloat(data.pris) : 0,
   };
-  if (data.type) fields.Kundetype = data.type;
-  return fields;
+  if (data.type) f.Kundetype = data.type;
+  return f;
 }
 
 async function createKunde(data) {
@@ -619,24 +663,32 @@ async function updateStatus(id, status) {
   return graphPatch(`/sites/${siteId}/lists/${listId}/items/${id}/fields`, { Status: status });
 }
 
+// FILE OPERATIONS
+async function listFiles(folderPath) {
+  await getSiteAndList();
+  const encoded = encodeURIComponent(folderPath);
+  const data = await graphGet(`/drives/${driveId}/root:/${folderPath}:/children`);
+  return data.value || [];
+}
+
+async function uploadFile(folderPath, file) {
+  await getSiteAndList();
+  const path = `${folderPath}/${file.name}`;
+  return graphPut(`/drives/${driveId}/root:/${path}:/content`, file, file.type);
+}
+
 async function showApp() {
   document.getElementById('loginScreen').style.display = 'none';
   document.getElementById('app').style.display = 'block';
-  document.getElementById('userBadge').textContent = `👤 ${currentUser.name || currentUser.username}`;
+  document.getElementById('userBadge').textContent = `👤 ${currentUser.name||currentUser.username}`;
   document.getElementById('searchInput').addEventListener('input', e => { currentSearch = e.target.value.toLowerCase(); render(); });
   await loadKunder();
 }
 
 async function loadKunder() {
-  document.getElementById('tableBody').innerHTML = '<tr class="loading-row"><td colspan="7"><span class="spinner"></span> Laster kunder...</td></tr>';
-  try {
-    kunder = await fetchKunder();
-    render();
-  } catch(e) {
-    console.error('Load error:', e);
-    showError('Kunne ikke laste kunder: ' + e.message);
-    document.getElementById('tableBody').innerHTML = '<tr class="loading-row"><td colspan="7">Feil ved lasting – prøv å laste siden på nytt</td></tr>';
-  }
+  document.getElementById('tableBody').innerHTML = '<tr class="loading-row"><td colspan="8"><span class="spinner"></span> Laster kunder...</td></tr>';
+  try { kunder = await fetchKunder(); render(); }
+  catch(e) { console.error(e); showError('Kunne ikke laste kunder: '+e.message); document.getElementById('tableBody').innerHTML = '<tr class="loading-row"><td colspan="8">Feil – prøv å laste siden på nytt</td></tr>'; }
 }
 
 function showError(msg) {
@@ -647,33 +699,36 @@ function showError(msg) {
 function setFilter(f, btn) {
   currentFilter = f;
   document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
-  btn.classList.add('active');
-  render();
+  btn.classList.add('active'); render();
+}
+
+function formatPris(pris) {
+  if (!pris || pris === 0) return '—';
+  return new Intl.NumberFormat('no-NO').format(pris) + ' kr';
 }
 
 function sortedFiltered() {
   let list = kunder.filter(k => {
-    const matchFilter = currentFilter === 'alle' || k.status === currentFilter;
-    const matchSearch = !currentSearch || k.firmanavn.toLowerCase().includes(currentSearch) || k.kontakt.toLowerCase().includes(currentSearch) || k.pnr.includes(currentSearch);
-    return matchFilter && matchSearch;
+    const mf = currentFilter === 'alle' || k.status === currentFilter;
+    const ms = !currentSearch || k.firmanavn.toLowerCase().includes(currentSearch) || k.kontakt.toLowerCase().includes(currentSearch) || k.pnr.includes(currentSearch);
+    return mf && ms;
   });
-
   list.sort((a, b) => {
     let av, bv;
-    if (sortKey === 'pnr') { av = parseInt(a.pnr)||0; bv = parseInt(b.pnr)||0; }
-    else if (sortKey === 'navn') { av = a.firmanavn.toLowerCase(); bv = b.firmanavn.toLowerCase(); }
-    else if (sortKey === 'status') { const o = {'Aktiv':0,'Under kalkyle':1,'Avsluttet':2}; av = o[a.status]||3; bv = o[b.status]||3; }
-    else { av = a[sortKey]||''; bv = b[sortKey]||''; }
-    if (av < bv) return sortDir === 'asc' ? -1 : 1;
-    if (av > bv) return sortDir === 'asc' ? 1 : -1;
+    if (sortKey==='pnr') { av=parseInt(a.pnr)||0; bv=parseInt(b.pnr)||0; }
+    else if (sortKey==='navn') { av=a.firmanavn.toLowerCase(); bv=b.firmanavn.toLowerCase(); }
+    else if (sortKey==='status') { const o={'Aktiv':0,'Under kalkyle':1,'Avsluttet':2}; av=o[a.status]||3; bv=o[b.status]||3; }
+    else { av=a[sortKey]||''; bv=b[sortKey]||''; }
+    if (av<bv) return sortDir==='asc'?-1:1;
+    if (av>bv) return sortDir==='asc'?1:-1;
     return 0;
   });
   return list;
 }
 
 function sortBy(key) {
-  if (sortKey === key) sortDir = sortDir === 'asc' ? 'desc' : 'asc';
-  else { sortKey = key; sortDir = 'asc'; }
+  if (sortKey===key) sortDir=sortDir==='asc'?'desc':'asc';
+  else { sortKey=key; sortDir='asc'; }
   localStorage.setItem('sort', `${sortKey}-${sortDir}`);
   render();
 }
@@ -681,34 +736,37 @@ function sortBy(key) {
 function render() {
   const list = sortedFiltered();
   const visCols = COLUMNS.filter(c => c.show);
+  const aktive = kunder.filter(k => k.status==='Aktiv');
+  const portefolje = aktive.reduce((sum, k) => sum + (k.pris||0), 0);
 
   document.getElementById('statTotal').textContent = kunder.length;
   document.getElementById('statKalkyle').textContent = kunder.filter(k=>k.status==='Under kalkyle').length;
-  document.getElementById('statAktiv').textContent = kunder.filter(k=>k.status==='Aktiv').length;
+  document.getElementById('statAktiv').textContent = aktive.length;
   document.getElementById('statAvsluttet').textContent = kunder.filter(k=>k.status==='Avsluttet').length;
+  document.getElementById('statPortefolje').textContent = portefolje > 0 ? new Intl.NumberFormat('no-NO').format(portefolje)+' kr' : '—';
 
-  const sortableKeys = ['pnr','navn','status'];
+  const sortable = ['pnr','navn','status'];
   document.getElementById('tableHead').innerHTML = '<tr>' + visCols.map(col => {
-    const sortable = sortableKeys.includes(col.key);
-    const active = sortKey === col.key;
-    const arrow = sortDir === 'asc' ? ' ↑' : ' ↓';
-    return `<th ${sortable ? `onclick="sortBy('${col.key}')"` : ''} class="${active ? 'sorted' : ''}">${col.label}${sortable ? (active ? arrow : ' ↕') : ''}</th>`;
+    const s = sortable.includes(col.key);
+    const a = sortKey===col.key;
+    return `<th ${s?`onclick="sortBy('${col.key}')"`:''} class="${a?'sorted':''}">${col.label}${s?(a?(sortDir==='asc'?' ↑':' ↓'):' ↕'):''}</th>`;
   }).join('') + '</tr>';
 
   const tbody = document.getElementById('tableBody');
   const empty = document.getElementById('emptyState');
-  if (list.length === 0) { tbody.innerHTML = ''; empty.style.display = 'block'; return; }
-  empty.style.display = 'none';
+  if (list.length===0) { tbody.innerHTML=''; empty.style.display='block'; return; }
+  empty.style.display='none';
 
   tbody.innerHTML = list.map(k => {
     const cells = visCols.map(col => {
-      if (col.key === 'pnr') return `<td><span class="pnr">${k.pnr||'—'}</span></td>`;
-      if (col.key === 'navn') return `<td><span class="firm-name">${k.firmanavn}</span></td>`;
-      if (col.key === 'type') return `<td><span class="${k.type==='privat'?'type-badge-privat':'type-badge-firma'}">${k.type==='privat'?'👤 Privat':'🏢 Firma'}</span></td>`;
-      if (col.key === 'kontakt') return `<td><span class="contact">${k.kontakt||'—'}</span></td>`;
-      if (col.key === 'telefon') return `<td><span class="contact">${k.telefon||'—'}</span></td>`;
-      if (col.key === 'status') return `<td>${badgeHtml(k.status)}</td>`;
-      if (col.key === 'mapper') return `<td><span class="mapper-check ${k.mapper?'done':''}">${k.mapper?'✓ Opprettet':'— Ikke opprettet'}</span></td>`;
+      if (col.key==='pnr') return `<td><span class="pnr">${k.pnr||'—'}</span></td>`;
+      if (col.key==='navn') return `<td><span class="firm-name">${k.firmanavn}</span></td>`;
+      if (col.key==='type') return `<td><span class="${k.type==='privat'?'type-badge-privat':'type-badge-firma'}">${k.type==='privat'?'👤 Privat':'🏢 Firma'}</span></td>`;
+      if (col.key==='kontakt') return `<td><span class="contact">${k.kontakt||'—'}</span></td>`;
+      if (col.key==='telefon') return `<td><span class="contact">${k.telefon||'—'}</span></td>`;
+      if (col.key==='pris') return `<td><span class="value-cell">${formatPris(k.pris)}</span></td>`;
+      if (col.key==='status') return `<td>${badgeHtml(k.status)}</td>`;
+      if (col.key==='mapper') return `<td><span class="mapper-check ${k.mapper?'done':''}">${k.mapper?'✓ Opprettet':'— Ikke opprettet'}</span></td>`;
       return '<td>—</td>';
     });
     return `<tr onclick="openDetail('${k.id}')">${cells.join('')}</tr>`;
@@ -721,69 +779,161 @@ function badgeHtml(status) {
 }
 
 function exportExcel() {
-  const headers = ['Prosjektnummer','Firmanavn','Type','Kontaktperson','Telefon','E-post','Adresse','Org.nr','Status','Mapper','Notat'];
-  const rows = kunder.map(k => [k.pnr, k.firmanavn, k.type==='privat'?'Privatkunde':'Firmakunde', k.kontakt, k.telefon, k.epost, k.adresse, k.orgnr, k.status, k.mapper?'Ja':'Nei', k.notat]);
-  const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
-  ws['!cols'] = headers.map(() => ({ wch: 20 }));
+  const headers = ['Pnr','Firmanavn','Type','Kontakt','Telefon','E-post','Adresse','Org.nr','Kontraktsum','Status','Mapper','Notat'];
+  const rows = kunder.map(k => [k.pnr, k.firmanavn, k.type==='privat'?'Privat':'Firma', k.kontakt, k.telefon, k.epost, k.adresse, k.orgnr, k.pris||0, k.status, k.mapper?'Ja':'Nei', k.notat]);
+  const ws = XLSX.utils.aoa_to_sheet([headers,...rows]);
+  ws['!cols'] = headers.map(()=>({wch:18}));
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Kunderegister');
   XLSX.writeFile(wb, `LHBygg_Kunderegister_${new Date().toISOString().slice(0,10)}.xlsx`);
-  toast('📊', 'Kunderegister eksportert til Excel');
+  toast('📊','Kunderegister eksportert til Excel');
+}
+
+function showTab(tab, btn) {
+  document.querySelectorAll('.detail-tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.detail-panel').forEach(p=>p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById(`panel-${tab}`).classList.add('active');
 }
 
 function setKundeType(type, btn) {
   kundeType = type;
-  document.querySelectorAll('.kunde-type-btn').forEach(b => b.classList.remove('selected'));
+  document.querySelectorAll('.kunde-type-btn').forEach(b=>b.classList.remove('selected'));
   btn.classList.add('selected');
-  document.getElementById('firmanavnLabel').textContent = type==='privat' ? 'Navn *' : 'Firmanavn *';
-  document.getElementById('f_firmanavn').placeholder = type==='privat' ? 'Ola Nordmann' : 'Bedrift AS';
-  document.getElementById('orgnrGroup').style.display = type==='privat' ? 'none' : '';
+  document.getElementById('firmanavnLabel').textContent = type==='privat'?'Navn *':'Firmanavn *';
+  document.getElementById('f_firmanavn').placeholder = type==='privat'?'Ola Nordmann':'Bedrift AS';
+  document.getElementById('orgnrGroup').style.display = type==='privat'?'none':'';
 }
 
 function openDetail(id) {
   selectedId = id;
-  const k = kunder.find(x=>x.id===id);
+  currentKunde = kunder.find(x=>x.id===id);
+  const k = currentKunde;
+
   document.getElementById('detailFirma').textContent = k.firmanavn;
-  document.getElementById('detailPnr').textContent = `Pnr: ${k.pnr||'—'} · ${k.type==='privat'?'👤 Privatkunde':'🏢 Firmakunde'}`;
+  document.getElementById('detailPnr').textContent = `Pnr: ${k.pnr||'—'} · ${k.type==='privat'?'👤 Privatkunde':'🏢 Firmakunde'}${k.pris?' · 💰 '+formatPris(k.pris):''}`;
 
   let btns = `<span class="status-label">Status:</span> ${badgeHtml(k.status)} &nbsp;`;
   if (k.status==='Under kalkyle') btns += `<button class="status-btn aktiv-btn" onclick="changeStatus('${id}','Aktiv')">→ Sett Aktiv</button>`;
   else if (k.status==='Aktiv') btns += `<button class="status-btn" onclick="changeStatus('${id}','Avsluttet')">→ Sett Avsluttet</button>`;
   document.getElementById('statusRow').innerHTML = btns;
 
+  // Action buttons
+  let actions = '';
+  if (k.telefon) actions += `<a class="action-btn phone" href="tel:${k.telefon}">📞 Ring ${k.telefon}</a>`;
+  if (k.epost) actions += `<a class="action-btn email" href="mailto:${k.epost}">✉️ Send e-post</a>`;
+  document.getElementById('actionBtns').innerHTML = actions;
+
   document.getElementById('detailInfo').innerHTML = `
     <div class="detail-field"><div class="detail-label">Kontaktperson</div><div class="detail-value">${k.kontakt||'—'}</div></div>
-    <div class="detail-field"><div class="detail-label">Telefon</div><div class="detail-value">${k.telefon ? `<a href="tel:${k.telefon}" style="color:var(--green);text-decoration:none">📞 ${k.telefon}</a>` : '—'}</div></div>
-    <div class="detail-field"><div class="detail-label">E-post</div><div class="detail-value">${k.epost ? `<a href="mailto:${k.epost}" style="color:var(--accent2);text-decoration:none">✉️ ${k.epost}</a>` : '—'}</div></div>
+    <div class="detail-field"><div class="detail-label">Kontraktsum</div><div class="detail-value" style="font-size:16px;font-weight:700;color:var(--accent)">${formatPris(k.pris)}</div></div>
+    <div class="detail-field"><div class="detail-label">E-post</div><div class="detail-value">${k.epost||'—'}</div></div>
     <div class="detail-field"><div class="detail-label">Org.nr</div><div class="detail-value">${k.orgnr||'—'}</div></div>
     <div class="detail-field" style="grid-column:1/-1"><div class="detail-label">Adresse</div><div class="detail-value">${k.adresse||'—'}</div></div>
   `;
-
-  const locked = k.status==='Under kalkyle';
-  const viewid = '4445a462-2859-4c56-8451-24b4acf6d034';
-  document.getElementById('mapperGrid').innerHTML = MAPPER.map(m=>{
-    if (locked) {
-      return `<div class="mappe-card locked" title="Låst – sett til Aktiv">
-        <div class="mappe-icon">${MAPPER_ICONS[m]}</div>
-        <div class="mappe-name">${m}</div>
-      </div>`;
-    }
-    const folderPath = `/sites/Industriveien1ASLHBygg/Delte dokumenter/Felles/LHBE/Prosjekter/${k.pnr} - ${k.firmanavn}/${m}`;
-    const mappeUrl = `https://lhbent.sharepoint.com/sites/Industriveien1ASLHBygg/Delte%20dokumenter/Forms/AllItems.aspx?id=${encodeURIComponent(folderPath)}&viewid=${viewid}`;
-    return `<a href="${mappeUrl}" target="_blank" style="text-decoration:none">
-      <div class="mappe-card" title="Åpne ${m} i SharePoint">
-        <div class="mappe-icon">${MAPPER_ICONS[m]}</div>
-        <div class="mappe-name">${m}</div>
-      </div>
-    </a>`;
-  }).join('');
 
   document.getElementById('notatSection').innerHTML = k.notat ? `
     <div class="section-title" style="margin-top:20px">Notat</div>
     <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:14px;font-size:14px;color:var(--text2);line-height:1.6">${k.notat}</div>
   ` : '';
 
+  // Mapper
+  const locked = k.status==='Under kalkyle';
+  document.getElementById('mapperGrid').innerHTML = MAPPER.map(m=>{
+    if (locked) return `<div class="mappe-card locked" title="Låst – sett til Aktiv"><div class="mappe-icon">${MAPPER_ICONS[m]}</div><div class="mappe-name">${m}</div></div>`;
+    return `<div class="mappe-card" onclick="openFolder('${m}')" title="Åpne ${m}"><div class="mappe-icon">${MAPPER_ICONS[m]}</div><div class="mappe-name">${m}</div></div>`;
+  }).join('');
+
+  document.getElementById('fileBrowser').style.display = 'none';
+
+  // Reset tabs
+  document.querySelectorAll('.detail-tab').forEach((t,i)=>t.classList.toggle('active',i===0));
+  document.querySelectorAll('.detail-panel').forEach((p,i)=>p.classList.toggle('active',i===0));
+
   document.getElementById('detailModal').classList.add('open');
+}
+
+async function openFolder(mappeNavn) {
+  const k = currentKunde;
+  currentFolder = `${PROSJEKT_BASE}/${k.pnr} - ${k.firmanavn}/${mappeNavn}`;
+
+  document.querySelectorAll('.mappe-card').forEach(c=>c.classList.remove('active-folder'));
+  event.currentTarget.classList.add('active-folder');
+
+  const browser = document.getElementById('fileBrowser');
+  browser.style.display = 'block';
+  document.getElementById('currentFolderName').textContent = `📁 ${mappeNavn}`;
+  document.getElementById('fileList').innerHTML = '<div class="file-loading"><span class="spinner"></span> Laster filer...</div>';
+
+  // Switch to mapper tab
+  document.querySelectorAll('.detail-tab').forEach((t,i)=>t.classList.toggle('active',i===1));
+  document.querySelectorAll('.detail-panel').forEach((p,i)=>p.classList.toggle('active',i===1));
+
+  try {
+    const files = await listFiles(currentFolder);
+    renderFileList(files);
+  } catch(e) {
+    document.getElementById('fileList').innerHTML = '<div class="file-empty">Ingen filer funnet</div>';
+  }
+}
+
+function closeFolderView() {
+  document.getElementById('fileBrowser').style.display = 'none';
+  document.querySelectorAll('.mappe-card').forEach(c=>c.classList.remove('active-folder'));
+  currentFolder = null;
+}
+
+function getFileIcon(name) {
+  const ext = name.split('.').pop().toLowerCase();
+  if (['pdf'].includes(ext)) return '📄';
+  if (['doc','docx'].includes(ext)) return '📝';
+  if (['xls','xlsx'].includes(ext)) return '📊';
+  if (['ppt','pptx'].includes(ext)) return '📑';
+  if (['jpg','jpeg','png','gif','webp'].includes(ext)) return '🖼️';
+  if (['zip','rar','7z'].includes(ext)) return '🗜️';
+  return '📎';
+}
+
+function renderFileList(files) {
+  const list = document.getElementById('fileList');
+  if (files.length === 0) { list.innerHTML = '<div class="file-empty">Ingen filer i denne mappen ennå</div>'; return; }
+  list.innerHTML = files.filter(f=>f.file).map(f => {
+    const dato = new Date(f.lastModifiedDateTime).toLocaleDateString('no-NO');
+    const size = f.size > 1024*1024 ? (f.size/1024/1024).toFixed(1)+' MB' : Math.round(f.size/1024)+' KB';
+    return `<div class="file-item">
+      <div class="file-icon">${getFileIcon(f.name)}</div>
+      <div class="file-info">
+        <div class="file-name"><a href="${f.webUrl}" target="_blank" style="color:var(--text);text-decoration:none">${f.name}</a></div>
+        <div class="file-meta">${dato} · ${size}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function handleDragOver(e) { e.preventDefault(); document.getElementById('dropZone').classList.add('drag-over'); }
+function handleDragLeave(e) { document.getElementById('dropZone').classList.remove('drag-over'); }
+function handleDrop(e) { e.preventDefault(); document.getElementById('dropZone').classList.remove('drag-over'); uploadFiles(e.dataTransfer.files); }
+function handleFileSelect(e) { uploadFiles(e.target.files); }
+
+async function uploadFiles(files) {
+  if (!currentFolder || !files.length) return;
+  const progress = document.getElementById('uploadProgress');
+  progress.classList.add('show');
+  let uploaded = 0;
+  for (const file of files) {
+    try {
+      progress.textContent = `⏳ Laster opp ${file.name}...`;
+      await uploadFile(currentFolder, file);
+      uploaded++;
+    } catch(e) { showError('Feil ved opplasting av '+file.name+': '+e.message); }
+  }
+  progress.classList.remove('show');
+  document.getElementById('fileInput').value = '';
+  if (uploaded > 0) {
+    toast('✅', `${uploaded} fil${uploaded>1?'er':''} lastet opp`);
+    const updatedFiles = await listFiles(currentFolder);
+    renderFileList(updatedFiles);
+  }
 }
 
 async function changeStatus(id, newStatus) {
@@ -810,6 +960,7 @@ function editKunde() {
   document.getElementById('f_orgnr').value = k.orgnr;
   document.getElementById('f_adresse').value = k.adresse;
   document.getElementById('f_pnr').value = k.pnr;
+  document.getElementById('f_pris').value = k.pris||'';
   document.getElementById('f_status').value = k.status;
   document.getElementById('f_notat').value = k.notat;
   document.getElementById('orgnrGroup').style.display = kundeType==='privat'?'none':'';
@@ -821,6 +972,7 @@ function openNewModal() {
   document.getElementById('formModalTitle').textContent = 'Ny kunde';
   document.getElementById('kundeTypeRow').style.display = '';
   ['firmanavn','kontakt','telefon','epost','orgnr','adresse','pnr','notat'].forEach(f=>document.getElementById('f_'+f).value='');
+  document.getElementById('f_pris').value = '';
   document.getElementById('f_status').value = 'Under kalkyle';
   document.getElementById('orgnrGroup').style.display = '';
   document.getElementById('firmanavnLabel').textContent = 'Firmanavn *';
@@ -840,6 +992,7 @@ async function saveKunde() {
     orgnr: document.getElementById('f_orgnr').value,
     adresse: document.getElementById('f_adresse').value,
     pnr: document.getElementById('f_pnr').value,
+    pris: document.getElementById('f_pris').value,
     status: document.getElementById('f_status').value,
     notat: document.getElementById('f_notat').value,
     type: kundeType
@@ -857,12 +1010,8 @@ async function saveKunde() {
       toast('✅', `${data.firmanavn} lagt til`);
     }
     closeModal('formModal'); render();
-  } catch(e) {
-    console.error('Save error:', e);
-    showError('Kunne ikke lagre: ' + e.message);
-  } finally {
-    btn.disabled = false; btn.textContent = 'Lagre';
-  }
+  } catch(e) { console.error(e); showError('Kunne ikke lagre: '+e.message); }
+  finally { btn.disabled = false; btn.textContent = 'Lagre'; }
 }
 
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }
