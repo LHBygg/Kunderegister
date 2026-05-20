@@ -688,7 +688,7 @@ function loadFiles(path) {
     if (!el) return;
     if (!files.length) { el.innerHTML = '<div class="fempty">Mappen er tom</div>'; return; }
     var html = files.map(function(f) {
-      return '<div class="fitem"><span>&#128196;</span><a class="fn" href="' + SP + f.ServerRelativeUrl + '" target="_blank">' + f.Name + '</a><span class="fm">' + fmtSize(f.Length) + '</span><span class="fm">' + fmtDate(f.TimeLastModified) + '</span></div>';
+      var fileUrl = 'https://lhbent.sharepoint.com' + f.ServerRelativeUrl; return '<div class="fitem"><span>&#128196;</span><a class="fn" href="' + fileUrl + '" target="_blank">' + f.Name + '</a><span class="fm">' + fmtSize(f.Length) + '</span><span class="fm">' + fmtDate(f.TimeLastModified) + '</span></div>';
     });
     el.innerHTML = html.join('');
   }).catch(function() {
