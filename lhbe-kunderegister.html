@@ -421,9 +421,17 @@ function signIn() {
 }
 
 function signOut() {
-  ms.logoutPopup();
-  document.getElementById('appWrap').style.display = 'none';
-  document.getElementById('authWrap').style.display = 'flex';
+  document.getElementById('confIco').textContent = '👋';
+  document.getElementById('confTit').textContent = 'Logg ut?';
+  document.getElementById('confTxt').textContent = 'Er du sikker på at du vil logge ut?';
+  document.getElementById('confOk').textContent = 'Ja, logg ut';
+  document.getElementById('confOk').onclick = function() {
+    closeMov('confMov');
+    ms.logoutPopup();
+    document.getElementById('appWrap').style.display = 'none';
+    document.getElementById('authWrap').style.display = 'flex';
+  };
+  openMov('confMov');
 }
 
 function showApp() {
@@ -619,7 +627,7 @@ function openPD(pid) {
   document.getElementById('pdmT').textContent = p.Title || '-';
   document.getElementById('pdmS').textContent = (p.Kundenavn || '') + (p.Prosjektnummer ? ' - ' + p.Prosjektnummer : '');
   var allF = ['HMS', 'Tegninger', 'FDV', 'Kontrakt', 'Fremdrift', 'Faktura', 'Kalkyle', 'Korrespondanse'];
-  var avF = s === 'Under kalkyle' ? ['Kalkyle', 'Korrespondanse'] : allF;
+  var avF = s === 'Under kalkyle' ? ['Kalkyler_Beskrivelser_Tegninger', 'Korrespondanse'] : allF;
   var lck = s === 'Avsluttet';
   var fgHtml = ['<div class="fgrid">'];
   allF.forEach(function(f) {
