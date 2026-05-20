@@ -307,8 +307,16 @@ tr.erow td{padding:0;background:var(--bg2);border-bottom:1px solid var(--br2);}
       <input type="hidden" id="pId"><input type="hidden" id="pKunde">
       <div class="fg"><label class="fl">Prosjektnavn *</label><input class="fi2" id="pNavn" placeholder="Eks: Orkdalsveien 652 Nybygg"></div>
       <div class="fg2">
-        <div class="fg"><label class="fl">Prosjektnummer *</label><input class="fi2 mono" id="pNr" placeholder="2026-01"></div>
-        <div class="fg"><label class="fl">Kalkylenummer *</label><input class="fi2 mono" id="pKalk" placeholder="K2026-01"></div>
+        <div class="fg">
+          <label class="fl">Prosjektnummer</label>
+          <input class="fi2 mono" id="pNr" placeholder="2026-01" oninput="chkDupProj()">
+          <div id="pNrWarn" style="display:none;font-size:11px;color:var(--org);margin-top:4px">⚠️ Dette prosjektnummeret er allerede i bruk</div>
+        </div>
+        <div class="fg">
+          <label class="fl">Kalkylenummer *</label>
+          <input class="fi2 mono" id="pKalk" placeholder="K-1000" oninput="chkDupProj()">
+          <div id="pKalkWarn" style="display:none;font-size:11px;color:var(--org);margin-top:4px">⚠️ Dette kalkylenummeret er allerede i bruk</div>
+        </div>
       </div>
       <div class="fg2">
         <div class="fg"><label class="fl">Kontraktsum (ekskl. mva)</label><input class="fi2" id="pPris" type="number" placeholder="0"></div>
@@ -770,13 +778,40 @@ function saveCust() {
   req.then(function() { toast(id ? 'Kunde oppdatert' : 'Kunde opprettet', 's'); closeMov('custMov'); loadData(); }).catch(function(e) { toast('Feil: ' + e.message, 'e'); });
 }
 
+function getNextKalkylenr() {
+  var nums = projects.map(function(p) {
+    if (!p.Kalkylenummer) return 0;
+    var m = p.Kalkylenummer.match(/K-(\d+)/);
+    return m ? parseInt(m[1]) : 0;
+  });
+  var max = nums.length ? Math.max.apply(null, nums) : 999;
+  return 'K-' + (max + 1);
+}
+
+function chkDupProj() {
+  var nr = (document.getElementById('pNr').value || '').trim();
+  var kalk = (document.getElementById('pKalk').value || '').trim();
+  var id = document.getElementById('pId').value;
+  var nrWarn = document.getElementById('pNrWarn');
+  var kalkWarn = document.getElementById('pKalkWarn');
+  if (nr && projects.some(function(p) { return p.Prosjektnummer === nr && String(p.ID) !== String(id); })) {
+    nrWarn.style.display = 'block';
+  } else { nrWarn.style.display = 'none'; }
+  if (kalk && projects.some(function(p) { return p.Kalkylenummer === kalk && String(p.ID) !== String(id); })) {
+    kalkWarn.style.display = 'block';
+  } else { kalkWarn.style.display = 'none'; }
+}
+
 function openNP(kn) {
   document.getElementById('pmT').textContent = 'Nytt prosjekt';
   document.getElementById('pId').value = '';
   document.getElementById('pKunde').value = kn;
-  ['pNavn','pNr','pKalk','pPris','pDato','pNotat'].forEach(function(x) { document.getElementById(x).value = ''; });
+  ['pNavn','pNr','pPris','pDato','pNotat'].forEach(function(x) { document.getElementById(x).value = ''; });
+  document.getElementById('pKalk').value = getNextKalkylenr();
   document.getElementById('pStat').value = 'Under kalkyle';
   document.getElementById('pLeder').value = '';
+  document.getElementById('pNrWarn').style.display = 'none';
+  document.getElementById('pKalkWarn').style.display = 'none';
   openMov('projMov');
 }
 
@@ -794,6 +829,8 @@ function openEditP(id) {
   document.getElementById('pStat').value = p.Status || 'Under kalkyle';
   document.getElementById('pLeder').value = p.Prosjektleder || '';
   document.getElementById('pNotat').value = p.Notat || '';
+  document.getElementById('pNrWarn').style.display = 'none';
+  document.getElementById('pKalkWarn').style.display = 'none';
   openMov('projMov');
 }
 
