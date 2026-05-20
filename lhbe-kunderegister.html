@@ -626,7 +626,7 @@ function openPD(pid) {
   var sc = s === 'Aktiv' ? 'aktiv' : s === 'Avsluttet' ? 'avsluttet' : 'kalkyle';
   document.getElementById('pdmT').textContent = p.Title || '-';
   document.getElementById('pdmS').textContent = (p.Kundenavn || '') + (p.Prosjektnummer ? ' - ' + p.Prosjektnummer : '');
-  var allF = ['HMS', 'Tegninger', 'FDV', 'Kontrakt', 'Fremdrift', 'Faktura', 'Kalkyle', 'Korrespondanse'];
+  var allF = ['HMS', 'Tegninger', 'FDV', 'Kontrakt', 'Fremdrift', 'Faktura', 'Kalkyler_Beskrivelser_Tegninger', 'Korrespondanse'];
   var avF = s === 'Under kalkyle' ? ['Kalkyler_Beskrivelser_Tegninger', 'Korrespondanse'] : allF;
   var lck = s === 'Avsluttet';
   var fgHtml = ['<div class="fgrid">'];
@@ -650,7 +650,7 @@ function openPD(pid) {
   if (p.Notat) bodyHtml.push('<div style="margin-top:10px;padding:10px 12px;background:var(--bg3);border-radius:var(--r);font-size:13px;color:var(--tx2);line-height:1.5">' + p.Notat + '</div>');
   bodyHtml.push('</div>');
   bodyHtml.push('<div class="pdsec"><div class="pdsect">Mapper</div>');
-  if (s === 'Under kalkyle') bodyHtml.push('<div style="font-size:12px;color:var(--tx3);margin-bottom:10px">Under kalkyle er kun Kalkyle og Korrespondanse tilgjengelige</div>');
+  if (s === 'Under kalkyle') bodyHtml.push('<div style="font-size:12px;color:var(--tx3);margin-bottom:10px">Under kalkyle er kun Kalkyler_Beskrivelser_Tegninger og Korrespondanse tilgjengelige</div>');
   bodyHtml.push(fgHtml.join(''));
   bodyHtml.push('<div id="fpanel"></div></div>');
   bodyHtml.push('<div class="pdsec"><div class="pdsect">Handlinger</div><div style="display:flex;gap:8px;flex-wrap:wrap">');
