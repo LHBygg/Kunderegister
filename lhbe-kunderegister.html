@@ -849,6 +849,7 @@ function saveProj() {
   var kalk = (document.getElementById('pKalk').value || '').trim();
   var status = document.getElementById('pStat').value;
   if (!navn) { toast('Prosjektnavn er pakrevd', 'w'); return; }
+  if (navn.indexOf('/') > -1) { toast('Prosjektnavn kan ikke inneholde skrastrek (/). Bruk bindestrek (-) i stedet.', 'w'); return; }
   if (!kalk && (status === 'Under kalkyle' || status === 'Aktiv')) { toast('Kalkylenummer er pakrevd', 'w'); return; }
   if (!nr && status === 'Aktiv') { toast('Prosjektnummer er pakrevd ved Aktiv status', 'w'); return; }
   var body = { Title: navn, Kundenavn: document.getElementById('pKunde').value, Prosjektnummer: nr, Kalkylenummer: kalk, Pris: parseFloat(document.getElementById('pPris').value) || null, Oppstartsdato: document.getElementById('pDato').value || null, Status: document.getElementById('pStat').value, Prosjektleder: document.getElementById('pLeder').value, Notat: document.getElementById('pNotat').value };
