@@ -15,7 +15,7 @@
 --br:rgba(0,0,0,.07);--br2:rgba(0,0,0,.13);--br3:rgba(0,0,0,.2);
 --tx:#1a2035;--tx2:#5a6478;--tx3:#9aa3b5;}
 *{box-sizing:border-box;margin:0;padding:0;}
-html,body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);font-size:14px;}
+html,body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);font-size:14px;min-height:100%;}
 .mono{font-family:'DM Mono',monospace;}
 .hdr{position:sticky;top:0;z-index:200;height:54px;display:flex;align-items:center;gap:12px;padding:0 24px;background:var(--bg);border-bottom:1px solid var(--br);}
 .lsq{width:30px;height:30px;background:var(--acc);border-radius:7px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:#000;flex-shrink:0;}
@@ -50,9 +50,9 @@ html,body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);
 table.ct{width:100%;border-collapse:collapse;}
 table.ct thead th{text-align:left;padding:9px 12px;font-size:11px;font-weight:500;color:var(--tx3);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--br);background:var(--bg);position:sticky;top:54px;z-index:10;}
 table.ct tbody tr.crow{cursor:pointer;transition:background .1s;}
-table.ct tbody tr.crow:hover td{background:var(--bg2);}
+table.ct tbody tr.crow:hover td{background:var(--bg2);}table.ct tbody td{background:var(--bg);}
 table.ct tbody tr.crow.open td{background:var(--bg2);border-bottom:none;}
-table.ct tbody td{padding:11px 12px;border-bottom:1px solid var(--br);vertical-align:middle;}
+table.ct tbody td{padding:11px 12px;border-bottom:1px solid var(--br);vertical-align:middle;background:var(--bg);transition:background .1s;}
 .xbtn{width:22px;height:22px;display:flex;align-items:center;justify-content:center;border-radius:4px;background:var(--bg3);color:var(--tx2);font-size:10px;transition:all .2s;border:none;cursor:pointer;}
 .xbtn.on{background:var(--acc);color:#000;transform:rotate(90deg);}
 .cname{font-weight:500;font-size:14px;}
@@ -202,7 +202,7 @@ tr.erow td{padding:0;background:var(--bg2);border-bottom:1px solid var(--br2);}
 <header class="hdr">
   <a class="logo" href="#"><div class="lsq">LH</div>Kunderegister</a>
   <div class="hsp"></div>
-  <span class="vbdg">v4.2</span>
+  <span class="vbdg">v4.3</span>
   <button class="hbtn" id="exportBtn">Eksporter</button>
   <button class="hbtn" id="settingsBtn">Innstillinger</button>
   <div class="hbtn" id="userBtn"><div class="udot" id="uInit">TS</div><span id="uName">Laster...</span></div>
@@ -396,6 +396,12 @@ function init() {
   document.getElementById('refreshBtn').addEventListener('click', loadData);
   document.getElementById('thTog').addEventListener('click', function() { toggleTheme(this); });
   document.getElementById('cpTog').addEventListener('click', function() { toggleCompact(this); });
+  document.getElementById('portTog').addEventListener('click', function() { togglePort(this); });
+  document.getElementById('defFilter').addEventListener('change', onDefFilterChange);
+  document.getElementById('defLeder').addEventListener('change', onDefLederChange);
+  document.getElementById('defSort').addEventListener('change', onDefSortChange);
+  document.getElementById('warnNrTog').addEventListener('click', function() { toggleWarnNr(this); });
+  document.getElementById('warnDays').addEventListener('change', onWarnDaysChange);
   document.getElementById('custCloseBtn').addEventListener('click', function() { closeMov('custMov'); });
   document.getElementById('custCancelBtn').addEventListener('click', function() { closeMov('custMov'); });
   document.getElementById('custSaveBtn').addEventListener('click', saveCust);
@@ -441,6 +447,7 @@ function showApp() {
   document.getElementById('uName').textContent = n.split(' ').slice(0,2).join(' ');
   document.getElementById('uInit').textContent = n.split(' ').map(function(x) { return x[0]; }).slice(0,2).join('').toUpperCase();
   document.getElementById('spUser').textContent = acc.username;
+  loadSettings();
 }
 
 function getToken() {
@@ -527,6 +534,16 @@ function getFiltered() {
     var s = statusMap[activeFilter];
     c = c.filter(function(x) { return projects.some(function(p) { return p.Kundenavn === x.Title && p.Status === s; }); });
   }
+  var sett = getSettings();
+  var sort = sett.defSort || 'navn';
+  c.sort(function(a, b) {
+    if (sort === 'navn') return (a.Title || '').localeCompare(b.Title || '', 'nb');
+    if (sort === 'status') {
+      var ap = getProjFor(a.Title)[0]; var bp = getProjFor(b.Title)[0];
+      return ((ap&&ap.Status)||'').localeCompare((bp&&bp.Status)||'');
+    }
+    return 0;
+  });
   return c;
 }
 
@@ -587,10 +604,19 @@ function renderPC(p) {
   var pn = p.Title || '-';
   var html = [];
   html.push('<div class="pcard ' + sc + '" onclick="event.stopPropagation();openPD(' + p.ID + ')">');
+  var sett3 = getSettings();
+  var warnNr = sett3.warnNr !== false;
+  var warnDays = parseInt(sett3.warnDays) || 0;
+  var showWarnNr = warnNr && s === 'Under kalkyle' && !p.Prosjektnummer;
+  var showWarnDays = warnDays > 0 && s === 'Under kalkyle' && p.Oppstartsdato && getDaysOld(p.Oppstartsdato) > warnDays;
   html.push('<div class="pctop"><div class="pcname">' + pn + '</div>');
   if (p.Prosjektnummer) html.push('<span class="pcnum">' + p.Prosjektnummer + '</span>');
   html.push('</div>');
-  html.push('<div><span class="sbdg ' + sc + '">' + sl + '</span></div>');
+  html.push('<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:8px">');
+  html.push('<span class="sbdg ' + sc + '" style="margin:0">' + sl + '</span>');
+  if (showWarnNr) html.push('<span style="font-size:10px;padding:2px 7px;border-radius:20px;background:rgba(239,68,68,.15);color:var(--red)">⚠️ Mangler prosjektnr</span>');
+  if (showWarnDays) html.push('<span style="font-size:10px;padding:2px 7px;border-radius:20px;background:rgba(249,115,22,.15);color:var(--org)">⏱ ' + getDaysOld(p.Oppstartsdato) + ' dager</span>');
+  html.push('</div>');
   html.push('<div class="pcinfo">');
   if (p.Pris) html.push('<div class="pcrow">Kontraktsum: <span class="pcprice">' + fmtCur(p.Pris) + '</span></div>');
   if (p.Prosjektleder) html.push('<div class="pcrow">Prosjektleder: ' + p.Prosjektleder + '</div>');
@@ -817,7 +843,7 @@ function openNP(kn) {
   ['pNavn','pNr','pPris','pDato','pNotat'].forEach(function(x) { document.getElementById(x).value = ''; });
   document.getElementById('pKalk').value = getNextKalkylenr();
   document.getElementById('pStat').value = 'Under kalkyle';
-  document.getElementById('pLeder').value = '';
+  var sett2 = getSettings(); document.getElementById('pLeder').value = sett2.defLeder || '';
   document.getElementById('pNrWarn').style.display = 'none';
   document.getElementById('pKalkWarn').style.display = 'none';
   openMov('projMov');
@@ -901,11 +927,126 @@ function cDelP(id, navn) {
 }
 
 function toggleSP() { document.getElementById('spPanel').classList.toggle('on'); }
-function toggleTheme(el) { el.classList.toggle('on'); document.body.classList.toggle('light', !el.classList.contains('on')); }
+
+// SETTINGS - localStorage
+var SETTINGS_KEY = 'lhbe_settings';
+
+function loadSettings() {
+  try {
+    var s = JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}');
+    // Theme
+    var darkMode = s.darkMode !== false;
+    document.body.classList.toggle('light', !darkMode);
+    var thTog = document.getElementById('thTog');
+    if (thTog) { if (darkMode) thTog.classList.add('on'); else thTog.classList.remove('on'); }
+    // Compact
+    var compact = !!s.compact;
+    var cpTog = document.getElementById('cpTog');
+    if (cpTog) { if (compact) cpTog.classList.add('on'); else cpTog.classList.remove('on'); }
+    if (compact) document.querySelectorAll('table.ct tbody td').forEach(function(td){ td.style.padding='7px 12px'; });
+    // Hide portfolio
+    var hidePort = !!s.hidePort;
+    var portTog = document.getElementById('portTog');
+    if (portTog) { if (hidePort) portTog.classList.add('on'); else portTog.classList.remove('on'); }
+    applyPortfolio(hidePort);
+    // Default filter
+    if (s.defFilter) {
+      activeFilter = s.defFilter;
+      document.querySelectorAll('.ftab').forEach(function(t) {
+        t.classList.toggle('on', t.dataset.filter === s.defFilter);
+      });
+    }
+    // Default leder
+    var defLederEl = document.getElementById('defLeder');
+    if (defLederEl && s.defLeder !== undefined) defLederEl.value = s.defLeder;
+    // Default sort
+    var defSortEl = document.getElementById('defSort');
+    if (defSortEl && s.defSort) defSortEl.value = s.defSort;
+    // Warn nr
+    var warnNrTog = document.getElementById('warnNrTog');
+    var warnNr = s.warnNr !== false;
+    if (warnNrTog) { if (warnNr) warnNrTog.classList.add('on'); else warnNrTog.classList.remove('on'); }
+    // Warn days
+    var warnDaysEl = document.getElementById('warnDays');
+    if (warnDaysEl && s.warnDays !== undefined) warnDaysEl.value = s.warnDays;
+    return s;
+  } catch(e) { return {}; }
+}
+
+function saveSetting(key, val) {
+  try {
+    var s = JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}');
+    s[key] = val;
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify(s));
+  } catch(e) {}
+}
+
+function getSettings() {
+  try { return JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}'); } catch(e) { return {}; }
+}
+
+function applyPortfolio(hide) {
+  var ths = document.querySelectorAll('table.ct thead th');
+  var tds = document.querySelectorAll('table.ct tbody td:nth-child(8)');
+  if (ths.length >= 8) ths[7].style.display = hide ? 'none' : '';
+  tds.forEach(function(td) { td.style.display = hide ? 'none' : ''; });
+}
+
+function toggleTheme(el) {
+  el.classList.toggle('on');
+  var dark = el.classList.contains('on');
+  document.body.classList.toggle('light', !dark);
+  saveSetting('darkMode', dark);
+}
+
 function toggleCompact(el) {
   el.classList.toggle('on');
   var v = el.classList.contains('on');
   document.querySelectorAll('table.ct tbody td').forEach(function(td) { td.style.padding = v ? '7px 12px' : '11px 12px'; });
+  saveSetting('compact', v);
+}
+
+function togglePort(el) {
+  el.classList.toggle('on');
+  var hide = el.classList.contains('on');
+  applyPortfolio(hide);
+  saveSetting('hidePort', hide);
+  renderTable();
+}
+
+function onDefFilterChange() {
+  var val = document.getElementById('defFilter').value;
+  saveSetting('defFilter', val);
+}
+
+function onDefLederChange() {
+  var val = document.getElementById('defLeder').value;
+  saveSetting('defLeder', val);
+}
+
+function onDefSortChange() {
+  var val = document.getElementById('defSort').value;
+  saveSetting('defSort', val);
+  renderTable();
+}
+
+function toggleWarnNr(el) {
+  el.classList.toggle('on');
+  saveSetting('warnNr', el.classList.contains('on'));
+  renderTable();
+}
+
+function onWarnDaysChange() {
+  var val = document.getElementById('warnDays').value;
+  saveSetting('warnDays', parseInt(val));
+  renderTable();
+}
+
+function getDaysOld(dateStr) {
+  if (!dateStr) return 0;
+  var d = new Date(dateStr);
+  var now = new Date();
+  return Math.floor((now - d) / (1000 * 60 * 60 * 24));
 }
 
 function exportCSV() {
