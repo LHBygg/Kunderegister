@@ -974,9 +974,12 @@ function toggleSP() { document.getElementById('spPanel').classList.toggle('on');
 // SETTINGS - localStorage
 var SETTINGS_KEY = 'lhbe_settings';
 
+function getSettingsKey() { return 'lhbe_' + (acc && acc.username ? acc.username : 'default'); }
+
 function loadSettings() {
   try {
-    var s = JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}');
+    var key = getSettingsKey();
+    var s = JSON.parse(localStorage.getItem(key) || '{}');
     // Theme
     var darkMode = s.darkMode !== false;
     document.body.classList.toggle('light', !darkMode);
@@ -1018,14 +1021,15 @@ function loadSettings() {
 
 function saveSetting(key, val) {
   try {
-    var s = JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}');
+    var sk = getSettingsKey();
+    var s = JSON.parse(localStorage.getItem(sk) || '{}');
     s[key] = val;
-    localStorage.setItem(SETTINGS_KEY, JSON.stringify(s));
+    localStorage.setItem(sk, JSON.stringify(s));
   } catch(e) {}
 }
 
 function getSettings() {
-  try { return JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}'); } catch(e) { return {}; }
+  try { return JSON.parse(localStorage.getItem(getSettingsKey()) || '{}'); } catch(e) { return {}; }
 }
 
 function applyPortfolio(hide) {
