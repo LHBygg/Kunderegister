@@ -172,6 +172,35 @@ tr.erow td{padding:0;background:var(--bg2);border-bottom:1px solid var(--br2);}
 .spin{width:26px;height:26px;border:2px solid var(--br2);border-top-color:var(--acc);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 10px;}
 @keyframes spin{to{transform:rotate(360deg);}}
 .empty{text-align:center;padding:50px 20px;color:var(--tx3);}
+/* SMARTDOK */
+.sdk-box{background:var(--bg3);border:1px solid var(--br);border-radius:var(--rl);overflow:hidden;}
+.sdk-hdr{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--br);}
+.sdk-title{font-size:12px;font-weight:500;display:flex;align-items:center;gap:6px;}
+.sdk-dot{width:8px;height:8px;border-radius:50%;background:var(--grn);}
+.sdk-time{font-size:10px;color:var(--tx3);font-family:'DM Mono',monospace;}
+.sdk-body{padding:12px 14px;}
+.sdk-load{padding:20px;text-align:center;color:var(--tx3);font-size:12px;}
+.sdk-spin{width:20px;height:20px;border:2px solid var(--br2);border-top-color:var(--grn);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 8px;}
+.res-card{background:var(--bg4);border-radius:var(--r);padding:10px 12px;margin-bottom:8px;display:flex;align-items:center;gap:10px;}
+.res-card:last-child{margin-bottom:0;}
+.res-av{width:34px;height:34px;border-radius:50%;background:var(--blu);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:#fff;flex-shrink:0;}
+.res-info{flex:1;}
+.res-name{font-weight:500;font-size:13px;}
+.res-role{font-size:11px;color:var(--tx3);margin-top:1px;}
+.res-badge{font-size:10px;padding:2px 7px;border-radius:20px;margin-top:3px;display:inline-block;}
+.res-badge.pa{background:rgba(34,197,94,.15);color:var(--grn);}
+.res-badge.pl{background:rgba(59,130,246,.15);color:var(--blu);}
+.wh-row{display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--br);}
+.wh-row:last-child{border-bottom:none;}
+.wh-lbl{font-size:12px;color:var(--tx2);}
+.wh-val{font-size:13px;font-weight:500;font-family:'DM Mono',monospace;}
+.wh-sum{background:rgba(232,184,75,.08);border:1px solid rgba(232,184,75,.2);border-radius:var(--r);padding:10px 12px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;}
+.wh-sum-lbl{font-size:12px;color:var(--tx2);}
+.wh-sum-val{font-size:18px;font-weight:600;color:var(--acc);font-family:'DM Mono',monospace;}
+.week-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;background:var(--bg4);border-radius:var(--r);padding:7px 10px;}
+.week-lbl{font-size:12px;font-weight:500;}
+.week-btn{width:26px;height:26px;background:var(--bg3);border:none;border-radius:5px;cursor:pointer;color:var(--tx2);font-size:14px;display:flex;align-items:center;justify-content:center;}
+.week-btn:hover{background:var(--bg5);color:var(--tx);}
 .toast{position:fixed;bottom:22px;right:22px;background:var(--bg3);border:1px solid var(--br2);border-radius:var(--r);padding:11px 16px;font-size:13px;z-index:2000;display:flex;align-items:center;gap:8px;transform:translateY(80px);opacity:0;transition:all .22s;max-width:340px;}
 .toast.on{transform:translateY(0);opacity:1;}
 .toast.s{border-left:3px solid var(--grn);}
@@ -373,6 +402,12 @@ var CL = 'D702DBE2-269F-41A0-8107-55C681AEC5BF';
 var PL = '3DB9CF64-778C-48D8-8F32-044AC6EE249C';
 var SCOPES = ['https://lhbent.sharepoint.com/AllSites.Write', 'User.Read'];
 var ms, acc, customers = [], projects = [], activeFilter = 'alle', custType = 'Firma', expanded = {}, activePath = '', activePID = null;
+var SDK_BASE = 'https://api.smartdok.no';
+var SDK_TOKEN = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE3Nzk0NTI3NDQsImV4cCI6MTgxMDk4ODc0NCwiY29tcGFueUlkIjoxMDUzOSwidG9rZW5JZCI6IjEzODE2ZWY3LWMwOTgtNGUxMi1hZTQzLTgxZTkzNTNkMWM0ZiJ9.dAqK-m2uCT-kenMIO63RTuwrUK1g2YlEuGm9oiP-ukt4JXHrzR-XAhbnrZ_nkF5JQsq1dLHR-3XaEUTU3iJa0m2JIoy38zTekJh79Sq3HlO7JYij3k_Jm8J2BT-FbTnIdGhWMX4gyaN30rLfWjla9FBh0LiDMC1MVUG7Gku3NPzyMfy-8MnlKiE56woLH_NfDYerlejIYtpKO-miinIRVZblFLmkLgenMOGyBuuTI_DI1_rZ1Cp2xjmdviLYZtL5yJgPRcvXWTZXfrc4nWn8Z9SYluSgcr088jFIHBvPjq8CVa3vuDbGpysI3TGSKp2xZN6gGoLwzznt9k4a5hdx5g';
+var sdkSession = null;
+var sdkWeekOffset = 0;
+var sdkCurrProsjektnr = '';
+var sdkCurrProjId = '';
 
 function init() {
   ms = new msal.PublicClientApplication(MSAL_CONFIG);
@@ -651,6 +686,16 @@ function openPD(pid) {
   if (s === 'Under kalkyle') bodyHtml.push('<div style="font-size:12px;color:var(--tx3);margin-bottom:10px">Under kalkyle er kun Kalkyler_Beskrivelser_Tegninger og Korrespondanse tilgjengelige</div>');
   bodyHtml.push(fgHtml.join(''));
   bodyHtml.push('<div id="fpanel"></div></div>');
+  if (s === 'Aktiv' && p.Prosjektnummer) {
+    bodyHtml.push('<div class="pdsec"><div class="pdsect">Ressursplanlegger - SmartDok</div>');
+    bodyHtml.push('<div class="sdk-box">');
+    bodyHtml.push('<div class="sdk-hdr"><div class="sdk-title"><div class="sdk-dot"></div>SmartDok</div><span class="sdk-time" id="sdkTime">henter...</span></div>');
+    bodyHtml.push('<div id="sdkBody"><div class="sdk-load"><div class="sdk-spin"></div>Kobler til SmartDok...</div></div>');
+    bodyHtml.push('</div></div>');
+  } else if (s === 'Under kalkyle') {
+    bodyHtml.push('<div class="pdsec"><div class="pdsect">Ressursplanlegger - SmartDok</div>');
+    bodyHtml.push('<div style="font-size:12px;color:var(--tx3)">Vises kun paa aktive prosjekter med prosjektnummer.</div></div>');
+  }
   bodyHtml.push('<div class="pdsec"><div class="pdsect">Handlinger</div><div style="display:flex;gap:8px;flex-wrap:wrap">');
   if (s === 'Under kalkyle') {
     if (p.Prosjektnummer && p.Kalkylenummer) {
@@ -665,6 +710,12 @@ function openPD(pid) {
   bodyHtml.push('</div></div>');
   document.getElementById('pdmB').innerHTML = bodyHtml.join('');
   document.getElementById('pdov').classList.add('on');
+  if (s === 'Aktiv' && p.Prosjektnummer) {
+    sdkWeekOffset = 0;
+    sdkCurrProsjektnr = p.Prosjektnummer;
+    sdkCurrProjId = '';
+    setTimeout(function() { loadSDK(p.Prosjektnummer); }, 100);
+  }
 }
 
 function closePD() { document.getElementById('pdov').classList.remove('on'); activePID = null; activePath = ''; }
@@ -971,6 +1022,158 @@ function toast(msg, type) {
   t.textContent = (type === 's' ? 'OK: ' : type === 'e' ? 'Feil: ' : 'NB: ') + msg;
   t.className = 'toast ' + type + ' on';
   setTimeout(function() { t.className = 'toast'; }, 3500);
+}
+
+function sdkAuth() {
+  if (sdkSession) return Promise.resolve(sdkSession);
+  return fetch(SDK_BASE + '/Authorize/ApiToken', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+    body: JSON.stringify({ Token: SDK_TOKEN })
+  }).then(function(r) {
+    if (!r.ok) throw new Error('SmartDok auth feilet: ' + r.status);
+    return r.json();
+  }).then(function(d) {
+    sdkSession = d.Token || d.SessionToken || d.token || d.sessionToken || (typeof d === 'string' ? d : null);
+    if (!sdkSession && d.Data) sdkSession = d.Data;
+    return sdkSession;
+  });
+}
+
+function sdkGet(path) {
+  return sdkAuth().then(function(token) {
+    return fetch(SDK_BASE + path, {
+      headers: { 'Authorization': 'Bearer ' + token, 'Accept': 'application/json' }
+    });
+  }).then(function(r) {
+    if (!r.ok) throw new Error('SmartDok feil: ' + r.status);
+    return r.json();
+  });
+}
+
+function loadSDK(prosjektnr) {
+  sdkGet('/Projects?projectNumber=' + encodeURIComponent(prosjektnr) + '&active=true').then(function(d) {
+    var list = d.Data || d.data || d.Items || d.items || d || [];
+    if (!Array.isArray(list)) list = [];
+    if (list.length > 0) {
+      var proj = list[0];
+      var projId = proj.Id || proj.id || proj.ID;
+      sdkCurrProjId = projId;
+      loadSDKData(projId, prosjektnr);
+    } else {
+      sdkError('Prosjekt ' + prosjektnr + ' ikke funnet i SmartDok');
+    }
+  }).catch(function(e) { sdkError(e.message); });
+}
+
+function loadSDKData(projId, prosjektnr) {
+  sdkCurrProsjektnr = prosjektnr;
+  sdkCurrProjId = projId;
+  var now = new Date();
+  var weekStart = new Date(now);
+  weekStart.setDate(now.getDate() - now.getDay() + 1 + (sdkWeekOffset * 7));
+  var weekEnd = new Date(weekStart);
+  weekEnd.setDate(weekStart.getDate() + 6);
+  var fromStr = weekStart.toISOString().split('T')[0];
+  var toStr = weekEnd.toISOString().split('T')[0];
+  Promise.all([
+    sdkGet('/ResourcePlanning/Resources?active=true&count=100'),
+    sdkGet('/ResourcePlanning/Plans?projectId=' + projId + '&from=' + fromStr + '&to=' + toStr + '&count=100'),
+    sdkGet('/WorkHours?projectId=' + projId + '&fromDate=2020-01-01&toDate=' + new Date().toISOString().split('T')[0] + '&onlyAttested=false')
+  ]).then(function(results) {
+    var resources = results[0].Data || results[0].data || results[0].Items || results[0] || [];
+    var plans = results[1].Data || results[1].data || results[1].Items || results[1] || [];
+    var hours = results[2].Data || results[2].data || results[2].Items || results[2] || [];
+    if (!Array.isArray(resources)) resources = [];
+    if (!Array.isArray(plans)) plans = [];
+    if (!Array.isArray(hours)) hours = [];
+    renderSDK(resources, plans, hours, fromStr, toStr);
+  }).catch(function(e) { sdkError(e.message); });
+}
+
+function renderSDK(resources, plans, hours, fromStr, toStr) {
+  var el = document.getElementById('sdkBody');
+  var timeEl = document.getElementById('sdkTime');
+  if (!el) return;
+  if (timeEl) timeEl.textContent = 'Oppdatert naa';
+  var d = new Date(fromStr);
+  var weekNum = getWeekNumber(d);
+  var weekLabel = 'Uke ' + weekNum + ' - ' + formatShortDate(fromStr) + ' - ' + formatShortDate(toStr);
+  var html = [];
+  html.push('<div class="sdk-body">');
+  html.push('<div class="week-nav">');
+  html.push('<button class="week-btn" onclick="sdkPrevWeek()">&#9664;</button>');
+  html.push('<div class="week-lbl">' + weekLabel + '</div>');
+  html.push('<button class="week-btn" onclick="sdkNextWeek()">&#9654;</button>');
+  html.push('</div>');
+  html.push('<div style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--tx3);margin-bottom:8px;font-weight:500">Planlagt mannskap</div>');
+  if (!plans.length) {
+    html.push('<div style="font-size:12px;color:var(--tx3);padding:8px 0;margin-bottom:12px">Ingen planlagt mannskap denne uken</div>');
+  } else {
+    plans.forEach(function(plan) {
+      var res = resources.filter(function(r) { return r.Id === plan.ResourceId; })[0];
+      var navn = res ? res.Name : 'Ukjent';
+      var init = navn.split(' ').map(function(w){return w[0]||'';}).slice(0,2).join('').toUpperCase();
+      var colors = ['#3b82f6','#a855f7','#22c55e','#f97316','#e8b84b','#ef4444','#06b6d4'];
+      var color = colors[(plan.ResourceId || 0) % colors.length];
+      var today = new Date().toISOString().split('T')[0];
+      var isNow = plan.Start <= today + 'T23:59:59' && plan.End >= today + 'T00:00:00';
+      html.push('<div class="res-card">');
+      html.push('<div class="res-av" style="background:' + color + '">' + init + '</div>');
+      html.push('<div class="res-info">');
+      html.push('<div class="res-name">' + navn + '</div>');
+      html.push('<span class="res-badge ' + (isNow ? 'pa' : 'pl') + '">' + (isNow ? 'Pa prosjekt' : 'Planlagt') + '</span>');
+      html.push('</div></div>');
+    });
+  }
+  html.push('<div style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--tx3);margin-bottom:8px;margin-top:14px;font-weight:500">Timer brukt</div>');
+  if (!hours.length) {
+    html.push('<div style="font-size:12px;color:var(--tx3);padding:8px 0">Ingen registrerte timer</div>');
+  } else {
+    var totalTimer = hours.reduce(function(s, h) { return s + (parseFloat(h.OrdinaryHours || h.NetHours || 0)); }, 0);
+    html.push('<div class="wh-sum"><div class="wh-sum-lbl">Totalt registrert</div><div class="wh-sum-val">' + totalTimer.toFixed(1) + ' t</div></div>');
+    var byUser = {};
+    hours.forEach(function(h) {
+      var uid = h.UserID || h.UserId || 'ukjent';
+      var name = h.UserName || h.EmployeeName || ('Ansatt ' + uid);
+      if (!byUser[uid]) byUser[uid] = { name: name, timer: 0 };
+      byUser[uid].timer += parseFloat(h.OrdinaryHours || h.NetHours || 0);
+    });
+    Object.values(byUser).forEach(function(u) {
+      html.push('<div class="wh-row"><div class="wh-lbl">' + u.name + '</div><div class="wh-val">' + u.timer.toFixed(1) + ' t</div></div>');
+    });
+  }
+  html.push('</div>');
+  el.innerHTML = html.join('');
+}
+
+function sdkPrevWeek() { sdkWeekOffset -= 1; reloadSDK(); }
+function sdkNextWeek() { sdkWeekOffset += 1; reloadSDK(); }
+function reloadSDK() {
+  var el = document.getElementById('sdkBody');
+  if (el) el.innerHTML = '<div class="sdk-load"><div class="sdk-spin"></div>Laster...</div>';
+  if (sdkCurrProjId) loadSDKData(sdkCurrProjId, sdkCurrProsjektnr);
+  else if (sdkCurrProsjektnr) loadSDK(sdkCurrProsjektnr);
+}
+
+function sdkError(msg) {
+  var el = document.getElementById('sdkBody');
+  var timeEl = document.getElementById('sdkTime');
+  if (el) el.innerHTML = '<div style="padding:14px;font-size:12px;color:var(--org)">&#9888; ' + msg + '</div>';
+  if (timeEl) timeEl.textContent = 'feil';
+}
+
+function getWeekNumber(d) {
+  var date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  date.setUTCDate(date.getUTCDate() + 4 - (date.getUTCDay() || 7));
+  var yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
+  return Math.ceil((((date - yearStart) / 86400000) + 1) / 7);
+}
+
+function formatShortDate(dateStr) {
+  if (!dateStr) return '';
+  var d = new Date(dateStr);
+  return d.getDate() + '.' + (d.getMonth() + 1) + '.';
 }
 
 window.addEventListener('DOMContentLoaded', init);
