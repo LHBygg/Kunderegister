@@ -718,7 +718,7 @@ function openPD(pid) {
     bodyHtml.push('<div style="font-size:12px;color:var(--tx3)">Vises kun på aktive prosjekter med prosjektnummer.</div></div>');
   }
 
-  bodyHtml.push('<div class="pdsec"><div class="pdsect">Handlinger</div>');<div style="display:flex;gap:8px;flex-wrap:wrap">');
+  bodyHtml.push('<div class="pdsec"><div class="pdsect">Handlinger</div><div style="display:flex;gap:8px;flex-wrap:wrap">');
   if (s === 'Under kalkyle') {
     if (p.Prosjektnummer && p.Kalkylenummer) {
       bodyHtml.push('<button class="btn" onclick="setSt(' + p.ID + ',\'Aktiv\');closePD()">Sett Aktiv</button>');
