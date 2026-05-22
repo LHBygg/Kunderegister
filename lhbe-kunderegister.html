@@ -1196,12 +1196,12 @@ function renderSDK(resources, plans, hours, fromStr, toStr, prosjektnr, projId) 
   var el = document.getElementById('sdkBody');
   var timeEl = document.getElementById('sdkTime');
   if (!el) return;
-  if (timeEl) timeEl.textContent = 'Oppdatert nå';
+  if (timeEl) timeEl.textContent = 'Oppdatert naa';
 
   // Week label
   var d = new Date(fromStr);
   var weekNum = getWeekNumber(d);
-  var weekLabel = 'Uke ' + weekNum + ' - ' + formatShortDate(fromStr) + ' – ' + formatShortDate(toStr);
+  var weekLabel = 'Uke ' + weekNum + ' - ' + formatShortDate(fromStr) + ' - ' + formatShortDate(toStr);
 
   var html = [];
   html.push('<div class="sdk-body">');
