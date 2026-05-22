@@ -408,6 +408,8 @@ var SDK_BASE = 'https://api.smartdok.no';
 var sdkSession = null;
 var sdkResources = [];
 var sdkWeekOffset = 0;
+var sdkCurrProsjektnr = '';
+var sdkCurrProjId = '';
 
 function init() {
   ms = new msal.PublicClientApplication(MSAL_CONFIG);
@@ -710,12 +712,12 @@ function openPD(pid) {
   bodyHtml.push('<div id="fpanel"></div></div>');
   // SMARTDOK SECTION
   if (s === 'Aktiv' && p.Prosjektnummer) {
-    bodyHtml.push('<div class="pdsec"><div class="pdsect">Ressursplanlegger · SmartDok</div>');
+    bodyHtml.push('<div class="pdsec"><div class="pdsect">Ressursplanlegger - SmartDok</div>');
     bodyHtml.push('<div class="sdk-box"><div class="sdk-hdr"><div class="sdk-title"><div class="sdk-dot"></div>SmartDok</div><span class="sdk-time" id="sdkTime">henter...</span></div>');
     bodyHtml.push('<div id="sdkBody"><div class="sdk-load"><div class="sdk-spin"></div>Kobler til SmartDok...</div></div></div></div>');
   } else if (s !== 'Aktiv') {
-    bodyHtml.push('<div class="pdsec"><div class="pdsect">Ressursplanlegger · SmartDok</div>');
-    bodyHtml.push('<div style="font-size:12px;color:var(--tx3)">Vises kun på aktive prosjekter med prosjektnummer.</div></div>');
+    bodyHtml.push('<div class="pdsec"><div class="pdsect">Ressursplanlegger - SmartDok</div>');
+    bodyHtml.push('<div style="font-size:12px;color:var(--tx3)">Vises kun paa aktive prosjekter med prosjektnummer.</div></div>');
   }
 
   bodyHtml.push('<div class="pdsec"><div class="pdsect">Handlinger</div><div style="display:flex;gap:8px;flex-wrap:wrap">');
@@ -1164,6 +1166,8 @@ function loadSDK(prosjektnr) {
 }
 
 function loadSDKData(projId, prosjektnr) {
+  sdkCurrProsjektnr = prosjektnr;
+  sdkCurrProjId = projId;
   var now = new Date();
   var weekStart = new Date(now);
   weekStart.setDate(now.getDate() - now.getDay() + 1 + (sdkWeekOffset * 7));
@@ -1197,16 +1201,16 @@ function renderSDK(resources, plans, hours, fromStr, toStr, prosjektnr, projId) 
   // Week label
   var d = new Date(fromStr);
   var weekNum = getWeekNumber(d);
-  var weekLabel = 'Uke ' + weekNum + ' · ' + formatShortDate(fromStr) + ' – ' + formatShortDate(toStr);
+  var weekLabel = 'Uke ' + weekNum + ' - ' + formatShortDate(fromStr) + ' – ' + formatShortDate(toStr);
 
   var html = [];
   html.push('<div class="sdk-body">');
 
   // Week nav
   html.push('<div class="week-nav">');
-  html.push('<button class="week-btn" onclick="sdkChangeWeek(-1,'' + prosjektnr + '','' + projId + '')">◀</button>');
+  html.push('<button class="week-btn" onclick="sdkPrevWeek()">&#9664;</button>');
   html.push('<div class="week-lbl">' + weekLabel + '</div>');
-  html.push('<button class="week-btn" onclick="sdkChangeWeek(1,'' + prosjektnr + '','' + projId + '')">▶</button>');
+  html.push('<button class="week-btn" onclick="sdkNextWeek()">&#9654;</button>');
   html.push('</div>');
 
   // Ressursplanlegger
@@ -1259,11 +1263,13 @@ function renderSDK(resources, plans, hours, fromStr, toStr, prosjektnr, projId) 
   el.innerHTML = html.join('');
 }
 
-function sdkChangeWeek(dir, prosjektnr, projId) {
+function sdkPrevWeek() { sdkChangeWeek(-1); }
+function sdkNextWeek() { sdkChangeWeek(1); }
+function sdkChangeWeek(dir) {
   sdkWeekOffset += dir;
   var el = document.getElementById('sdkBody');
   if (el) el.innerHTML = '<div class="sdk-load"><div class="sdk-spin"></div>Laster...</div>';
-  loadSDKData(projId, prosjektnr);
+  loadSDKData(sdkCurrProjId, sdkCurrProsjektnr);
 }
 
 function sdkError(msg) {
