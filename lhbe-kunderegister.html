@@ -1065,7 +1065,7 @@ function loadSDKData(projId, prosjektnr) {
   Promise.all([
     sdkGet('/ResourcePlanning/Resources?active=true&count=100'),
     sdkGet('/ResourcePlanning/Plans?projectId=' + projId + '&from=' + fromStr + '&to=' + toStr + '&count=100'),
-    sdkGet('/WorkHours?projectId=' + projId + '&fromDate=2020-01-01T00:00:00&toDate=' + new Date().toISOString().split('.')[0]).catch(function() { return {}; })
+    sdkGet('/WorkHours?projectId=' + projId + '&fromDate=' + (function(){ var d = new Date(); d.setDate(d.getDate()-90); return d.toISOString().split('.')[0]; })() + '&toDate=' + new Date().toISOString().split('.')[0]).catch(function() { return {}; })
   ]).then(function(results) {
     var resources = results[0].Data || results[0].data || results[0].Items || results[0] || [];
     var plans = results[1].Data || results[1].data || results[1].Items || results[1] || [];
