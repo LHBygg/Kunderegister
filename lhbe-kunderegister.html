@@ -1121,7 +1121,8 @@ function renderSDK(resources, plans, hours, fromStr, toStr) {
     var byUser = {};
     hours.forEach(function(h) {
       var uid = h.UserID || h.UserId || 'ukjent';
-      var name = h.UserName || h.EmployeeName || ('Ansatt ' + uid);
+      var res = resources.filter(function(r) { return r.UserId === uid || r.userId === uid; })[0];
+      var name = res ? res.Name : (h.EmployeeNo ? 'Ansatt ' + h.EmployeeNo : 'Ukjent');
       if (!byUser[uid]) byUser[uid] = { name: name, timer: 0 };
       byUser[uid].timer += parseFloat(h.OrdinaryHours || h.NetHours || 0);
     });
