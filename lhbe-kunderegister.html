@@ -1025,26 +1025,12 @@ function toast(msg, type) {
 }
 
 function sdkAuth() {
-  if (sdkSession) return Promise.resolve(sdkSession);
-  return fetch(SDK_BASE + '/Authorize/ApiToken', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-    body: JSON.stringify({ Token: SDK_TOKEN })
-  }).then(function(r) {
-    if (!r.ok) throw new Error('SmartDok auth feilet: ' + r.status);
-    return r.json();
-  }).then(function(d) {
-    sdkSession = d.Token || d.SessionToken || d.token || d.sessionToken || (typeof d === 'string' ? d : null);
-    if (!sdkSession && d.Data) sdkSession = d.Data;
-    return sdkSession;
-  });
+  return Promise.resolve('worker-handles-auth');
 }
 
 function sdkGet(path) {
-  return sdkAuth().then(function(token) {
-    return fetch(SDK_BASE + path, {
-      headers: { 'Authorization': 'Bearer ' + token, 'Accept': 'application/json' }
-    });
+  return fetch(SDK_BASE + path, {
+    headers: { 'Accept': 'application/json' }
   }).then(function(r) {
     if (!r.ok) throw new Error('SmartDok feil: ' + r.status);
     return r.json();
