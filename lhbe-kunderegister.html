@@ -206,6 +206,13 @@ tr.erow td{padding:0;background:var(--bg2);border-bottom:1px solid var(--br2);}
 .toast.s{border-left:3px solid var(--grn);}
 .toast.e{border-left:3px solid var(--red);}
 .toast.w{border-left:3px solid var(--org);}
+.adrow{display:flex;align-items:center;gap:10px;padding:10px 20px;border-bottom:1px solid var(--br);transition:background .1s;}
+.adrow:last-child{border-bottom:none;}
+.adrow:hover{background:var(--bg3);}
+.adrow-info{flex:1;min-width:0;}
+.adrow-name{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.adrow-sub{font-size:11px;color:var(--tx3);margin-top:2px;}
+.adrow-acts{display:flex;gap:6px;flex-shrink:0;}
 ::-webkit-scrollbar{width:5px;}
 ::-webkit-scrollbar-thumb{background:var(--bg4);border-radius:3px;}
 @media(max-width:800px){
@@ -299,17 +306,8 @@ tr.erow td{padding:0;background:var(--bg2);border-bottom:1px solid var(--br2);}
     </div>
     <div class="spsec">
       <div class="splbl">Administrasjon</div>
-      <div style="font-size:11px;color:var(--tx3);margin-bottom:10px;line-height:1.5">Slett kunde eller prosjekt her. Handlingen kan ikke angres.</div>
-      <div class="sprow" style="flex-direction:column;align-items:flex-start;gap:8px;padding-bottom:10px">
-        <div class="sprl" style="font-size:12px;font-weight:500">Slett kunde</div>
-        <select class="fi2" id="spDelCustSel" style="font-size:12px;padding:6px 10px;width:100%"><option value="">-- Velg kunde --</option></select>
-        <button class="btn sm danger" id="spDelCustBtn" style="width:100%;justify-content:center">Slett valgt kunde</button>
-      </div>
-      <div class="sprow" style="flex-direction:column;align-items:flex-start;gap:8px;padding-top:2px">
-        <div class="sprl" style="font-size:12px;font-weight:500">Slett prosjekt</div>
-        <select class="fi2" id="spDelProjSel" style="font-size:12px;padding:6px 10px;width:100%"><option value="">-- Velg prosjekt --</option></select>
-        <button class="btn sm danger" id="spDelProjBtn" style="width:100%;justify-content:center">Slett valgt prosjekt</button>
-      </div>
+      <div class="sprow"><div class="sprl">Kunder</div><button class="btn sm" id="spCustAdminBtn">Kunde-innstillinger</button></div>
+      <div class="sprow"><div class="sprl">Prosjekter</div><button class="btn sm" id="spProjAdminBtn">Prosjekt-innstillinger</button></div>
     </div>
     <div class="spsec">
       <div class="splbl">Om appen</div>
@@ -388,6 +386,36 @@ tr.erow td{padding:0;background:var(--bg2);border-bottom:1px solid var(--br2);}
   </div>
 </div>
 
+<!-- MODAL: KUNDE-INNSTILLINGER -->
+<div class="mov hid" id="custAdminMov">
+  <div class="mbox" style="max-width:620px">
+    <div class="mhdr"><div class="mhdr-t">Kunde-innstillinger</div><button class="mclose" id="custAdminCloseBtn">x</button></div>
+    <div class="mbody" style="padding-bottom:0">
+      <div class="srch" style="margin-bottom:14px;max-width:100%">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="text" id="custAdminSrch" placeholder="Sok etter kunde..." style="background:none;border:none;outline:none;color:var(--tx);font-family:'DM Sans',sans-serif;font-size:13px;width:100%">
+      </div>
+      <div id="custAdminList" style="max-height:420px;overflow-y:auto;margin:0 -20px"></div>
+    </div>
+    <div class="mftr"><button class="btn" id="custAdminCancelBtn">Lukk</button></div>
+  </div>
+</div>
+
+<!-- MODAL: PROSJEKT-INNSTILLINGER -->
+<div class="mov hid" id="projAdminMov">
+  <div class="mbox" style="max-width:680px">
+    <div class="mhdr"><div class="mhdr-t">Prosjekt-innstillinger</div><button class="mclose" id="projAdminCloseBtn">x</button></div>
+    <div class="mbody" style="padding-bottom:0">
+      <div class="srch" style="margin-bottom:14px;max-width:100%">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="text" id="projAdminSrch" placeholder="Sok etter prosjekt eller kunde..." style="background:none;border:none;outline:none;color:var(--tx);font-family:'DM Sans',sans-serif;font-size:13px;width:100%">
+      </div>
+      <div id="projAdminList" style="max-height:420px;overflow-y:auto;margin:0 -20px"></div>
+    </div>
+    <div class="mftr"><button class="btn" id="projAdminCancelBtn">Lukk</button></div>
+  </div>
+</div>
+
 <!-- MODAL: BEKREFT -->
 <div class="mov hid" id="confMov">
   <div class="mbox sm">
@@ -456,8 +484,14 @@ function init() {
   document.getElementById('projSaveBtn').addEventListener('click', saveProj);
   document.getElementById('confCancelBtn').addEventListener('click', function() { closeMov('confMov'); });
   document.getElementById('srchIn').addEventListener('input', renderTable);
-  document.getElementById('spDelCustBtn').addEventListener('click', spDelCust);
-  document.getElementById('spDelProjBtn').addEventListener('click', spDelProj);
+  document.getElementById('spCustAdminBtn').addEventListener('click', openCustAdmin);
+  document.getElementById('spProjAdminBtn').addEventListener('click', openProjAdmin);
+  document.getElementById('custAdminCloseBtn').addEventListener('click', function() { closeMov('custAdminMov'); });
+  document.getElementById('custAdminCancelBtn').addEventListener('click', function() { closeMov('custAdminMov'); });
+  document.getElementById('projAdminCloseBtn').addEventListener('click', function() { closeMov('projAdminMov'); });
+  document.getElementById('projAdminCancelBtn').addEventListener('click', function() { closeMov('projAdminMov'); });
+  document.getElementById('custAdminSrch').addEventListener('input', renderCustAdminList);
+  document.getElementById('projAdminSrch').addEventListener('input', renderProjAdminList);
   document.querySelectorAll('.ftab').forEach(function(btn) {
     btn.addEventListener('click', function() { setFilter(this.dataset.filter, this); });
   });
@@ -963,10 +997,7 @@ function cDelP(id, navn) {
   openMov('confMov');
 }
 
-function toggleSP() {
-  document.getElementById('spPanel').classList.toggle('on');
-  populateSpDelSelects();
-}
+function toggleSP() { document.getElementById('spPanel').classList.toggle('on'); }
 
 var SETTINGS_KEY = 'lhbe_settings';
 
@@ -1014,29 +1045,36 @@ function toggleCompact(el) {
   saveSetting('compact', v);
 }
 
-function populateSpDelSelects() {
-  var cSel = document.getElementById('spDelCustSel');
-  var pSel = document.getElementById('spDelProjSel');
-  if (!cSel || !pSel) return;
-  var sorted = customers.slice().sort(function(a, b) { return (a.Title || '').localeCompare(b.Title || '', 'nb'); });
-  cSel.innerHTML = '<option value="">-- Velg kunde --</option>' + sorted.map(function(c) {
-    return '<option value="' + c.ID + '">' + (c.Title || '') + '</option>';
-  }).join('');
-  var pSorted = projects.slice().sort(function(a, b) { return (a.Title || '').localeCompare(b.Title || '', 'nb'); });
-  pSel.innerHTML = '<option value="">-- Velg prosjekt --</option>' + pSorted.map(function(p) {
-    return '<option value="' + p.ID + '">[' + (p.Status || '') + '] ' + (p.Title || '') + (p.Prosjektnummer ? ' (' + p.Prosjektnummer + ')' : '') + '</option>';
+function openCustAdmin() {
+  document.getElementById('custAdminSrch').value = '';
+  renderCustAdminList();
+  openMov('custAdminMov');
+}
+
+function renderCustAdminList() {
+  var q = (document.getElementById('custAdminSrch').value || '').toLowerCase();
+  var list = customers.slice().sort(function(a, b) { return (a.Title || '').localeCompare(b.Title || '', 'nb'); });
+  if (q) list = list.filter(function(c) { return (c.Title || '').toLowerCase().indexOf(q) > -1 || (c.Kontaktperson || '').toLowerCase().indexOf(q) > -1; });
+  var el = document.getElementById('custAdminList');
+  if (!list.length) { el.innerHTML = '<div style="padding:20px;text-align:center;color:var(--tx3);font-size:13px">Ingen kunder funnet</div>'; return; }
+  el.innerHTML = list.map(function(c) {
+    var ps = getProjFor(c.Title);
+    var sub = (c.Kundetype || 'Firma') + (c.Kontaktperson ? ' · ' + c.Kontaktperson : '') + (ps.length ? ' · ' + ps.length + ' prosjekter' : '');
+    return '<div class="adrow">' +
+      '<div class="adrow-info"><div class="adrow-name">' + (c.Title || '-') + '</div><div class="adrow-sub">' + sub + '</div></div>' +
+      '<div class="adrow-acts">' +
+      '<button class="btn sm" onclick="openEditC(' + c.ID + ')">Rediger</button>' +
+      '<button class="btn sm danger" onclick="cDelCFromAdmin(' + c.ID + ',\'' + (c.Title || '').replace(/'/g, '') + '\')">Slett</button>' +
+      '</div></div>';
   }).join('');
 }
 
-function spDelCust() {
-  var sel = document.getElementById('spDelCustSel');
-  var id = sel ? parseInt(sel.value) : 0;
-  if (!id) { toast('Velg en kunde forst', 'w'); return; }
-  var c = customers.filter(function(x) { return x.ID === id; })[0];
-  if (!c) return;
+function cDelCFromAdmin(id, navn) {
+  var ps = getProjFor(navn);
+  var pTxt = ps.length ? ' Kunden har ' + ps.length + ' prosjekt(er) som ikke slettes automatisk.' : '';
   document.getElementById('confIco').textContent = '';
   document.getElementById('confTit').textContent = 'Slett kunde?';
-  document.getElementById('confTxt').textContent = 'Er du sikker pa at du vil slette ' + c.Title + '? Prosjekter slettes ikke automatisk.';
+  document.getElementById('confTxt').textContent = 'Er du sikker pa at du vil slette ' + navn + '?' + pTxt;
   document.getElementById('confOk').textContent = 'Ja, slett kunde';
   document.getElementById('confOk').onclick = function() {
     spDel(SP + '/_api/web/lists(guid\'' + CL + '\')/items(' + id + ')').then(function() {
@@ -1044,21 +1082,42 @@ function spDelCust() {
       closeMov('confMov');
       expanded[id] = false;
       loadData();
-      populateSpDelSelects();
+      renderCustAdminList();
     }).catch(function(e) { toast('Feil: ' + e.message, 'e'); });
   };
   openMov('confMov');
 }
 
-function spDelProj() {
-  var sel = document.getElementById('spDelProjSel');
-  var id = sel ? parseInt(sel.value) : 0;
-  if (!id) { toast('Velg et prosjekt forst', 'w'); return; }
-  var p = projects.filter(function(x) { return x.ID === id; })[0];
-  if (!p) return;
+function openProjAdmin() {
+  document.getElementById('projAdminSrch').value = '';
+  renderProjAdminList();
+  openMov('projAdminMov');
+}
+
+function renderProjAdminList() {
+  var q = (document.getElementById('projAdminSrch').value || '').toLowerCase();
+  var list = projects.slice().sort(function(a, b) { return (a.Title || '').localeCompare(b.Title || '', 'nb'); });
+  if (q) list = list.filter(function(p) { return (p.Title || '').toLowerCase().indexOf(q) > -1 || (p.Kundenavn || '').toLowerCase().indexOf(q) > -1 || (p.Prosjektnummer || '').toLowerCase().indexOf(q) > -1; });
+  var el = document.getElementById('projAdminList');
+  if (!list.length) { el.innerHTML = '<div style="padding:20px;text-align:center;color:var(--tx3);font-size:13px">Ingen prosjekter funnet</div>'; return; }
+  var statusColor = { 'Aktiv': 'var(--grn)', 'Under kalkyle': 'var(--org)', 'Avsluttet': 'var(--tx3)' };
+  el.innerHTML = list.map(function(p) {
+    var s = p.Status || 'Under kalkyle';
+    var col = statusColor[s] || 'var(--tx3)';
+    var sub = (p.Kundenavn || '-') + (p.Prosjektnummer ? ' · ' + p.Prosjektnummer : '') + ' · <span style="color:' + col + '">' + s + '</span>';
+    return '<div class="adrow">' +
+      '<div class="adrow-info"><div class="adrow-name">' + (p.Title || '-') + '</div><div class="adrow-sub">' + sub + '</div></div>' +
+      '<div class="adrow-acts">' +
+      '<button class="btn sm" onclick="openEditP(' + p.ID + ')">Rediger</button>' +
+      '<button class="btn sm danger" onclick="cDelPFromAdmin(' + p.ID + ',\'' + (p.Title || '').replace(/'/g, '') + '\')">Slett</button>' +
+      '</div></div>';
+  }).join('');
+}
+
+function cDelPFromAdmin(id, navn) {
   document.getElementById('confIco').textContent = '';
   document.getElementById('confTit').textContent = 'Slett prosjekt?';
-  document.getElementById('confTxt').textContent = 'Er du sikker pa at du vil slette ' + p.Title + '? Mapper i OneDrive slettes ikke.';
+  document.getElementById('confTxt').textContent = 'Er du sikker pa at du vil slette ' + navn + '? Mapper i OneDrive slettes ikke.';
   document.getElementById('confOk').textContent = 'Ja, slett prosjekt';
   document.getElementById('confOk').onclick = function() {
     spDel(SP + '/_api/web/lists(guid\'' + PL + '\')/items(' + id + ')').then(function() {
@@ -1066,7 +1125,7 @@ function spDelProj() {
       closeMov('confMov');
       closePD();
       loadData();
-      populateSpDelSelects();
+      renderProjAdminList();
     }).catch(function(e) { toast('Feil: ' + e.message, 'e'); });
   };
   openMov('confMov');
