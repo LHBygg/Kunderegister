@@ -380,6 +380,12 @@ tr.erow td{padding:0;background:var(--bg2);border-bottom:1px solid var(--br2);}
           </select>
         </div>
       </div>
+      <div style="font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--tx3);font-weight:500;margin:14px 0 10px;padding-top:10px;border-top:1px solid var(--br)">Kontaktinfo for dette prosjektet</div>
+      <div class="fg2">
+        <div class="fg"><label class="fl">Kontaktperson</label><input class="fi2" id="pKontakt" placeholder="Navn pa kontaktperson"></div>
+        <div class="fg"><label class="fl">Telefon</label><input class="fi2" id="pTelefon" placeholder="+47 xxx xx xxx"></div>
+      </div>
+      <div class="fg"><label class="fl">Adresse (byggeplass)</label><input class="fi2" id="pAdresse" placeholder="Byggeplassadresse"></div>
       <div class="fg"><label class="fl">Notat</label><textarea class="fi2" id="pNotat" rows="3" placeholder="Tilleggsopplysninger..."></textarea></div>
     </div>
     <div class="mftr"><button class="btn" id="projCancelBtn">Avbryt</button><button class="btn pri" id="projSaveBtn">Lagre prosjekt</button></div>
@@ -572,7 +578,7 @@ function spDel(url) {
 function loadData() {
   Promise.all([
     spGet(SP + '/_api/web/lists(guid\'' + CL + '\')/items?$select=ID,Title,Kontaktperson,Telefon,Epost,Adresse,Orgnr,Kundetype&$top=500'),
-    spGet(SP + '/_api/web/lists(guid\'' + PL + '\')/items?$select=ID,Title,Kundenavn,Prosjektnummer,Kalkylenummer,Oppstartsdato,Pris,Status,Prosjektleder,Notat&$top=500')
+    spGet(SP + '/_api/web/lists(guid\'' + PL + '\')/items?$select=ID,Title,Kundenavn,Prosjektnummer,Kalkylenummer,Oppstartsdato,Pris,Status,Prosjektleder,Notat,Kontaktperson,Telefon,Adresse&$top=500')
   ]).then(function(results) {
     customers = results[0].value || [];
     projects = results[1].value || [];
@@ -911,7 +917,7 @@ function openNP(kn) {
   document.getElementById('pmT').textContent = 'Nytt prosjekt';
   document.getElementById('pId').value = '';
   document.getElementById('pKunde').value = kn;
-  ['pNavn','pNr','pPris','pDato','pNotat'].forEach(function(x) { document.getElementById(x).value = ''; });
+  ['pNavn','pNr','pPris','pDato','pNotat','pKontakt','pTelefon','pAdresse'].forEach(function(x) { document.getElementById(x).value = ''; });
   document.getElementById('pKalk').value = getNextKalkylenr();
   document.getElementById('pStat').value = 'Under kalkyle';
   document.getElementById('pLeder').value = '';
@@ -934,6 +940,9 @@ function openEditP(id) {
   document.getElementById('pStat').value = p.Status || 'Under kalkyle';
   document.getElementById('pLeder').value = p.Prosjektleder || '';
   document.getElementById('pNotat').value = p.Notat || '';
+  document.getElementById('pKontakt').value = p.Kontaktperson || '';
+  document.getElementById('pTelefon').value = p.Telefon || '';
+  document.getElementById('pAdresse').value = p.Adresse || '';
   document.getElementById('pNrWarn').style.display = 'none';
   document.getElementById('pKalkWarn').style.display = 'none';
   openMov('projMov');
@@ -949,7 +958,7 @@ function saveProj() {
   if (navn.indexOf('/') > -1) { toast('Prosjektnavn kan ikke inneholde skrastrek (/). Bruk bindestrek (-) i stedet.', 'w'); return; }
   if (!kalk && (status === 'Under kalkyle' || status === 'Aktiv')) { toast('Kalkylenummer er pakrevd', 'w'); return; }
   if (!nr && status === 'Aktiv') { toast('Prosjektnummer er pakrevd ved Aktiv status', 'w'); return; }
-  var body = { Title: navn, Kundenavn: document.getElementById('pKunde').value, Prosjektnummer: nr, Kalkylenummer: kalk, Pris: parseFloat(document.getElementById('pPris').value) || null, Oppstartsdato: document.getElementById('pDato').value || null, Status: document.getElementById('pStat').value, Prosjektleder: document.getElementById('pLeder').value, Notat: document.getElementById('pNotat').value };
+  var body = { Title: navn, Kundenavn: document.getElementById('pKunde').value, Prosjektnummer: nr, Kalkylenummer: kalk, Pris: parseFloat(document.getElementById('pPris').value) || null, Oppstartsdato: document.getElementById('pDato').value || null, Status: document.getElementById('pStat').value, Prosjektleder: document.getElementById('pLeder').value, Notat: document.getElementById('pNotat').value, Kontaktperson: document.getElementById('pKontakt').value, Telefon: document.getElementById('pTelefon').value, Adresse: document.getElementById('pAdresse').value };
   var url = id ? SP + '/_api/web/lists(guid\'' + PL + '\')/items(' + id + ')' : SP + '/_api/web/lists(guid\'' + PL + '\')/items';
   var req = id ? spPatch(url, body) : spPost(url, body);
   req.then(function() { toast(id ? 'Prosjekt oppdatert' : 'Prosjekt opprettet', 's'); closeMov('projMov'); loadData(); }).catch(function(e) { toast('Feil: ' + e.message, 'e'); });
