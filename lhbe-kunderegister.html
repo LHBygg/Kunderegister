@@ -713,7 +713,7 @@ function openPD(pid) {
   var sc = s === 'Aktiv' ? 'aktiv' : s === 'Avsluttet' ? 'avsluttet' : 'kalkyle';
   document.getElementById('pdmT').textContent = p.Title || '-';
   document.getElementById('pdmS').textContent = (p.Kundenavn || '') + (p.Prosjektnummer ? ' - ' + p.Prosjektnummer : '');
-  var allF = ['HMS', 'Tegninger', 'FDV', 'Kontrakt', 'Fremdrift', 'Faktura', 'Kalkyler_Beskrivelser_Tegninger', 'Korrespondanse'];
+  var allF = ['HMS', 'FDV', 'Kontrakt', 'Fremdrift', 'Faktura', 'Kalkyler_Beskrivelser_Tegninger', 'Korrespondanse'];
   var avF = s === 'Under kalkyle' ? ['Kalkyler_Beskrivelser_Tegninger', 'Korrespondanse'] : allF;
   var lck = s === 'Avsluttet';
   var fgHtml = ['<div class="fgrid">'];
