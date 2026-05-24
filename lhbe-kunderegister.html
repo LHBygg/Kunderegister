@@ -298,6 +298,20 @@ tr.erow td{padding:0;background:var(--bg2);border-bottom:1px solid var(--br2);}
       <div class="sprow"><div class="sprl">Oppdater data</div><button class="btn sm" id="refreshBtn">Refresh</button></div>
     </div>
     <div class="spsec">
+      <div class="splbl">Administrasjon</div>
+      <div style="font-size:11px;color:var(--tx3);margin-bottom:10px;line-height:1.5">Slett kunde eller prosjekt her. Handlingen kan ikke angres.</div>
+      <div class="sprow" style="flex-direction:column;align-items:flex-start;gap:8px;padding-bottom:10px">
+        <div class="sprl" style="font-size:12px;font-weight:500">Slett kunde</div>
+        <select class="fi2" id="spDelCustSel" style="font-size:12px;padding:6px 10px;width:100%"><option value="">-- Velg kunde --</option></select>
+        <button class="btn sm danger" id="spDelCustBtn" style="width:100%;justify-content:center">Slett valgt kunde</button>
+      </div>
+      <div class="sprow" style="flex-direction:column;align-items:flex-start;gap:8px;padding-top:2px">
+        <div class="sprl" style="font-size:12px;font-weight:500">Slett prosjekt</div>
+        <select class="fi2" id="spDelProjSel" style="font-size:12px;padding:6px 10px;width:100%"><option value="">-- Velg prosjekt --</option></select>
+        <button class="btn sm danger" id="spDelProjBtn" style="width:100%;justify-content:center">Slett valgt prosjekt</button>
+      </div>
+    </div>
+    <div class="spsec">
       <div class="splbl">Om appen</div>
       <div class="spinfo">LH Bygg Kunderegister v4.3<br>LH Bygg Entreprenor AS<br><br>Innlogget som:<br><span style="color:var(--tx)" id="spUser">-</span></div>
     </div>
@@ -442,6 +456,8 @@ function init() {
   document.getElementById('projSaveBtn').addEventListener('click', saveProj);
   document.getElementById('confCancelBtn').addEventListener('click', function() { closeMov('confMov'); });
   document.getElementById('srchIn').addEventListener('input', renderTable);
+  document.getElementById('spDelCustBtn').addEventListener('click', spDelCust);
+  document.getElementById('spDelProjBtn').addEventListener('click', spDelProj);
   document.querySelectorAll('.ftab').forEach(function(btn) {
     btn.addEventListener('click', function() { setFilter(this.dataset.filter, this); });
   });
@@ -604,7 +620,6 @@ function renderTable() {
       rows.push('<tr class="erow"><td colspan="9"><div class="ebox">');
       rows.push('<div class="ehdr"><div class="etitle">' + (c.Title || '') + '</div>');
       rows.push('<div style="display:flex;gap:6px">');
-      rows.push('<button class="btn sm danger" onclick="event.stopPropagation();cDelC(' + c.ID + ',\'' + (c.Title || '').replace(/'/g, '') + '\')">Slett kunde</button>');
       rows.push('<button class="btn sm pri" onclick="event.stopPropagation();openNP(\'' + (c.Title || '').replace(/'/g, '') + '\')">+ Nytt prosjekt</button>');
       rows.push('</div></div>');
       rows.push('<div class="pgrid">');
@@ -644,7 +659,6 @@ function renderPC(p) {
   }
   if (s === 'Aktiv') html.push('<button class="pca" onclick="event.stopPropagation();setSt(' + p.ID + ',\'Avsluttet\')">Avsluttet</button>');
   html.push('<button class="pca" onclick="event.stopPropagation();openPD(' + p.ID + ')">Apne</button>');
-  html.push('<button class="pca red" onclick="event.stopPropagation();cDelP(' + p.ID + ',\'' + pn.replace(/'/g, '') + '\')">Slett</button>');
   html.push('</div></div>');
   return html.join('');
 }
@@ -706,7 +720,6 @@ function openPD(pid) {
   }
   if (s === 'Aktiv') bodyHtml.push('<button class="btn" onclick="setSt(' + p.ID + ',\'Avsluttet\');closePD()">Sett Avsluttet</button>');
   bodyHtml.push('<button class="btn" onclick="openEditP(' + p.ID + ')">Rediger</button>');
-  bodyHtml.push('<button class="btn danger" onclick="cDelP(' + p.ID + ',\'' + (p.Title || '').replace(/'/g, '') + '\')">Slett prosjekt</button>');
   bodyHtml.push('</div></div>');
   document.getElementById('pdmB').innerHTML = bodyHtml.join('');
   document.getElementById('pdov').classList.add('on');
@@ -950,7 +963,10 @@ function cDelP(id, navn) {
   openMov('confMov');
 }
 
-function toggleSP() { document.getElementById('spPanel').classList.toggle('on'); }
+function toggleSP() {
+  document.getElementById('spPanel').classList.toggle('on');
+  populateSpDelSelects();
+}
 
 var SETTINGS_KEY = 'lhbe_settings';
 
@@ -996,6 +1012,64 @@ function toggleCompact(el) {
   var v = el.classList.contains('on');
   document.querySelectorAll('table.ct tbody td').forEach(function(td) { td.style.padding = v ? '7px 12px' : '11px 12px'; });
   saveSetting('compact', v);
+}
+
+function populateSpDelSelects() {
+  var cSel = document.getElementById('spDelCustSel');
+  var pSel = document.getElementById('spDelProjSel');
+  if (!cSel || !pSel) return;
+  var sorted = customers.slice().sort(function(a, b) { return (a.Title || '').localeCompare(b.Title || '', 'nb'); });
+  cSel.innerHTML = '<option value="">-- Velg kunde --</option>' + sorted.map(function(c) {
+    return '<option value="' + c.ID + '">' + (c.Title || '') + '</option>';
+  }).join('');
+  var pSorted = projects.slice().sort(function(a, b) { return (a.Title || '').localeCompare(b.Title || '', 'nb'); });
+  pSel.innerHTML = '<option value="">-- Velg prosjekt --</option>' + pSorted.map(function(p) {
+    return '<option value="' + p.ID + '">[' + (p.Status || '') + '] ' + (p.Title || '') + (p.Prosjektnummer ? ' (' + p.Prosjektnummer + ')' : '') + '</option>';
+  }).join('');
+}
+
+function spDelCust() {
+  var sel = document.getElementById('spDelCustSel');
+  var id = sel ? parseInt(sel.value) : 0;
+  if (!id) { toast('Velg en kunde forst', 'w'); return; }
+  var c = customers.filter(function(x) { return x.ID === id; })[0];
+  if (!c) return;
+  document.getElementById('confIco').textContent = '';
+  document.getElementById('confTit').textContent = 'Slett kunde?';
+  document.getElementById('confTxt').textContent = 'Er du sikker pa at du vil slette ' + c.Title + '? Prosjekter slettes ikke automatisk.';
+  document.getElementById('confOk').textContent = 'Ja, slett kunde';
+  document.getElementById('confOk').onclick = function() {
+    spDel(SP + '/_api/web/lists(guid\'' + CL + '\')/items(' + id + ')').then(function() {
+      toast('Kunde slettet', 's');
+      closeMov('confMov');
+      expanded[id] = false;
+      loadData();
+      populateSpDelSelects();
+    }).catch(function(e) { toast('Feil: ' + e.message, 'e'); });
+  };
+  openMov('confMov');
+}
+
+function spDelProj() {
+  var sel = document.getElementById('spDelProjSel');
+  var id = sel ? parseInt(sel.value) : 0;
+  if (!id) { toast('Velg et prosjekt forst', 'w'); return; }
+  var p = projects.filter(function(x) { return x.ID === id; })[0];
+  if (!p) return;
+  document.getElementById('confIco').textContent = '';
+  document.getElementById('confTit').textContent = 'Slett prosjekt?';
+  document.getElementById('confTxt').textContent = 'Er du sikker pa at du vil slette ' + p.Title + '? Mapper i OneDrive slettes ikke.';
+  document.getElementById('confOk').textContent = 'Ja, slett prosjekt';
+  document.getElementById('confOk').onclick = function() {
+    spDel(SP + '/_api/web/lists(guid\'' + PL + '\')/items(' + id + ')').then(function() {
+      toast('Prosjekt slettet', 's');
+      closeMov('confMov');
+      closePD();
+      loadData();
+      populateSpDelSelects();
+    }).catch(function(e) { toast('Feil: ' + e.message, 'e'); });
+  };
+  openMov('confMov');
 }
 
 function exportCSV() {
