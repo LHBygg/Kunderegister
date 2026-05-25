@@ -1258,15 +1258,24 @@ function renderSDK(resources, plans, hours, fromStr, toStr) {
   if (!hours.length) {
     html.push('<div style="font-size:12px;color:var(--tx3);padding:8px 0">Ingen registrerte timer</div>');
   } else {
-    var totalTimer = hours.reduce(function(s, h) { return s + (parseFloat(h.OrdinaryHours || h.NetHours || 0)); }, 0);
+    var validWages = ['Fastlonn', 'Timelonn', 'Overtid 50 %', 'Overtid 100 %', 'Fastlønn', 'Timelønn'];
+    var totalTimer = hours.reduce(function(s, h) {
+      var wageName = h.WageName || '';
+      var isValid = validWages.indexOf(wageName) > -1 || wageName.indexOf('Overtid') > -1;
+      return s + (isValid ? parseFloat(h.NetHours || 0) : 0);
+    }, 0);
     html.push('<div class="wh-sum"><div class="wh-sum-lbl">Totalt registrert</div><div class="wh-sum-val">' + totalTimer.toFixed(1) + ' t</div></div>');
+    var validWages = ['Fastlonn', 'Timelonn', 'Overtid 50 %', 'Overtid 100 %', 'Fastlønn', 'Timelønn'];
     var byUser = {};
     hours.forEach(function(h) {
+      var wageName = h.WageName || '';
+      var isValid = validWages.indexOf(wageName) > -1 || wageName.indexOf('Overtid') > -1;
+      if (!isValid) return;
       var uid = h.UserID || h.UserId || 'ukjent';
       var res = resources.filter(function(r) { return r.UserId === uid || r.userId === uid; })[0];
       var name = res ? res.Name : (h.EmployeeNo ? 'Ansatt ' + h.EmployeeNo : 'Ukjent');
       if (!byUser[uid]) byUser[uid] = { name: name, timer: 0 };
-      byUser[uid].timer += parseFloat(h.OrdinaryHours || h.NetHours || 0);
+      byUser[uid].timer += parseFloat(h.NetHours || 0);
     });
     Object.values(byUser).forEach(function(u) {
       html.push('<div class="wh-row"><div class="wh-lbl">' + u.name + '</div><div class="wh-val">' + u.timer.toFixed(1) + ' t</div></div>');
