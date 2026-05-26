@@ -752,7 +752,13 @@ function renderTable() {
       rows.push('<div style="display:flex;gap:6px">');
       rows.push('<button class="btn sm pri" onclick="event.stopPropagation();openNP(\'' + (c.Title || '').replace(/'/g, '') + '\')">+ Nytt prosjekt</button>');
       rows.push('</div></div>');
-      rows.push('<div class="pgrid">');
+      rows.push('<div class="ftabs" style="margin-bottom:10px;border-bottom:1px solid var(--br);padding-bottom:0;">');
+      rows.push('<button class="ftab on" onclick="event.stopPropagation();filterPC(this,\'alle\',' + c.ID + ')">Alle</button>');
+      rows.push('<button class="ftab" onclick="event.stopPropagation();filterPC(this,\'kalkyle\',' + c.ID + ')">Kalkyle</button>');
+      rows.push('<button class="ftab" onclick="event.stopPropagation();filterPC(this,\'aktiv\',' + c.ID + ')">Aktive</button>');
+      rows.push('<button class="ftab" onclick="event.stopPropagation();filterPC(this,\'avsluttet\',' + c.ID + ')">Avsluttede</button>');
+      rows.push('</div>');
+      rows.push('<div class="pgrid" id="pgrid_' + c.ID + '">');
       if (!ps.length) rows.push('<div style="color:var(--tx3);font-size:13px;grid-column:1/-1">Ingen prosjekter enna</div>');
       ps.forEach(function(p) { rows.push(renderPC(p)); });
       rows.push('</div></div></td></tr>');
@@ -791,6 +797,24 @@ function renderPC(p) {
   html.push('<button class="pca" onclick="event.stopPropagation();openPD(' + p.ID + ')">Apne</button>');
   html.push('</div></div>');
   return html.join('');
+}
+
+function filterPC(btn, filter, cid) {
+  var wrap = document.getElementById('pgrid_' + cid);
+  if (!wrap) return;
+  btn.closest('.ftabs').querySelectorAll('.ftab').forEach(function(b) { b.classList.remove('on'); });
+  btn.classList.add('on');
+  var c = customers.filter(function(x) { return x.ID === cid; })[0];
+  if (!c) return;
+  var ps = getProjFor(c.Title);
+  var statusMap = { alle: null, kalkyle: 'Under kalkyle', aktiv: 'Aktiv', avsluttet: 'Avsluttet' };
+  var target = statusMap[filter];
+  var filtered = target ? ps.filter(function(p) { return p.Status === target; }) : ps;
+  if (!filtered.length) {
+    wrap.innerHTML = '<div style="color:var(--tx3);font-size:13px;grid-column:1/-1">Ingen ' + (target ? target.toLowerCase() + 'e' : '') + ' prosjekter</div>';
+  } else {
+    wrap.innerHTML = filtered.map(function(p) { return renderPC(p); }).join('');
+  }
 }
 
 function togExp(id) { expanded[id] = !expanded[id]; renderTable(); }
@@ -1057,11 +1081,12 @@ function saveProj() {
 function setSt(id, s) {
   var p = projects.filter(function(x) { return x.ID === id; })[0];
   if (!p) return;
+  var fra = p.Status || 'Under kalkyle';
+  if (fra === 'Avsluttet') { toast('Avsluttede prosjekter kan ikke endres tilbake. Rediger statusen direkte i SharePoint om nodvendig.', 'w'); return; }
   if (s === 'Aktiv') {
     if (!p.Prosjektnummer) { toast('Du ma legge inn Prosjektnummer forst. Trykk Rediger pa prosjektet.', 'w'); return; }
     if (!p.Kalkylenummer) { toast('Du ma legge inn Kalkylenummer forst. Trykk Rediger pa prosjektet.', 'w'); return; }
   }
-  var fra = p.Status || 'Under kalkyle';
   document.getElementById('confIco').textContent = s === 'Aktiv' ? '\u2705' : s === 'Avsluttet' ? '\uD83C\uDFC1' : '\u2699\uFE0F';
   document.getElementById('confTit').textContent = 'Endre status?';
   document.getElementById('confTxt').textContent = 'Vil du endre status pa ' + (p.Title || '') + ' fra "' + fra + '" til "' + s + '"?';
