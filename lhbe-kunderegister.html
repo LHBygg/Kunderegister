@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>LH Bygg Kunderegister v4.3</title>
+<title>LH Bygg Kunderegister v4.7</title>
 <script src="msal-browser.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
@@ -320,14 +320,14 @@ tr.erow td{padding:0;background:var(--bg2);border-bottom:1px solid var(--br2);}
   <div class="auth-t">LH Bygg Kunderegister</div>
   <div class="auth-s">Logg inn med Microsoft 365</div>
   <button class="auth-btn" id="loginBtn">Logg inn med Microsoft</button>
-  <div style="font-size:11px;color:var(--tx3)">v4.3 - LH Bygg Entreprenor AS</div>
+  <div style="font-size:11px;color:var(--tx3)">v4.7 - LH Bygg Entreprenor AS</div>
 </div>
 
 <div id="appWrap" style="display:none">
 <header class="hdr">
   <a class="logo" href="#"><div class="lsq">LH</div>Kunderegister</a>
   <div class="hsp"></div>
-  <span class="vbdg">v4.3</span>
+  <span class="vbdg">v4.7</span>
   <button class="hbtn" id="exportBtn">Eksporter</button>
   <button class="hbtn" id="settingsBtn">Innstillinger</button>
   <div class="hbtn" id="userBtn"><div class="udot" id="uInit">TS</div><span id="uName">Laster...</span></div>
@@ -400,7 +400,7 @@ tr.erow td{padding:0;background:var(--bg2);border-bottom:1px solid var(--br2);}
     </div>
     <div class="spsec">
       <div class="splbl">Om appen</div>
-      <div class="spinfo">LH Bygg Kunderegister v4.3<br>LH Bygg Entreprenor AS<br><br>Innlogget som:<br><span style="color:var(--tx)" id="spUser">-</span></div>
+      <div class="spinfo">LH Bygg Kunderegister v4.7<br>LH Bygg Entreprenor AS<br><br>Innlogget som:<br><span style="color:var(--tx)" id="spUser">-</span></div>
     </div>
   </div>
 </div>
@@ -1070,6 +1070,15 @@ function saveProj() {
   var status = document.getElementById('pStat').value;
   if (!navn) { toast('Prosjektnavn er pakrevd', 'w'); return; }
   if (/[\/\\:*?"<>|\u2013\u2014]/.test(navn)) { toast('Prosjektnavn kan ikke inneholde tegnene: / \\ : * ? " < > | eller tankestrek. Bruk vanlig bindestrek (-).', 'w'); return; }
+  if (id) {
+    var eksisterende = projects.filter(function(x) { return x.ID == id; })[0];
+    if (eksisterende && eksisterende.Status === 'Avsluttet' && status !== 'Avsluttet') {
+      toast('Avsluttede prosjekter kan ikke endres tilbake. Rediger statusen direkte i SharePoint om nodvendig.', 'w'); return;
+    }
+    if (eksisterende && eksisterende.Status === 'Aktiv' && status === 'Under kalkyle') {
+      toast('Aktive prosjekter kan ikke settes tilbake til Under kalkyle. Rediger statusen direkte i SharePoint om nodvendig.', 'w'); return;
+    }
+  }
   if (!kalk && (status === 'Under kalkyle' || status === 'Aktiv')) { toast('Kalkylenummer er pakrevd', 'w'); return; }
   if (!nr && status === 'Aktiv') { toast('Prosjektnummer er pakrevd ved Aktiv status', 'w'); return; }
   var body = { Title: navn, Kundenavn: document.getElementById('pKunde').value, Prosjektnummer: nr, Kalkylenummer: kalk, Pris: parseFloat(document.getElementById('pPris').value) || null, Oppstartsdato: document.getElementById('pDato').value || null, Status: document.getElementById('pStat').value, Prosjektleder: document.getElementById('pLeder').value, Notat: document.getElementById('pNotat').value, Kontaktperson: document.getElementById('pKontakt').value, Telefon: document.getElementById('pTelefon').value, Adresse: document.getElementById('pAdresse').value };
@@ -1083,6 +1092,7 @@ function setSt(id, s) {
   if (!p) return;
   var fra = p.Status || 'Under kalkyle';
   if (fra === 'Avsluttet') { toast('Avsluttede prosjekter kan ikke endres tilbake. Rediger statusen direkte i SharePoint om nodvendig.', 'w'); return; }
+  if (fra === 'Aktiv' && s === 'Under kalkyle') { toast('Aktive prosjekter kan ikke settes tilbake til Under kalkyle. Rediger statusen direkte i SharePoint om nodvendig.', 'w'); return; }
   if (s === 'Aktiv') {
     if (!p.Prosjektnummer) { toast('Du ma legge inn Prosjektnummer forst. Trykk Rediger pa prosjektet.', 'w'); return; }
     if (!p.Kalkylenummer) { toast('Du ma legge inn Kalkylenummer forst. Trykk Rediger pa prosjektet.', 'w'); return; }
