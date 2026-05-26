@@ -18,7 +18,7 @@
 html,body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);font-size:14px;min-height:100vh;}
 .mono{font-family:'DM Mono',monospace;}
 .hdr{position:sticky;top:0;z-index:200;height:54px;overflow:visible;display:flex;align-items:center;gap:12px;padding:0 24px;background:var(--bg);border-bottom:1px solid var(--br);}
-.logo-img{height:44px;display:block;mix-blend-mode:multiply;transition:filter .2s;}
+.logo-img{height:34px;display:block;mix-blend-mode:multiply;transition:filter .2s;}
 .light .logo-img{filter:none;}
 body:not(.light) .logo-img{filter:invert(1);mix-blend-mode:normal;}
 .lsq{width:30px;height:30px;background:var(--acc);border-radius:7px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:#000;flex-shrink:0;}
@@ -392,6 +392,16 @@ tr.erow td{padding:0;background:var(--bg2);border-bottom:1px solid var(--br2);}
       <div class="sprow"><div><div class="sprl">Kompakt visning</div><div class="sprs">Tettere rader</div></div><div class="tog" id="cpTog"></div></div>
     </div>
     <div class="spsec">
+      <div class="splbl">Sortering</div>
+      <div class="sprow"><div class="sprl">Rekkefølge</div></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px;">
+        <button class="ttbtn on" id="sortAZ" onclick="setSort('az',this)">A–Å</button>
+        <button class="ttbtn" id="sortZA" onclick="setSort('za',this)">Å–A</button>
+        <button class="ttbtn" id="sortFirma" onclick="setSort('firma',this)">Firma først</button>
+        <button class="ttbtn" id="sortPrivat" onclick="setSort('privat',this)">Privat først</button>
+      </div>
+    </div>
+    <div class="spsec">
       <div class="splbl">Data</div>
       <div class="sprow"><div class="sprl">Oppdater data</div><button class="btn sm" id="refreshBtn">Refresh</button></div>
     </div>
@@ -540,7 +550,7 @@ var SP = 'https://lhbent.sharepoint.com/sites/Industriveien1ASLHBygg';
 var CL = 'D702DBE2-269F-41A0-8107-55C681AEC5BF';
 var PL = '3DB9CF64-778C-48D8-8F32-044AC6EE249C';
 var SCOPES = ['https://lhbent.sharepoint.com/AllSites.Write', 'User.Read'];
-var ms, acc, customers = [], projects = [], activeFilter = 'alle', custType = 'Firma', expanded = {}, activePath = '', activePID = null;
+var ms, acc, customers = [], projects = [], activeFilter = 'alle', activeSort = 'az', custType = 'Firma', expanded = {}, activePath = '', activePID = null;
 var SDK_BASE = 'https://lhbe-smartdok.tom-andre.workers.dev';
 var SDK_TOKEN = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE3Nzk0NTI3NDQsImV4cCI6MTgxMDk4ODc0NCwiY29tcGFueUlkIjoxMDUzOSwidG9rZW5JZCI6IjEzODE2ZWY3LWMwOTgtNGUxMi1hZTQzLTgxZTkzNTNkMWM0ZiJ9.dAqK-m2uCT-kenMIO63RTuwrUK1g2YlEuGm9oiP-ukt4JXHrzR-XAhbnrZ_nkF5JQsq1dLHR-3XaEUTU3iJa0m2JIoy38zTekJh79Sq3HlO7JYij3k_Jm8J2BT-FbTnIdGhWMX4gyaN30rLfWjla9FBh0LiDMC1MVUG7Gku3NPzyMfy-8MnlKiE56woLH_NfDYerlejIYtpKO-miinIRVZblFLmkLgenMOGyBuuTI_DI1_rZ1Cp2xjmdviLYZtL5yJgPRcvXWTZXfrc4nWn8Z9SYluSgcr088jFIHBvPjq8CVa3vuDbGpysI3TGSKp2xZN6gGoLwzznt9k4a5hdx5g';
 var sdkSession = null;
@@ -711,7 +721,7 @@ function getFiltered() {
     var s = statusMap[activeFilter];
     c = c.filter(function(x) { return projects.some(function(p) { return p.Kundenavn === x.Title && p.Status === s; }); });
   }
-  return c;
+  return getSorted(c);
 }
 
 function getProjFor(kn) { return projects.filter(function(p) { return p.Kundenavn === kn; }); }
@@ -817,6 +827,29 @@ function filterPC(btn, filter, cid) {
   } else {
     wrap.innerHTML = filtered.map(function(p) { return renderPC(p); }).join('');
   }
+}
+
+function setSort(s, el) {
+  activeSort = s;
+  document.querySelectorAll('#sortAZ,#sortZA,#sortFirma,#sortPrivat').forEach(function(b) { b.classList.remove('on'); });
+  el.classList.add('on');
+  saveSetting('sort', s);
+  renderTable();
+}
+
+function getSorted(list) {
+  var sorted = list.slice();
+  if (activeSort === 'az') sorted.sort(function(a,b){ return (a.Title||'').localeCompare(b.Title||'','nb'); });
+  else if (activeSort === 'za') sorted.sort(function(a,b){ return (b.Title||'').localeCompare(a.Title||'','nb'); });
+  else if (activeSort === 'firma') sorted.sort(function(a,b){
+    if (a.Kundetype===b.Kundetype) return (a.Title||'').localeCompare(b.Title||'','nb');
+    return a.Kundetype==='Firma' ? -1 : 1;
+  });
+  else if (activeSort === 'privat') sorted.sort(function(a,b){
+    if (a.Kundetype===b.Kundetype) return (a.Title||'').localeCompare(b.Title||'','nb');
+    return a.Kundetype==='Privat' ? -1 : 1;
+  });
+  return sorted;
 }
 
 function togExp(id) { expanded[id] = !expanded[id]; renderTable(); }
@@ -1151,6 +1184,12 @@ function loadSettings() {
     var cpTog = document.getElementById('cpTog');
     if (cpTog) { if (compact) cpTog.classList.add('on'); else cpTog.classList.remove('on'); }
     if (compact) document.querySelectorAll('table.ct tbody td').forEach(function(td){ td.style.padding='7px 12px'; });
+    activeSort = s.sort || 'az';
+    var sortBtn = document.getElementById('sort' + activeSort.charAt(0).toUpperCase() + activeSort.slice(1));
+    if (sortBtn) {
+      document.querySelectorAll('#sortAZ,#sortZA,#sortFirma,#sortPrivat').forEach(function(b){b.classList.remove('on');});
+      sortBtn.classList.add('on');
+    }
   } catch(e) {}
 }
 
