@@ -780,7 +780,9 @@ function loadMannskap() {
   var fromStr = monday.getFullYear() + '-' + String(monday.getMonth()+1).padStart(2,'0') + '-' + String(monday.getDate()).padStart(2,'0');
   var toStr = periodEnd.getFullYear() + '-' + String(periodEnd.getMonth()+1).padStart(2,'0') + '-' + String(periodEnd.getDate()).padStart(2,'0');
   var mndNavn = ['jan','feb','mar','apr','mai','jun','jul','aug','sep','okt','nov','des'];
-  document.getElementById('mvWeekLbl').textContent = formatShortDate(fromStr) + ' – ' + formatShortDate(toStr);
+  var ukeFra = getWeekNumber(monday);
+  var ukeTil = getWeekNumber(periodEnd);
+  document.getElementById('mvWeekLbl').textContent = 'Uke ' + ukeFra + ' – ' + ukeTil;
   var body = document.getElementById('mvBody');
   body.innerHTML = '<div class="sdk-load"><div class="sdk-spin"></div>Henter fra SmartDok...</div>';
   // Hent ressurser og prosjekter forst, deretter planer per prosjekt
