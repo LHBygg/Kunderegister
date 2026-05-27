@@ -829,6 +829,11 @@ function loadMannskap() {
 
 function renderMannskap(resources, sdkProjects, plans, fromStr) {
   var body = document.getElementById('mvBody');
+  // Debug: vis første plan-objekt
+  if (plans.length) {
+    console.log('PLAN eksempel:', JSON.stringify(plans[0]));
+    console.log('RESOURCE eksempel:', JSON.stringify(resources[0]));
+  }
   var today = new Date().toISOString().split('T')[0];
   var todayDow = new Date(today).getDay();
   var todayIdx = (todayDow >= 1 && todayDow <= 5) ? todayDow - 1 : -1;
