@@ -826,6 +826,8 @@ function loadMannskap() {
         var pid = String(pl.ProjectId || '');
         if (pid && projIds.indexOf(pid) === -1) projIds.push(pid);
       });
+      // Debug: vis alle felt i første plan
+      if (flatPlans.length) console.log('Plan alle felt:', JSON.stringify(flatPlans[0]));
       // Hent unike prosjektnummer fra planene (ikke projectId)
       var projNumMap = {};
       flatPlans.forEach(function(pl) {
