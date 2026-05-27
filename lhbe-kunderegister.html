@@ -783,22 +783,37 @@ function loadMannskap() {
   var body = document.getElementById('mvBody');
   body.innerHTML = '<div class="sdk-load"><div class="sdk-spin"></div>Henter fra SmartDok...</div>';
   // Hent ressurser og prosjekter forst, deretter planer per prosjekt
-  // Hent alle ressurser, deretter planer per ressurs, grupper pa prosjekt etterpaa
-  sdkGet('/ResourcePlanning/Resources?active=true&count=200').then(function(rRes) {
-    var resources = rRes.Data || rRes.data || rRes.Items || rRes || [];
+  // Hent resources og projects parallelt, deretter plans per prosjekt
+  Promise.all([
+    sdkGet('/ResourcePlanning/Resources?active=true&count=100'),
+    sdkGet('/Projects?count=100')
+  ]).then(function(results) {
+    var resources = results[0].Data || results[0].data || results[0].Items || results[0] || [];
+    var allProjects = results[1].Data || results[1].data || results[1].Items || results[1] || [];
     if (!Array.isArray(resources)) resources = [];
-    if (!resources.length) {
-      body.innerHTML = '<div style="font-size:13px;color:var(--tx3);padding:24px;text-align:center;">Ingen ressurser funnet i SmartDok</div>';
+    if (!Array.isArray(allProjects)) allProjects = [];
+    // Filtrer kun aktive
+    var activeProjects = allProjects.filter(function(p) {
+      return p.Active === true || p.active === true || p.Status === 'Active' || p.IsActive === true;
+    });
+    // Hvis ingen aktive flagget, bruk alle
+    if (!activeProjects.length) activeProjects = allProjects;
+    if (!activeProjects.length) {
+      body.innerHTML = '<div style="font-size:13px;color:var(--tx3);padding:24px;text-align:center;">Ingen prosjekter funnet i SmartDok</div>';
       return;
     }
-    // Hent planer per ressurs parallelt
-    var planRequests = resources.map(function(res) {
-      var rid = res.Id || res.id;
-      return sdkGet('/ResourcePlanning/Plans?resourceId=' + rid + '&from=' + fromStr + '&to=' + toStr + '&count=100')
+    // Hent plans per prosjekt parallelt
+    var planRequests = activeProjects.map(function(p) {
+      var pid = p.Id || p.id;
+      return sdkGet('/ResourcePlanning/Plans?projectId=' + pid + '&from=' + fromStr + '&to=' + toStr + '&count=100')
         .then(function(d) {
           var plans = d.Data || d.data || d.Items || d || [];
           if (!Array.isArray(plans)) plans = [];
-          plans.forEach(function(pl) { pl._resourceName = res.Name || res.name || ''; });
+          plans.forEach(function(pl) {
+            pl._projId = pid;
+            pl._projName = p.Name || p.name || p.Title || '';
+            pl._projNum = p.ProjectNumber || p.projectNumber || p.Number || '';
+          });
           return plans;
         })
         .catch(function() { return []; });
