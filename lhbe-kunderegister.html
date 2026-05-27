@@ -782,18 +782,33 @@ function loadMannskap() {
   document.getElementById('mvWeekLbl').textContent = 'Uke ' + weekNum + ' – ' + formatShortDate(fromStr) + ' – ' + formatShortDate(toStr);
   var body = document.getElementById('mvBody');
   body.innerHTML = '<div class="sdk-load"><div class="sdk-spin"></div>Henter fra SmartDok...</div>';
+  // Hent ressurser og prosjekter forst, deretter planer per prosjekt
   Promise.all([
     sdkGet('/ResourcePlanning/Resources?active=true&count=200'),
-    sdkGet('/Projects?active=true&count=200'),
-    sdkGet('/ResourcePlanning/Plans?from=' + fromStr + '&to=' + toStr + '&count=500')
+    sdkGet('/Projects?active=true&count=200')
   ]).then(function(results) {
     var resources = results[0].Data || results[0].data || results[0].Items || results[0] || [];
     var sdkProjects = results[1].Data || results[1].data || results[1].Items || results[1] || [];
-    var plans = results[2].Data || results[2].data || results[2].Items || results[2] || [];
     if (!Array.isArray(resources)) resources = [];
     if (!Array.isArray(sdkProjects)) sdkProjects = [];
-    if (!Array.isArray(plans)) plans = [];
-    renderMannskap(resources, sdkProjects, plans, fromStr);
+    if (!sdkProjects.length) { renderMannskap(resources, [], [], fromStr); return; }
+    // Hent planer per prosjekt parallelt
+    var planRequests = sdkProjects.map(function(p) {
+      var pid = p.Id || p.id;
+      return sdkGet('/ResourcePlanning/Plans?projectId=' + pid + '&from=' + fromStr + '&to=' + toStr + '&count=100')
+        .then(function(d) {
+          var plans = d.Data || d.data || d.Items || d || [];
+          if (!Array.isArray(plans)) plans = [];
+          // Koble prosjekt-id til planene
+          plans.forEach(function(pl) { pl._projId = pid; pl._projName = p.Name || p.name || p.Title || ''; pl._projNum = p.ProjectNumber || p.projectNumber || ''; });
+          return plans;
+        })
+        .catch(function() { return []; });
+    });
+    Promise.all(planRequests).then(function(allPlans) {
+      var flatPlans = [].concat.apply([], allPlans);
+      renderMannskap(resources, sdkProjects, flatPlans, fromStr);
+    });
   }).catch(function(e) {
     body.innerHTML = '<div style="color:var(--red);font-size:13px;padding:16px">Feil: ' + e.message + '</div>';
   });
@@ -809,9 +824,10 @@ function renderMannskap(resources, sdkProjects, plans, fromStr) {
   // Grupper planer per prosjekt
   var byProject = {};
   plans.forEach(function(plan) {
-    var pid = plan.ProjectId || plan.projectId;
-    if (!byProject[pid]) byProject[pid] = [];
-    byProject[pid].push(plan);
+    var pid = plan._projId || plan.ProjectId || plan.projectId;
+    if (!pid) return;
+    if (!byProject[pid]) byProject[pid] = { name: plan._projName || '', num: plan._projNum || '', plans: [] };
+    byProject[pid].plans.push(plan);
   });
 
   var projectIds = Object.keys(byProject);
@@ -822,13 +838,12 @@ function renderMannskap(resources, sdkProjects, plans, fromStr) {
 
   var html = [];
   projectIds.forEach(function(pid) {
-    var proj = sdkProjects.filter(function(p) { return String(p.Id || p.id) === String(pid); })[0];
-    var projName = proj ? (proj.Name || proj.name || proj.Title || 'Prosjekt ' + pid) : 'Prosjekt ' + pid;
-    var projNum = proj ? (proj.ProjectNumber || proj.projectNumber || '') : '';
+    var projName = byProject[pid].name || 'Prosjekt ' + pid;
+    var projNum = byProject[pid].num || '';
 
     // Grupper per person
     var byPerson = {};
-    byProject[pid].forEach(function(plan) {
+    byProject[pid].plans.forEach(function(plan) {
       var rid = plan.ResourceId;
       if (!byPerson[rid]) byPerson[rid] = { plan: plan, days: [] };
       var planStart = plan.Start ? plan.Start.split('T')[0] : '';
