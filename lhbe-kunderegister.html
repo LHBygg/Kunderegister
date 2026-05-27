@@ -372,9 +372,25 @@ tr.erow td{padding:0;background:var(--bg2);border-bottom:1px solid var(--br2);}
     <button class="ftab" data-filter="kalkyle">Kalkyle</button>
     <button class="ftab" data-filter="aktiv">Aktive</button>
     <button class="ftab" data-filter="avsluttet">Avsluttet</button>
+    <button class="ftab" data-filter="mannskap" onclick="openMannskap(this)">&#128100; Mannskap</button>
   </div>
   <div class="tsp"></div>
   <button class="btn pri" id="newCustBtn">+ Ny kunde</button>
+</div>
+
+<div id="mannskapView" style="display:none;padding:18px 24px 32px;">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+    <div>
+      <div style="font-size:16px;font-weight:600;color:var(--tx)">Ressursplanlegger</div>
+      <div style="font-size:12px;color:var(--tx3);margin-top:2px">Alle aktive prosjekter fra SmartDok</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <button class="week-btn" onclick="mvPrevWeek()">&#9664;</button>
+      <div id="mvWeekLbl" style="font-size:13px;font-weight:500;min-width:160px;text-align:center;">Laster...</div>
+      <button class="week-btn" onclick="mvNextWeek()">&#9654;</button>
+    </div>
+  </div>
+  <div id="mvBody"><div class="sdk-load"><div class="sdk-spin"></div>Kobler til SmartDok...</div></div>
 </div>
 
 <div class="tw">
@@ -728,7 +744,141 @@ function setFilter(f, el) {
   activeFilter = f;
   document.querySelectorAll('.ftab').forEach(function(t) { t.classList.remove('on'); });
   el.classList.add('on');
+  // Skjul/vis mannskap-visning
+  document.getElementById('mannskapView').style.display = 'none';
+  document.querySelector('.tw').style.display = '';
+  document.querySelector('.stats').style.display = '';
   renderTable();
+}
+
+var mvWeekOffset = 0;
+
+function openMannskap(el) {
+  document.querySelectorAll('.ftab').forEach(function(t) { t.classList.remove('on'); });
+  el.classList.add('on');
+  activeFilter = 'mannskap';
+  document.querySelector('.tw').style.display = 'none';
+  document.querySelector('.stats').style.display = 'none';
+  document.getElementById('mannskapView').style.display = '';
+  mvWeekOffset = 0;
+  loadMannskap();
+}
+
+function mvPrevWeek() { mvWeekOffset--; loadMannskap(); }
+function mvNextWeek() { mvWeekOffset++; loadMannskap(); }
+
+function loadMannskap() {
+  var now = new Date();
+  var weekStart = new Date(now);
+  weekStart.setDate(now.getDate() - now.getDay() + 1 + (mvWeekOffset * 7));
+  var weekEnd = new Date(weekStart);
+  weekEnd.setDate(weekStart.getDate() + 6);
+  var fromStr = weekStart.toISOString().split('T')[0];
+  var toStr = weekEnd.toISOString().split('T')[0];
+  var weekNum = getWeekNumber(weekStart);
+  document.getElementById('mvWeekLbl').textContent = 'Uke ' + weekNum + ' – ' + formatShortDate(fromStr) + ' – ' + formatShortDate(toStr);
+  var body = document.getElementById('mvBody');
+  body.innerHTML = '<div class="sdk-load"><div class="sdk-spin"></div>Henter fra SmartDok...</div>';
+  Promise.all([
+    sdkGet('/ResourcePlanning/Resources?active=true&count=200'),
+    sdkGet('/Projects?active=true&count=200'),
+    sdkGet('/ResourcePlanning/Plans?from=' + fromStr + '&to=' + toStr + '&count=500')
+  ]).then(function(results) {
+    var resources = results[0].Data || results[0].data || results[0].Items || results[0] || [];
+    var sdkProjects = results[1].Data || results[1].data || results[1].Items || results[1] || [];
+    var plans = results[2].Data || results[2].data || results[2].Items || results[2] || [];
+    if (!Array.isArray(resources)) resources = [];
+    if (!Array.isArray(sdkProjects)) sdkProjects = [];
+    if (!Array.isArray(plans)) plans = [];
+    renderMannskap(resources, sdkProjects, plans, fromStr);
+  }).catch(function(e) {
+    body.innerHTML = '<div style="color:var(--red);font-size:13px;padding:16px">Feil: ' + e.message + '</div>';
+  });
+}
+
+function renderMannskap(resources, sdkProjects, plans, fromStr) {
+  var body = document.getElementById('mvBody');
+  var today = new Date().toISOString().split('T')[0];
+  var todayDow = new Date(today).getDay();
+  var todayIdx = (todayDow >= 1 && todayDow <= 5) ? todayDow - 1 : -1;
+  var dayNames = ['Man','Tir','Ons','Tor','Fre'];
+
+  // Grupper planer per prosjekt
+  var byProject = {};
+  plans.forEach(function(plan) {
+    var pid = plan.ProjectId || plan.projectId;
+    if (!byProject[pid]) byProject[pid] = [];
+    byProject[pid].push(plan);
+  });
+
+  var projectIds = Object.keys(byProject);
+  if (!projectIds.length) {
+    body.innerHTML = '<div style="font-size:13px;color:var(--tx3);padding:24px;text-align:center;">Ingen planlagt mannskap denne uken</div>';
+    return;
+  }
+
+  var html = [];
+  projectIds.forEach(function(pid) {
+    var proj = sdkProjects.filter(function(p) { return String(p.Id || p.id) === String(pid); })[0];
+    var projName = proj ? (proj.Name || proj.name || proj.Title || 'Prosjekt ' + pid) : 'Prosjekt ' + pid;
+    var projNum = proj ? (proj.ProjectNumber || proj.projectNumber || '') : '';
+
+    // Grupper per person
+    var byPerson = {};
+    byProject[pid].forEach(function(plan) {
+      var rid = plan.ResourceId;
+      if (!byPerson[rid]) byPerson[rid] = { plan: plan, days: [] };
+      var planStart = plan.Start ? plan.Start.split('T')[0] : '';
+      var planEnd = plan.End ? plan.End.split('T')[0] : '';
+      for (var di = 0; di < 5; di++) {
+        var dayDate = new Date(fromStr);
+        dayDate.setDate(dayDate.getDate() + di);
+        var dayStr = dayDate.toISOString().split('T')[0];
+        if (planStart <= dayStr && planEnd >= dayStr) {
+          if (byPerson[rid].days.indexOf(di) === -1) byPerson[rid].days.push(di);
+        }
+      }
+    });
+
+    html.push('<div style="background:var(--bg2);border:1px solid var(--br);border-radius:var(--rl);margin-bottom:12px;overflow:hidden;">');
+    html.push('<div style="padding:10px 14px;border-bottom:1px solid var(--br);background:var(--bg3);display:flex;align-items:center;gap:8px;">');
+    html.push('<span style="font-size:13px;font-weight:600;color:var(--tx)">' + projName + '</span>');
+    if (projNum) html.push('<span class="mono" style="font-size:11px;color:var(--tx3);background:var(--bg4);padding:2px 7px;border-radius:20px;">' + projNum + '</span>');
+    html.push('</div>');
+
+    Object.keys(byPerson).forEach(function(rid) {
+      var entry = byPerson[rid];
+      var res = resources.filter(function(r) { return r.Id === entry.plan.ResourceId; })[0];
+      var navn = res ? res.Name : 'Ukjent';
+      var init = navn.split(' ').map(function(w){return w[0]||'';}).slice(0,2).join('').toUpperCase();
+      var colors = ['#3b82f6','#a855f7','#22c55e','#f97316','#e8b84b','#ef4444','#06b6d4'];
+      var color = colors[(entry.plan.ResourceId || 0) % colors.length];
+
+      html.push('<div class="res-card" style="padding:8px 14px;border-radius:0;margin:0;border-bottom:1px solid var(--br);">');
+      html.push('<div class="res-av" style="background:' + color + ';width:28px;height:28px;font-size:11px;flex-shrink:0;">' + init + '</div>');
+      html.push('<div class="res-name" style="font-size:12px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + navn + '</div>');
+      html.push('<div class="res-days" style="flex:none;gap:4px;">');
+      for (var di = 0; di < 5; di++) {
+        var isActive = entry.days.indexOf(di) > -1;
+        var isToday = di === todayIdx;
+        var cls = isActive ? (isToday ? 'now' : 'on') : 'off';
+        var mark = isActive ? '&#10003;' : '';
+        var dayDate2 = new Date(fromStr);
+        dayDate2.setDate(dayDate2.getDate() + di);
+        var dateLabel = dayDate2.getDate() + '.' + (dayDate2.getMonth() + 1) + '.';
+        html.push('<div class="res-day">');
+        html.push('<div class="res-day-lbl" style="font-size:9px;">' + dayNames[di] + '</div>');
+        html.push('<div class="res-day-dot ' + cls + '" style="width:30px;height:26px;font-size:13px;">' + mark + '</div>');
+        html.push('<div class="res-day-date" style="font-size:8px;">' + dateLabel + '</div>');
+        html.push('</div>');
+      }
+      html.push('</div>');
+      html.push('</div>');
+    });
+    html.push('</div>');
+  });
+
+  body.innerHTML = html.join('');
 }
 
 function getFiltered() {
