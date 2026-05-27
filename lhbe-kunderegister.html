@@ -935,6 +935,14 @@ function openPD(pid) {
 function closePD() { document.getElementById('pdov').classList.remove('on'); activePID = null; activePath = ''; }
 
 function openF(pid, mappenavn) {
+  var fb = document.getElementById('fb_' + mappenavn);
+  var fp = document.getElementById('fpanel');
+  if (fb && fb.classList.contains('act')) {
+    fb.classList.remove('act');
+    activePath = '';
+    fp.innerHTML = '';
+    return;
+  }
   var p = projects.filter(function(x) { return x.ID === pid; })[0];
   if (!p) return;
   var s = p.Status || 'Under kalkyle';
@@ -944,12 +952,19 @@ function openF(pid, mappenavn) {
   else base = 'Felles/LHBE/Prosjekter/' + (p.Prosjektnummer || '') + ' - ' + (p.Title || '') + '/' + mappenavn;
   activePath = base;
   document.querySelectorAll('.fbtn').forEach(function(b) { b.classList.remove('act'); });
-  var fb = document.getElementById('fb_' + mappenavn);
   if (fb) fb.classList.add('act');
-  var fp = document.getElementById('fpanel');
-  fp.innerHTML = '<div class="fpanel"><div class="fphdr"><div class="fptitle">Mappe: ' + mappenavn + '</div><button class="btn sm" onclick="document.getElementById(\'upIn\').click()">Last opp</button></div><div id="flist" class="flist"><div class="fempty">Laster...</div></div><div class="uzone" id="uz" ondragover="dov2(event)" ondragleave="dlv2()" ondrop="drop2(event)" onclick="document.getElementById(\'upIn\').click()"><div class="uzone-icon">&#128206;</div>Dra filer hit eller klikk for a laste opp</div><input type="file" id="upIn" multiple style="display:none" onchange="upF(event)"></div>';
+  fp.innerHTML = '<div class="fpanel"><div class="fphdr"><div class="fptitle">&#128193; ' + mappenavn + '</div><div style="display:flex;gap:6px"><button class="btn sm" onclick="document.getElementById('upIn').click()">Last opp</button><button class="btn sm" onclick="closeF('' + mappenavn + '')">&#8593; Lukk</button></div></div><div id="flist" class="flist"><div class="fempty">Laster...</div></div><div class="uzone" id="uz" ondragover="dov2(event)" ondragleave="dlv2()" ondrop="drop2(event)" onclick="document.getElementById('upIn').click()"><div class="uzone-icon">&#128206;</div>Dra filer hit eller klikk for a laste opp</div><input type="file" id="upIn" multiple style="display:none" onchange="upF(event)"></div>';
   loadFiles(base);
 }
+
+function closeF(mappenavn) {
+  var fb = document.getElementById('fb_' + mappenavn);
+  if (fb) fb.classList.remove('act');
+  activePath = '';
+  var fp = document.getElementById('fpanel');
+  if (fp) fp.innerHTML = '';
+}
+
 
 function loadFiles(path) {
   var fp = '/sites/Industriveien1ASLHBygg/Delte dokumenter/' + path;
