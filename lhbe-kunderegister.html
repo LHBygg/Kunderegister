@@ -636,7 +636,10 @@ function init() {
   document.getElementById('custAdminSrch').addEventListener('input', renderCustAdminList);
   document.getElementById('projAdminSrch').addEventListener('input', renderProjAdminList);
   document.querySelectorAll('.ftab').forEach(function(btn) {
-    btn.addEventListener('click', function() { setFilter(this.dataset.filter, this); });
+    btn.addEventListener('click', function() {
+      if (this.dataset.filter === 'mannskap') { openMannskap(this); return; }
+      setFilter(this.dataset.filter, this);
+    });
   });
 }
 
