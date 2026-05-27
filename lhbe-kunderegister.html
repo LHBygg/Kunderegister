@@ -783,31 +783,29 @@ function loadMannskap() {
   var body = document.getElementById('mvBody');
   body.innerHTML = '<div class="sdk-load"><div class="sdk-spin"></div>Henter fra SmartDok...</div>';
   // Hent ressurser og prosjekter forst, deretter planer per prosjekt
-  Promise.all([
-    sdkGet('/ResourcePlanning/Resources?active=true&count=200'),
-    sdkGet('/Projects?active=true&count=200')
-  ]).then(function(results) {
-    var resources = results[0].Data || results[0].data || results[0].Items || results[0] || [];
-    var sdkProjects = results[1].Data || results[1].data || results[1].Items || results[1] || [];
+  // Hent alle ressurser, deretter planer per ressurs, grupper pa prosjekt etterpaa
+  sdkGet('/ResourcePlanning/Resources?active=true&count=200').then(function(rRes) {
+    var resources = rRes.Data || rRes.data || rRes.Items || rRes || [];
     if (!Array.isArray(resources)) resources = [];
-    if (!Array.isArray(sdkProjects)) sdkProjects = [];
-    if (!sdkProjects.length) { renderMannskap(resources, [], [], fromStr); return; }
-    // Hent planer per prosjekt parallelt
-    var planRequests = sdkProjects.map(function(p) {
-      var pid = p.Id || p.id;
-      return sdkGet('/ResourcePlanning/Plans?projectId=' + pid + '&from=' + fromStr + '&to=' + toStr + '&count=100')
+    if (!resources.length) {
+      body.innerHTML = '<div style="font-size:13px;color:var(--tx3);padding:24px;text-align:center;">Ingen ressurser funnet i SmartDok</div>';
+      return;
+    }
+    // Hent planer per ressurs parallelt
+    var planRequests = resources.map(function(res) {
+      var rid = res.Id || res.id;
+      return sdkGet('/ResourcePlanning/Plans?resourceId=' + rid + '&from=' + fromStr + '&to=' + toStr + '&count=100')
         .then(function(d) {
           var plans = d.Data || d.data || d.Items || d || [];
           if (!Array.isArray(plans)) plans = [];
-          // Koble prosjekt-id til planene
-          plans.forEach(function(pl) { pl._projId = pid; pl._projName = p.Name || p.name || p.Title || ''; pl._projNum = p.ProjectNumber || p.projectNumber || ''; });
+          plans.forEach(function(pl) { pl._resourceName = res.Name || res.name || ''; });
           return plans;
         })
         .catch(function() { return []; });
     });
     Promise.all(planRequests).then(function(allPlans) {
       var flatPlans = [].concat.apply([], allPlans);
-      renderMannskap(resources, sdkProjects, flatPlans, fromStr);
+      renderMannskap(resources, [], flatPlans, fromStr);
     });
   }).catch(function(e) {
     body.innerHTML = '<div style="color:var(--red);font-size:13px;padding:16px">Feil: ' + e.message + '</div>';
@@ -821,12 +819,14 @@ function renderMannskap(resources, sdkProjects, plans, fromStr) {
   var todayIdx = (todayDow >= 1 && todayDow <= 5) ? todayDow - 1 : -1;
   var dayNames = ['Man','Tir','Ons','Tor','Fre'];
 
-  // Grupper planer per prosjekt
+  // Grupper planer per prosjekt (bruk ProjectId fra SmartDok-planen)
   var byProject = {};
   plans.forEach(function(plan) {
-    var pid = plan._projId || plan.ProjectId || plan.projectId;
+    var pid = String(plan.ProjectId || plan.projectId || plan._projId || '');
     if (!pid) return;
-    if (!byProject[pid]) byProject[pid] = { name: plan._projName || '', num: plan._projNum || '', plans: [] };
+    var pname = plan.ProjectName || plan.projectName || plan._projName || ('Prosjekt ' + pid);
+    var pnum = plan.ProjectNumber || plan.projectNumber || plan._projNum || '';
+    if (!byProject[pid]) byProject[pid] = { name: pname, num: pnum, plans: [] };
     byProject[pid].plans.push(plan);
   });
 
@@ -867,7 +867,7 @@ function renderMannskap(resources, sdkProjects, plans, fromStr) {
     Object.keys(byPerson).forEach(function(rid) {
       var entry = byPerson[rid];
       var res = resources.filter(function(r) { return r.Id === entry.plan.ResourceId; })[0];
-      var navn = res ? res.Name : 'Ukjent';
+      var navn = (res ? res.Name : null) || entry.plan._resourceName || 'Ukjent';
       var init = navn.split(' ').map(function(w){return w[0]||'';}).slice(0,2).join('').toUpperCase();
       var colors = ['#3b82f6','#a855f7','#22c55e','#f97316','#e8b84b','#ef4444','#06b6d4'];
       var color = colors[(entry.plan.ResourceId || 0) % colors.length];
