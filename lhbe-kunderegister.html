@@ -826,21 +826,30 @@ function loadMannskap() {
         var pid = String(pl.ProjectId || '');
         if (pid && projIds.indexOf(pid) === -1) projIds.push(pid);
       });
-      var nameRequests = projIds.map(function(pid) {
-        return sdkGet('/Projects?projectId=' + pid + '&count=1')
+      // Hent unike prosjektnummer fra planene (ikke projectId)
+      var projNumMap = {};
+      flatPlans.forEach(function(pl) {
+        var pnum = pl._projNum || '';
+        var pid = String(pl.ProjectId || pl._projId || '');
+        if (pnum && pid) projNumMap[pid] = pnum;
+      });
+      var uniquePids = Object.keys(projNumMap);
+      var nameRequests = uniquePids.map(function(pid) {
+        var pnum = projNumMap[pid];
+        return sdkGet('/Projects?projectNumber=' + encodeURIComponent(pnum) + '&active=true')
           .then(function(d) {
             var list = d.Data || d.data || d.Items || d || [];
             if (!Array.isArray(list)) list = [];
             var proj = list[0];
-            return { id: pid, name: proj ? (proj.Name || proj.name || proj.Title || '') : '', num: proj ? (proj.ProjectNumber || proj.projectNumber || proj.Number || '') : '' };
+            return { id: pid, name: proj ? (proj.Name || proj.name || proj.Title || '') : '', num: pnum };
           })
-          .catch(function() { return { id: pid, name: '', num: '' }; });
+          .catch(function() { return { id: pid, name: '', num: pnum }; });
       });
       Promise.all(nameRequests).then(function(projNames) {
         var nameMap = {};
         projNames.forEach(function(p) { nameMap[p.id] = p; });
         flatPlans.forEach(function(pl) {
-          var pid = String(pl.ProjectId || '');
+          var pid = String(pl.ProjectId || pl._projId || '');
           if (nameMap[pid]) {
             pl._projName = nameMap[pid].name;
             pl._projNum = nameMap[pid].num;
