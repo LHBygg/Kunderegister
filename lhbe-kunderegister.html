@@ -204,11 +204,11 @@ tr.erow td{padding:0;background:var(--bg2);border-bottom:1px solid var(--br2);}
 .week-lbl{font-size:12px;font-weight:500;}
 .week-btn{width:26px;height:26px;background:var(--bg3);border:none;border-radius:5px;cursor:pointer;color:var(--tx2);font-size:14px;display:flex;align-items:center;justify-content:center;}
 .week-btn:hover{background:var(--bg5);color:var(--tx);}
-.res-days{display:flex;gap:5px;margin-left:auto;}
-.res-day{display:flex;flex-direction:column;align-items:center;gap:2px;}
-.res-day-lbl{font-size:9px;color:var(--tx3);text-transform:uppercase;letter-spacing:.3px;font-weight:600;}
-.res-day-date{font-size:8px;color:var(--tx3);font-family:'DM Mono',monospace;}
-.res-day-dot{width:30px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;}
+.res-days{display:flex;gap:6px;margin-left:auto;flex:1;}
+.res-day{display:flex;flex-direction:column;align-items:center;gap:2px;flex:1;}
+.res-day-lbl{font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.3px;font-weight:600;}
+.res-day-date{font-size:9px;color:var(--tx3);font-family:'DM Mono',monospace;}
+.res-day-dot{width:100%;height:36px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:600;}
 .res-day-dot.on{background:rgba(34,197,94,.18);color:var(--grn);}
 .res-day-dot.now{background:rgba(34,197,94,.35);color:var(--grn);outline:2px solid var(--grn);}
 .res-day-dot.off{background:var(--bg3);color:var(--tx3);}
@@ -317,6 +317,13 @@ tr.erow td{padding:0;background:var(--bg2);border-bottom:1px solid var(--br2);}
 
   /* Toast */
   .toast{bottom:max(16px,env(safe-area-inset-bottom));left:12px;right:12px;max-width:100%;}
+
+  /* Dagbokser - fast størrelse på mobil, ikke strekk */
+  .res-days{flex:none;gap:4px;}
+  .res-day{flex:none;}
+  .res-day-dot{width:30px;height:28px;font-size:13px;}
+  .res-day-lbl{font-size:9px;}
+  .res-day-date{font-size:8px;}
 
   /* Touch-størrelser */
   .btn{min-height:40px;}
