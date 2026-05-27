@@ -204,10 +204,11 @@ tr.erow td{padding:0;background:var(--bg2);border-bottom:1px solid var(--br2);}
 .week-lbl{font-size:12px;font-weight:500;}
 .week-btn{width:26px;height:26px;background:var(--bg3);border:none;border-radius:5px;cursor:pointer;color:var(--tx2);font-size:14px;display:flex;align-items:center;justify-content:center;}
 .week-btn:hover{background:var(--bg5);color:var(--tx);}
-.res-days{display:flex;gap:4px;margin-top:6px;}
-.res-day{display:flex;flex-direction:column;align-items:center;gap:2px;}
-.res-day-lbl{font-size:9px;color:var(--tx3);text-transform:uppercase;letter-spacing:.3px;font-weight:500;}
-.res-day-dot{width:22px;height:22px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:600;}
+.res-days{display:flex;gap:6px;margin-top:8px;}
+.res-day{display:flex;flex-direction:column;align-items:center;gap:3px;}
+.res-day-lbl{font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.3px;font-weight:600;}
+.res-day-date{font-size:9px;color:var(--tx3);font-family:'DM Mono',monospace;}
+.res-day-dot{width:36px;height:36px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:600;}
 .res-day-dot.on{background:rgba(34,197,94,.18);color:var(--grn);}
 .res-day-dot.now{background:rgba(34,197,94,.35);color:var(--grn);outline:2px solid var(--grn);}
 .res-day-dot.off{background:var(--bg3);color:var(--tx3);}
@@ -1449,9 +1450,13 @@ function renderSDK(resources, plans, hours, fromStr, toStr) {
         var isToday = di === todayIdx;
         var cls = isActive ? (isToday ? 'now' : 'on') : 'off';
         var mark = isActive ? '&#10003;' : '';
+        var dayDate2 = new Date(fromStr);
+        dayDate2.setDate(dayDate2.getDate() + di);
+        var dateLabel = dayDate2.getDate() + '.' + (dayDate2.getMonth() + 1) + '.';
         html.push('<div class="res-day">');
         html.push('<div class="res-day-lbl">' + dayNames[di] + '</div>');
         html.push('<div class="res-day-dot ' + cls + '">' + mark + '</div>');
+        html.push('<div class="res-day-date">' + dateLabel + '</div>');
         html.push('</div>');
       }
       html.push('</div>');
