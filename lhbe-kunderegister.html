@@ -327,11 +327,11 @@ tr.erow td{padding:0;background:var(--bg2);border-bottom:1px solid var(--br2);}
 
   /* Touch-størrelser */
   .btn{min-height:40px;}
-  .btn.sm{min-height:52px;padding:7px 12px;}
+  .btn.sm{min-height:58px;padding:7px 12px;}
   .mclose{width:36px;height:36px;font-size:18px;}
   .adrow{padding:12px 14px;}
   .adrow-acts{gap:8px;}
-  .adrow-acts .btn.sm{min-height:52px;}
+  .adrow-acts .btn.sm{min-height:58px;}
 }
 </style>
 </head>
@@ -929,8 +929,8 @@ function renderMannskap(resources, sdkProjects, plans, fromStr, toStr) {
     weekGroups[weekGroups.length-1].count++;
   });
 
-  var NAME_W = 160;
-  var DAY_W = 52;
+  var NAME_W = 180;
+  var DAY_W = 70;
   var totalW = NAME_W + days.length * DAY_W;
   var mndNavn = ['jan','feb','mar','apr','mai','jun','jul','aug','sep','okt','nov','des'];
 
@@ -969,11 +969,11 @@ function renderMannskap(resources, sdkProjects, plans, fromStr, toStr) {
     var init = navn.split(' ').map(function(w){return w[0]||'';}).slice(0,2).join('').toUpperCase();
     var avColor = projColors[parseInt(rid) % projColors.length];
 
-    html.push('<div style="display:flex;align-items:stretch;border-bottom:1px solid var(--br);min-height:52px;">');
+    html.push('<div style="display:flex;align-items:stretch;border-bottom:1px solid var(--br);min-height:58px;">');
     // Navn-kolonne
     html.push('<div style="width:' + NAME_W + 'px;flex-shrink:0;display:flex;align-items:center;gap:7px;padding:4px 8px;">');
     html.push('<div class="res-av" style="background:' + avColor + ';width:24px;height:24px;font-size:10px;flex-shrink:0;">' + init + '</div>');
-    html.push('<div style="font-size:12px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + navn + '</div>');
+    html.push('<div style="font-size:12px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:' + (NAME_W - 44) + 'px;">' + navn + '</div>');
     html.push('</div>');
 
     // Dag-kolonner med fargede blokker
@@ -996,9 +996,12 @@ function renderMannskap(resources, sdkProjects, plans, fromStr, toStr) {
           var isEnd = pe === day.date || day.dow === 5;
           var rLeft = isStart ? '3px' : '0';
           var rRight = isEnd ? '3px' : '0';
-          html.push('<div style="position:absolute;top:4px;bottom:4px;left:0;right:0;background:' + pcolor + ';border-radius:' + rLeft + ' ' + rRight + ' ' + rRight + ' ' + rLeft + ';display:flex;align-items:center;overflow:hidden;" title="' + label + (pnum ? ' (' + pnum + ')' : '') + '">');
+          html.push('<div style="position:absolute;top:3px;bottom:3px;left:0;right:0;background:' + pcolor + ';border-radius:' + rLeft + ' ' + rRight + ' ' + rRight + ' ' + rLeft + ';display:flex;align-items:center;overflow:hidden;" title="' + label + (pnum ? ' (' + pnum + ')' : '') + '">');
           if (isStart && label) {
-            html.push('<span style="font-size:10px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 6px;line-height:1.3;text-shadow:0 1px 2px rgba(0,0,0,.3);">' + label + (pnum ? ' · ' + pnum : '') + '</span>');
+            html.push('<div style="padding:0 6px;overflow:hidden;min-width:0;">');
+            html.push('<div style="font-size:11px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.3;text-shadow:0 1px 2px rgba(0,0,0,.3);">' + label + '</div>');
+            if (pnum) html.push('<div style="font-size:9px;font-weight:500;color:rgba(255,255,255,.85);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.3;">' + pnum + '</div>');
+            html.push('</div>');
           }
           html.push('</div>');
         }
