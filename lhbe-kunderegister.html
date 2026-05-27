@@ -826,26 +826,22 @@ function loadMannskap() {
         var pid = String(pl.ProjectId || '');
         if (pid && projIds.indexOf(pid) === -1) projIds.push(pid);
       });
-      // Debug: vis alle felt i første plan
-      if (flatPlans.length) console.log('Plan alle felt:', JSON.stringify(flatPlans[0]));
-      // Hent unike prosjektnummer fra planene (ikke projectId)
-      var projNumMap = {};
+      // Hent unike ProjectId-er fra planene
+      var uniquePids = [];
       flatPlans.forEach(function(pl) {
-        var pnum = pl._projNum || '';
-        var pid = String(pl.ProjectId || pl._projId || '');
-        if (pnum && pid) projNumMap[pid] = pnum;
+        var pid = String(pl.ProjectId || '');
+        if (pid && uniquePids.indexOf(pid) === -1) uniquePids.push(pid);
       });
-      var uniquePids = Object.keys(projNumMap);
       var nameRequests = uniquePids.map(function(pid) {
-        var pnum = projNumMap[pid];
-        return sdkGet('/Projects?projectNumber=' + encodeURIComponent(pnum) + '&active=true')
+        return sdkGet('/Projects/' + pid)
           .then(function(d) {
-            var list = d.Data || d.data || d.Items || d || [];
-            if (!Array.isArray(list)) list = [];
-            var proj = list[0];
-            return { id: pid, name: proj ? (proj.Name || proj.name || proj.Title || '') : '', num: pnum };
+            // Prøv direkte objekt eller liste
+            var proj = (d && d.Id) ? d : ((d.Data || d.data || d.Items || d || [])[0]);
+            var name = proj ? (proj.Name || proj.name || proj.Title || proj.ProjectName || '') : '';
+            var num = proj ? (proj.ProjectNumber || proj.projectNumber || proj.Number || '') : '';
+            return { id: pid, name: name, num: num };
           })
-          .catch(function() { return { id: pid, name: '', num: pnum }; });
+          .catch(function() { return { id: pid, name: '', num: '' }; });
       });
       Promise.all(nameRequests).then(function(projNames) {
         var nameMap = {};
