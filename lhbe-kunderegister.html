@@ -820,7 +820,34 @@ function loadMannskap() {
     });
     Promise.all(planRequests).then(function(allPlans) {
       var flatPlans = [].concat.apply([], allPlans);
-      renderMannskap(resources, [], flatPlans, fromStr);
+      // Hent prosjektnavn for unike ProjectId-er
+      var projIds = [];
+      flatPlans.forEach(function(pl) {
+        var pid = String(pl.ProjectId || '');
+        if (pid && projIds.indexOf(pid) === -1) projIds.push(pid);
+      });
+      var nameRequests = projIds.map(function(pid) {
+        return sdkGet('/Projects?projectId=' + pid + '&count=1')
+          .then(function(d) {
+            var list = d.Data || d.data || d.Items || d || [];
+            if (!Array.isArray(list)) list = [];
+            var proj = list[0];
+            return { id: pid, name: proj ? (proj.Name || proj.name || proj.Title || '') : '', num: proj ? (proj.ProjectNumber || proj.projectNumber || proj.Number || '') : '' };
+          })
+          .catch(function() { return { id: pid, name: '', num: '' }; });
+      });
+      Promise.all(nameRequests).then(function(projNames) {
+        var nameMap = {};
+        projNames.forEach(function(p) { nameMap[p.id] = p; });
+        flatPlans.forEach(function(pl) {
+          var pid = String(pl.ProjectId || '');
+          if (nameMap[pid]) {
+            pl._projName = nameMap[pid].name;
+            pl._projNum = nameMap[pid].num;
+          }
+        });
+        renderMannskap(resources, [], flatPlans, fromStr);
+      });
     });
   }).catch(function(e) {
     body.innerHTML = '<div style="color:var(--red);font-size:13px;padding:16px">Feil: ' + e.message + '</div>';
@@ -829,11 +856,6 @@ function loadMannskap() {
 
 function renderMannskap(resources, sdkProjects, plans, fromStr) {
   var body = document.getElementById('mvBody');
-  // Debug: vis første plan-objekt
-  if (plans.length) {
-    console.log('PLAN eksempel:', JSON.stringify(plans[0]));
-    console.log('RESOURCE eksempel:', JSON.stringify(resources[0]));
-  }
   var today = new Date().toISOString().split('T')[0];
   var todayDow = new Date(today).getDay();
   var todayIdx = (todayDow >= 1 && todayDow <= 5) ? todayDow - 1 : -1;
@@ -866,13 +888,15 @@ function renderMannskap(resources, sdkProjects, plans, fromStr) {
     byProject[pid].plans.forEach(function(plan) {
       var rid = plan.ResourceId;
       if (!byPerson[rid]) byPerson[rid] = { plan: plan, days: [] };
-      var planStart = plan.Start ? plan.Start.split('T')[0] : '';
-      var planEnd = plan.End ? plan.End.split('T')[0] : '';
+      var planStart = plan.Start ? plan.Start.substring(0, 10) : '';
+      var planEnd = plan.End ? plan.End.substring(0, 10) : '';
       for (var di = 0; di < 5; di++) {
-        var dayDate = new Date(fromStr);
+        var dayDate = new Date(fromStr + 'T12:00:00');
         dayDate.setDate(dayDate.getDate() + di);
-        var dayStr = dayDate.toISOString().split('T')[0];
-        if (planStart <= dayStr && planEnd >= dayStr) {
+        var dd = dayDate.getFullYear() + '-' +
+          String(dayDate.getMonth()+1).padStart(2,'0') + '-' +
+          String(dayDate.getDate()).padStart(2,'0');
+        if (planStart <= dd && planEnd >= dd) {
           if (byPerson[rid].days.indexOf(di) === -1) byPerson[rid].days.push(di);
         }
       }
@@ -1632,13 +1656,15 @@ function renderSDK(resources, plans, hours, fromStr, toStr) {
     plans.forEach(function(plan) {
       var rid = plan.ResourceId;
       if (!byPerson[rid]) byPerson[rid] = { plan: plan, days: [] };
-      var planStart = plan.Start ? plan.Start.split('T')[0] : '';
-      var planEnd = plan.End ? plan.End.split('T')[0] : '';
+      var planStart = plan.Start ? plan.Start.substring(0, 10) : '';
+      var planEnd = plan.End ? plan.End.substring(0, 10) : '';
       for (var di = 0; di < 5; di++) {
-        var dayDate = new Date(fromStr);
+        var dayDate = new Date(fromStr + 'T12:00:00');
         dayDate.setDate(dayDate.getDate() + di);
-        var dayStr = dayDate.toISOString().split('T')[0];
-        if (planStart <= dayStr && planEnd >= dayStr) {
+        var dd = dayDate.getFullYear() + '-' +
+          String(dayDate.getMonth()+1).padStart(2,'0') + '-' +
+          String(dayDate.getDate()).padStart(2,'0');
+        if (planStart <= dd && planEnd >= dd) {
           if (byPerson[rid].days.indexOf(di) === -1) byPerson[rid].days.push(di);
         }
       }
