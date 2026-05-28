@@ -759,7 +759,7 @@ function spDel(url) {
 function loadData() {
   Promise.all([
     spGet(SP + '/_api/web/lists(guid\'' + CL + '\')/items?$select=ID,Title,Kontaktperson,Telefon,Epost,Adresse,Orgnr,Kundetype&$top=500'),
-    spGet(SP + '/_api/web/lists(guid\'' + PL + '\')/items?$select=ID,Title,Kundenavn,Prosjektnummer,Kalkylenummer,Oppstartsdato,Pris,Status,Prosjektleder,Notat,Kontaktperson,Telefon,Adresse,Underprosjekt,Hovedprosjektnummer&$top=500')
+    spGet(SP + '/_api/web/lists(guid\'' + PL + '\')/items?$select=ID,Title,Kundenavn,Prosjektnummer,Kalkylenummer,Oppstartsdato,Pris,Status,Prosjektleder,Notat,Kontaktperson,Telefon,Adresse,Underprosjekt,Hovedprosjektnummer,Hovedprosjektnavn&$top=500')
   ]).then(function(results) {
     customers = results[0].value || [];
     projects = results[1].value || [];
@@ -1625,6 +1625,10 @@ function saveProj() {
   if (isUnder) {
     body.Underprosjekt = true;
     body.Hovedprosjektnummer = hovedNr;
+    // Hent hovedprosjektnavnet og lagre det
+    var sel = document.getElementById('pHovedSel');
+    var selectedOpt = sel ? sel.options[sel.selectedIndex] : null;
+    body.Hovedprosjektnavn = selectedOpt ? (selectedOpt.dataset.navn || '') : '';
   }
   var url = id ? SP + '/_api/web/lists(guid\'' + PL + '\')/items(' + id + ')' : SP + '/_api/web/lists(guid\'' + PL + '\')/items';
   var req = id ? spPatch(url, body) : spPost(url, body);
