@@ -482,11 +482,31 @@ tr.erow td{padding:0;background:var(--bg2);border-bottom:1px solid var(--br2);}
     <div class="mhdr"><div class="mhdr-t" id="pmT">Nytt prosjekt</div><button class="mclose" id="projCloseBtn">x</button></div>
     <div class="mbody">
       <input type="hidden" id="pId"><input type="hidden" id="pKunde">
+      <div class="fg" id="pTypeWrap">
+        <label class="fl">Type prosjekt</label>
+        <div style="display:flex;gap:10px;margin-top:4px;">
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;">
+            <input type="radio" name="pType" value="hoved" id="pTypeHoved" checked onchange="toggleUnderprosjekt()"> Hovedprosjekt
+          </label>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;">
+            <input type="radio" name="pType" value="under" id="pTypeUnder" onchange="toggleUnderprosjekt()"> Underprosjekt
+          </label>
+        </div>
+      </div>
+      <div class="fg" id="pHovedWrap" style="display:none;">
+        <label class="fl">Hovedprosjekt *</label>
+        <select class="fi2" id="pHovedSel" onchange="oppdaterUnderprosjektnr()">
+          <option value="">- Velg hovedprosjekt -</option>
+        </select>
+      </div>
       <div class="fg"><label class="fl">Prosjektnavn *</label><input class="fi2" id="pNavn" placeholder="Eks: Orkdalsveien 652 Nybygg"></div>
       <div class="fg2">
         <div class="fg">
           <label class="fl">Prosjektnummer</label>
-          <input class="fi2 mono" id="pNr" placeholder="2026-01" oninput="chkDupProj()">
+          <div style="display:flex;align-items:center;gap:6px;">
+            <span id="pNrPrefix" style="display:none;font-size:13px;font-weight:600;color:var(--tx2);font-family:monospace;white-space:nowrap;"></span>
+            <input class="fi2 mono" id="pNr" placeholder="2026-01" oninput="chkDupProj()" style="flex:1;">
+          </div>
           <div id="pNrWarn" style="display:none;font-size:11px;color:var(--org);margin-top:4px">&#9888;&#65039; Dette prosjektnummeret er allerede i bruk</div>
         </div>
         <div class="fg">
@@ -739,7 +759,7 @@ function spDel(url) {
 function loadData() {
   Promise.all([
     spGet(SP + '/_api/web/lists(guid\'' + CL + '\')/items?$select=ID,Title,Kontaktperson,Telefon,Epost,Adresse,Orgnr,Kundetype&$top=500'),
-    spGet(SP + '/_api/web/lists(guid\'' + PL + '\')/items?$select=ID,Title,Kundenavn,Prosjektnummer,Kalkylenummer,Oppstartsdato,Pris,Status,Prosjektleder,Notat,Kontaktperson,Telefon,Adresse&$top=500')
+    spGet(SP + '/_api/web/lists(guid\'' + PL + '\')/items?$select=ID,Title,Kundenavn,Prosjektnummer,Kalkylenummer,Oppstartsdato,Pris,Status,Prosjektleder,Notat,Kontaktperson,Telefon,Adresse,Underprosjekt,Hovedprosjektnummer&$top=500')
   ]).then(function(results) {
     customers = results[0].value || [];
     projects = results[1].value || [];
@@ -1074,7 +1094,20 @@ function getFiltered() {
   return getSorted(c);
 }
 
-function getProjFor(kn) { return projects.filter(function(p) { return p.Kundenavn === kn; }); }
+function getProjFor(kn) {
+  var alle = projects.filter(function(p) { return p.Kundenavn === kn; });
+  var hoved = alle.filter(function(p) { return !p.Underprosjekt; });
+  var under = alle.filter(function(p) { return p.Underprosjekt; });
+  var sortert = [];
+  hoved.forEach(function(h) {
+    sortert.push(h);
+    under.filter(function(u) { return u.Hovedprosjektnummer === h.Prosjektnummer; })
+      .forEach(function(u) { sortert.push(u); });
+  });
+  under.filter(function(u) { return !hoved.some(function(h) { return h.Prosjektnummer === u.Hovedprosjektnummer; }); })
+    .forEach(function(u) { sortert.push(u); });
+  return sortert;
+}
 function getPort(kn) { return projects.filter(function(p) { return p.Kundenavn === kn && p.Status === 'Aktiv'; }).reduce(function(s, p) { return s + (parseFloat(p.Pris) || 0); }, 0); }
 
 function renderTable() {
@@ -1135,8 +1168,10 @@ function renderPC(p) {
   var sl = s === 'Aktiv' ? 'Aktiv' : s === 'Avsluttet' ? 'Avsluttet' : 'Under kalkyle';
   var pn = p.Title || '-';
   var html = [];
-  html.push('<div class="pcard ' + sc + '" onclick="event.stopPropagation();openPD(' + p.ID + ')">');
-  html.push('<div class="pctop"><div class="pcname">' + pn + '</div>');
+  var isUnderP = p.Underprosjekt;
+  var indentStyle = isUnderP ? 'margin-left:18px;border-left:3px solid var(--acc);' : '';
+  html.push('<div class="pcard ' + sc + '" onclick="event.stopPropagation();openPD(' + p.ID + ')" style="' + indentStyle + '">');
+  html.push('<div class="pctop"><div class="pcname">' + (isUnderP ? '<span style="font-size:10px;color:var(--tx3);margin-right:4px;">&#8627;</span>' : '') + pn + '</div>');
   if (p.Prosjektnummer) html.push('<span class="pcnum">' + p.Prosjektnummer + '</span>');
   html.push('</div>');
   html.push('<div><span class="sbdg ' + sc + '">' + sl + '</span></div>');
@@ -1287,7 +1322,18 @@ function openF(pid, mappenavn) {
   var base;
   if (s === 'Under kalkyle') base = 'Felles/LHBE/Kalkyler/' + (p.Kalkylenummer || '') + ' - ' + (p.Title || '') + '/' + mappenavn;
   else if (s === 'Avsluttet') base = 'Felles/LHBE/Avsluttede prosjekter/' + (p.Prosjektnummer || '') + ' - ' + (p.Title || '') + '/' + mappenavn;
+  if (s === 'Under kalkyle') base = 'Felles/LHBE/Kalkyler/' + (p.Kalkylenummer || '') + ' - ' + (p.Title || '') + '/' + mappenavn;
+  else if (s === 'Avsluttet') base = 'Felles/LHBE/Avsluttede prosjekter/' + (p.Prosjektnummer || '') + ' - ' + (p.Title || '') + '/' + mappenavn;
   else base = 'Felles/LHBE/Prosjekter/' + (p.Prosjektnummer || '') + ' - ' + (p.Title || '') + '/' + mappenavn;
+  // Underprosjekt – annen mappesti
+  if (p.Underprosjekt) {
+    var hovedProj = projects.filter(function(h) { return h.Prosjektnummer === p.Hovedprosjektnummer && !h.Underprosjekt; })[0];
+    var hovedNavn = hovedProj ? (hovedProj.Title || '') : (p.Kundenavn || '');
+    var uMappe = hovedNavn + ' ' + (p.Prosjektnummer || '') + ' ' + (p.Title || '');
+    if (s === 'Under kalkyle') base = 'Felles/LHBE/Kalkyle Underprosjekter/' + uMappe + '/' + mappenavn;
+    else if (s === 'Avsluttet') base = 'Felles/LHBE/Avsluttede underprosjekter/' + uMappe + '/' + mappenavn;
+    else base = 'Felles/LHBE/Underprosjekter/' + uMappe + '/' + mappenavn;
+  }
   activePath = base;
   document.querySelectorAll('.fbtn').forEach(function(b) { b.classList.remove('act'); });
   if (fb) fb.classList.add('act');
@@ -1427,6 +1473,56 @@ function chkDupProj() {
   } else { kalkWarn.style.display = 'none'; }
 }
 
+function toggleUnderprosjekt() {
+  var isUnder = document.getElementById('pTypeUnder').checked;
+  document.getElementById('pHovedWrap').style.display = isUnder ? '' : 'none';
+  document.getElementById('pNrPrefix').style.display = isUnder ? '' : 'none';
+  if (isUnder) {
+    // Fyll dropdown med aktive/kalkyle hovedprosjekter
+    var sel = document.getElementById('pHovedSel');
+    sel.innerHTML = '<option value="">- Velg hovedprosjekt -</option>';
+    var hovedprosjekter = projects.filter(function(p) {
+      return !p.Underprosjekt && p.Status !== 'Avsluttet';
+    });
+    hovedprosjekter.forEach(function(p) {
+      var opt = document.createElement('option');
+      opt.value = p.Prosjektnummer || '';
+      opt.textContent = (p.Title || '') + (p.Prosjektnummer ? ' (' + p.Prosjektnummer + ')' : '');
+      opt.dataset.navn = p.Title || '';
+      sel.appendChild(opt);
+    });
+    document.getElementById('pNr').placeholder = '1001';
+    oppdaterUnderprosjektnr();
+  } else {
+    document.getElementById('pNrPrefix').textContent = '';
+    document.getElementById('pNr').placeholder = '2026-01';
+  }
+}
+
+function oppdaterUnderprosjektnr() {
+  var sel = document.getElementById('pHovedSel');
+  var hovedNr = sel.value;
+  var prefix = document.getElementById('pNrPrefix');
+  if (hovedNr) {
+    prefix.textContent = hovedNr + '-';
+    prefix.style.display = '';
+  } else {
+    prefix.textContent = '';
+    prefix.style.display = 'none';
+  }
+}
+
+function getFulltProsjektnr() {
+  var isUnder = document.getElementById('pTypeUnder') && document.getElementById('pTypeUnder').checked;
+  var nr = (document.getElementById('pNr').value || '').trim();
+  if (isUnder) {
+    var sel = document.getElementById('pHovedSel');
+    var hovedNr = sel ? sel.value : '';
+    return hovedNr ? hovedNr + '-' + nr : nr;
+  }
+  return nr;
+}
+
 function openNP(kn) {
   document.getElementById('pmT').textContent = 'Nytt prosjekt';
   document.getElementById('pId').value = '';
@@ -1437,6 +1533,16 @@ function openNP(kn) {
   document.getElementById('pLeder').value = '';
   document.getElementById('pNrWarn').style.display = 'none';
   document.getElementById('pKalkWarn').style.display = 'none';
+  // Nullstill underprosjekt-valg
+  document.getElementById('pTypeHoved').checked = true;
+  document.getElementById('pHovedWrap').style.display = 'none';
+  document.getElementById('pNrPrefix').style.display = 'none';
+  document.getElementById('pNr').placeholder = '2026-01';
+  // Vis underprosjekt-valg kun hvis kunden har eksisterende hovedprosjekter
+  var harHovedprosjekter = projects.some(function(p) {
+    return p.Kundenavn === kn && !p.Underprosjekt && p.Status !== 'Avsluttet';
+  });
+  document.getElementById('pTypeWrap').style.display = harHovedprosjekter ? '' : 'none';
   openMov('projMov');
 }
 
@@ -1459,17 +1565,29 @@ function openEditP(id) {
   document.getElementById('pAdresse').value = p.Adresse || '';
   document.getElementById('pNrWarn').style.display = 'none';
   document.getElementById('pKalkWarn').style.display = 'none';
+  // Skjul type-valg ved redigering
+  document.getElementById('pTypeWrap').style.display = 'none';
+  document.getElementById('pHovedWrap').style.display = 'none';
+  document.getElementById('pNrPrefix').style.display = 'none';
   openMov('projMov');
 }
 
 function saveProj() {
   var id = document.getElementById('pId').value;
   var navn = (document.getElementById('pNavn').value || '').trim();
-  var nr = (document.getElementById('pNr').value || '').trim();
   var kalk = (document.getElementById('pKalk').value || '').trim();
   var status = document.getElementById('pStat').value;
+  var isUnder = document.getElementById('pTypeUnder') && document.getElementById('pTypeUnder').checked && !id;
+  var nr = isUnder ? getFulltProsjektnr() : (document.getElementById('pNr').value || '').trim();
+  var hovedNr = '';
+  if (isUnder) {
+    var sel = document.getElementById('pHovedSel');
+    hovedNr = sel ? sel.value : '';
+    if (!hovedNr) { toast('Velg et hovedprosjekt', 'w'); return; }
+    if (!(document.getElementById('pNr').value || '').trim()) { toast('Skriv inn underprosjektnummer (f.eks. 1001)', 'w'); return; }
+  }
   if (!navn) { toast('Prosjektnavn er pakrevd', 'w'); return; }
-  if (/[\/\\:*?"<>|\u2013\u2014]/.test(navn)) { toast('Prosjektnavn kan ikke inneholde tegnene: / \\ : * ? " < > | eller tankestrek. Bruk vanlig bindestrek (-).', 'w'); return; }
+  if (/[\/\:*?"<>|–—]/.test(navn)) { toast('Prosjektnavn kan ikke inneholde tegnene: / \ : * ? " < > | eller tankestrek. Bruk vanlig bindestrek (-).', 'w'); return; }
   if (id) {
     var eksisterende = projects.filter(function(x) { return x.ID == id; })[0];
     if (eksisterende && eksisterende.Status === 'Avsluttet' && status !== 'Avsluttet') {
@@ -1481,7 +1599,33 @@ function saveProj() {
   }
   if (!kalk && (status === 'Under kalkyle' || status === 'Aktiv')) { toast('Kalkylenummer er pakrevd', 'w'); return; }
   if (!nr && status === 'Aktiv') { toast('Prosjektnummer er pakrevd ved Aktiv status', 'w'); return; }
-  var body = { Title: navn, Kundenavn: document.getElementById('pKunde').value, Prosjektnummer: nr, Kalkylenummer: kalk, Pris: parseFloat(document.getElementById('pPris').value) || null, Oppstartsdato: document.getElementById('pDato').value || null, Status: document.getElementById('pStat').value, Prosjektleder: document.getElementById('pLeder').value, Notat: document.getElementById('pNotat').value, Kontaktperson: document.getElementById('pKontakt').value, Telefon: document.getElementById('pTelefon').value, Adresse: document.getElementById('pAdresse').value };
+  // Sjekk aktive underprosjekter ved avslutning av hovedprosjekt
+  if (!isUnder && status === 'Avsluttet' && id) {
+    var aktiveUnder = projects.filter(function(p) {
+      return p.Underprosjekt && p.Hovedprosjektnummer === nr && p.Status !== 'Avsluttet';
+    });
+    if (aktiveUnder.length) {
+      toast('Du har ' + aktiveUnder.length + ' aktive underprosjekter – avslutt disse forst.', 'w'); return;
+    }
+  }
+  var body = {
+    Title: navn,
+    Kundenavn: document.getElementById('pKunde').value,
+    Prosjektnummer: nr,
+    Kalkylenummer: kalk,
+    Pris: parseFloat(document.getElementById('pPris').value) || null,
+    Oppstartsdato: document.getElementById('pDato').value || null,
+    Status: status,
+    Prosjektleder: document.getElementById('pLeder').value,
+    Notat: document.getElementById('pNotat').value,
+    Kontaktperson: document.getElementById('pKontakt').value,
+    Telefon: document.getElementById('pTelefon').value,
+    Adresse: document.getElementById('pAdresse').value
+  };
+  if (isUnder) {
+    body.Underprosjekt = true;
+    body.Hovedprosjektnummer = hovedNr;
+  }
   var url = id ? SP + '/_api/web/lists(guid\'' + PL + '\')/items(' + id + ')' : SP + '/_api/web/lists(guid\'' + PL + '\')/items';
   var req = id ? spPatch(url, body) : spPost(url, body);
   req.then(function() { toast(id ? 'Prosjekt oppdatert' : 'Prosjekt opprettet', 's'); closeMov('projMov'); loadData(); }).catch(function(e) { toast('Feil: ' + e.message, 'e'); });
@@ -1496,6 +1640,14 @@ function setSt(id, s) {
   if (s === 'Aktiv') {
     if (!p.Prosjektnummer) { toast('Du ma legge inn Prosjektnummer forst. Trykk Rediger pa prosjektet.', 'w'); return; }
     if (!p.Kalkylenummer) { toast('Du ma legge inn Kalkylenummer forst. Trykk Rediger pa prosjektet.', 'w'); return; }
+  }
+  if (s === 'Avsluttet' && !p.Underprosjekt) {
+    var aktiveUnder = projects.filter(function(x) {
+      return x.Underprosjekt && x.Hovedprosjektnummer === p.Prosjektnummer && x.Status !== 'Avsluttet';
+    });
+    if (aktiveUnder.length) {
+      toast('Du har ' + aktiveUnder.length + ' aktive underprosjekter – avslutt disse forst.', 'w'); return;
+    }
   }
   document.getElementById('confIco').textContent = s === 'Aktiv' ? '\u2705' : s === 'Avsluttet' ? '\uD83C\uDFC1' : '\u2699\uFE0F';
   document.getElementById('confTit').textContent = 'Endre status?';
