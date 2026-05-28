@@ -644,11 +644,21 @@ function init() {
 }
 
 function signIn() {
-  ms.loginPopup({ scopes: SCOPES }).then(function(r) {
-    acc = r.account;
-    showApp();
-    loadData();
-  }).catch(function(e) { console.error(e); });
+  // Vent på eventuelle pågående interactions før vi starter ny
+  ms.handleRedirectPromise().catch(function() {}).then(function() {
+    ms.loginPopup({ scopes: SCOPES }).then(function(r) {
+      acc = r.account;
+      showApp();
+      loadData();
+    }).catch(function(e) {
+      if (e.errorCode === 'interaction_in_progress') {
+        // Prøv igjen etter en liten pause
+        setTimeout(signIn, 1000);
+      } else {
+        console.error(e);
+      }
+    });
+  });
 }
 
 function signOut() {
@@ -676,7 +686,18 @@ function showApp() {
 }
 
 function getToken() {
-  return ms.acquireTokenSilent({ scopes: SCOPES, account: acc }).catch(function() {
+  return ms.acquireTokenSilent({ scopes: SCOPES, account: acc }).catch(function(e) {
+    if (e.errorCode === 'interaction_in_progress') {
+      // Vent og prøv silent igjen
+      return new Promise(function(resolve, reject) {
+        setTimeout(function() {
+          ms.acquireTokenSilent({ scopes: SCOPES, account: acc })
+            .then(resolve).catch(function() {
+              ms.acquireTokenPopup({ scopes: SCOPES }).then(resolve).catch(reject);
+            });
+        }, 1200);
+      });
+    }
     return ms.acquireTokenPopup({ scopes: SCOPES });
   }).then(function(r) { return r.accessToken; });
 }
@@ -724,7 +745,14 @@ function loadData() {
     projects = results[1].value || [];
     updateStats();
     renderTable();
-  }).catch(function(e) { toast('Feil ved lasting: ' + e.message, 'e'); });
+  }).catch(function(e) {
+    if (e.errorCode === 'interaction_in_progress') {
+      setTimeout(loadData, 1500);
+    } else {
+      toast('Kunne ikke laste data – prøv å laste siden på nytt', 'e');
+      console.error(e);
+    }
+  });
 }
 
 function updateStats() {
