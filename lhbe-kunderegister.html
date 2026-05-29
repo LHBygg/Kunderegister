@@ -1952,10 +1952,15 @@ function loadSDKData(projId, timerId, prosjektnr) {
   weekStart.setDate(now.getDate() - now.getDay() + 1 + (sdkWeekOffset * 7));
   var weekEnd = new Date(weekStart);
   weekEnd.setDate(weekStart.getDate() + 6);
-  var fromStr = weekStart.toISOString().split('T')[0];
-  var toStr = weekEnd.toISOString().split('T')[0];
-  var fraDato = (function(){ var d = new Date(); d.setDate(d.getDate()-90); return d.toISOString().split('.')[0]; })();
-  var tilDato = new Date().toISOString().split('.')[0];
+  // Bruk lokal dato (ikke toISOString som gir UTC og kan gi feil dag)
+  function toLocalDate(d) {
+    return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+  }
+  var fromStr = toLocalDate(weekStart);
+  var toStr = toLocalDate(weekEnd);
+  var fra90 = new Date(); fra90.setDate(fra90.getDate()-90);
+  var fraDato = toLocalDate(fra90) + 'T00:00:00';
+  var tilDato = toLocalDate(new Date()) + 'T23:59:59';
   Promise.all([
     sdkGet('/ResourcePlanning/Resources?active=true&count=100'),
     sdkGet('/ResourcePlanning/Plans?projectId=' + projId + '&from=' + fromStr + '&to=' + toStr + '&count=100'),
