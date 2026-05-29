@@ -613,6 +613,7 @@ var sdkWeekOffset = 0;
 var sdkSavedScroll = 0;
 var sdkCurrProsjektnr = '';
 var sdkCurrProjId = '';
+var sdkCurrUnderProjId = ''; // Satt for underprosjekter – brukes til timehenting
 
 function init() {
   ms = new msal.PublicClientApplication(MSAL_CONFIG);
@@ -1348,11 +1349,20 @@ function openPD(pid) {
   if (s === 'Aktiv' && p.Prosjektnummer) {
     sdkWeekOffset = 0;
     sdkCurrProjId = '';
+    sdkCurrUnderProjId = '';
     if (p.Underprosjekt && p.Hovedprosjektnummer) {
-      // Underprosjekt: søk opp hovedprosjekt (f.eks. 131) → finn underprosjekt (f.eks. 1012) under det
+      // Ressursplaner hentes fra hovedprosjektet (131)
+      // Timer hentes fra underprosjektet (1012) – slå opp ID asynkront
       var underNr = p.Prosjektnummer.split('-').pop();
-      sdkCurrProsjektnr = underNr;
-      setTimeout(function() { loadSDKUnderprosjekt(p.Hovedprosjektnummer, underNr); }, 100);
+      sdkCurrProsjektnr = p.Hovedprosjektnummer;
+      // Hent underprosjekt-ID for timehenting i bakgrunnen
+      sdkGet('/Projects?projectNumber=' + encodeURIComponent(underNr) + '&active=true').then(function(d) {
+        var list = d.Data || d.data || d.Items || d.items || d || [];
+        if (Array.isArray(list) && list.length) {
+          sdkCurrUnderProjId = list[0].Id || list[0].id || list[0].ID || '';
+        }
+      }).catch(function() {});
+      setTimeout(function() { loadSDK(p.Hovedprosjektnummer); }, 100);
     } else {
       sdkCurrProsjektnr = p.Prosjektnummer;
       setTimeout(function() { loadSDK(p.Prosjektnummer); }, 100);
@@ -1360,7 +1370,7 @@ function openPD(pid) {
   }
 }
 
-function closePD() { document.getElementById('pdov').classList.remove('on'); activePID = null; activePath = ''; }
+function closePD() { document.getElementById('pdov').classList.remove('on'); activePID = null; activePath = ''; sdkCurrUnderProjId = ''; }
 
 function openF(pid, mappenavn) {
   var fb = document.getElementById('fb_' + mappenavn);
@@ -1984,10 +1994,14 @@ function loadSDKData(projId, prosjektnr) {
   weekEnd.setDate(weekStart.getDate() + 6);
   var fromStr = weekStart.toISOString().split('T')[0];
   var toStr = weekEnd.toISOString().split('T')[0];
+  // Timer: bruk underprosjekt-ID hvis satt (underprosjekter), ellers hovedprosjekt-ID
+  var timerId = sdkCurrUnderProjId || projId;
+  var fraDato = (function(){ var d = new Date(); d.setDate(d.getDate()-90); return d.toISOString().split('.')[0]; })();
+  var tilDato = new Date().toISOString().split('.')[0];
   Promise.all([
     sdkGet('/ResourcePlanning/Resources?active=true&count=100'),
     sdkGet('/ResourcePlanning/Plans?projectId=' + projId + '&from=' + fromStr + '&to=' + toStr + '&count=100'),
-    sdkGet('/WorkHours?projectId=' + projId + '&fromDate=' + (function(){ var d = new Date(); d.setDate(d.getDate()-90); return d.toISOString().split('.')[0]; })() + '&toDate=' + new Date().toISOString().split('.')[0]).catch(function() { return {}; })
+    sdkGet('/WorkHours?projectId=' + timerId + '&fromDate=' + fraDato + '&toDate=' + tilDato).catch(function() { return {}; })
   ]).then(function(results) {
     var resources = results[0].Data || results[0].data || results[0].Items || results[0] || [];
     var plans = results[1].Data || results[1].data || results[1].Items || results[1] || [];
