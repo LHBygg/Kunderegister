@@ -865,7 +865,7 @@ function loadMannskap() {
           if (!Array.isArray(plans)) plans = [];
           plans.forEach(function(pl) {
             pl._projId = pid;
-            pl._projName = p.Name || p.name || p.Title || '';
+            pl._projName = p.ProjectName || p.Name || p.name || p.Title || '';
             pl._projNum = p.ProjectNumber || p.projectNumber || p.Number || '';
           });
           return plans;
