@@ -1976,7 +1976,7 @@ function renderSDK(resources, plans, hours, fromStr, toStr) {
   var timeEl = document.getElementById('sdkTime');
   if (!el) return;
   if (timeEl) timeEl.textContent = 'Oppdatert naa';
-  var d = new Date(fromStr);
+  var d = new Date(fromStr + 'T12:00:00');
   var weekNum = getWeekNumber(d);
   var weekLabel = 'Uke ' + weekNum + ' - ' + formatShortDate(fromStr) + ' - ' + formatShortDate(toStr);
   var html = [];
@@ -2036,7 +2036,7 @@ function renderSDK(resources, plans, hours, fromStr, toStr) {
         var isToday = di === todayIdx;
         var cls = isActive ? (isToday ? 'now' : 'on') : 'off';
         var mark = isActive ? '&#10003;' : '';
-        var dayDate2 = new Date(fromStr);
+        var dayDate2 = new Date(fromStr + 'T12:00:00');
         dayDate2.setDate(dayDate2.getDate() + di);
         var dateLabel = dayDate2.getDate() + '.' + (dayDate2.getMonth() + 1) + '.';
         html.push('<div class="res-day">');
@@ -2139,7 +2139,7 @@ function getWeekNumber(d) {
 
 function formatShortDate(dateStr) {
   if (!dateStr) return '';
-  var d = new Date(dateStr);
+  var d = new Date(dateStr + 'T12:00:00');
   return d.getDate() + '.' + (d.getMonth() + 1) + '.';
 }
 
