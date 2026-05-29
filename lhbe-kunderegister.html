@@ -1364,18 +1364,28 @@ function openPD(pid) {
             var list = d.Data || d.data || d.Items || d.items || d || [];
             if (!Array.isArray(list) || !list.length) { loadSDK(p.Hovedprosjektnummer); return; }
             var hovedInternId = list[0].Id || list[0].id || list[0].ID || '';
+            console.log('Hovedprosjekt intern ID:', hovedInternId);
             // Steg 2: hent underprosjektlisten for å finne SubProjectId for underNr
             return sdkGet('/Projects/' + hovedInternId + '/SubProjects').then(function(d2) {
+              console.log('SubProjects svar:', JSON.stringify(d2).substring(0, 500));
               var subs = d2.Data || d2.data || d2.Items || d2.items || d2 || [];
               if (!Array.isArray(subs)) subs = [];
+              console.log('SubProjects liste lengde:', subs.length);
+              if (subs.length > 0) console.log('Første SubProject:', JSON.stringify(subs[0]));
               var sub = subs.filter(function(s) {
                 return String(s.Number || s.ProjectNumber || s.No || '') === String(underNr);
               })[0];
-              if (sub) sdkCurrSubProjId = sub.Id || sub.id || sub.ID || '';
+              if (sub) {
+                sdkCurrSubProjId = sub.Id || sub.id || sub.ID || '';
+                console.log('Fant SubProjectId:', sdkCurrSubProjId);
+              } else {
+                console.log('Fant ikke underprosjekt med nummer:', underNr);
+              }
               loadSDK(p.Hovedprosjektnummer);
             });
           })
-          .catch(function() {
+          .catch(function(e) {
+            console.log('Feil ved SubProjects-oppslag:', e.message);
             loadSDK(p.Hovedprosjektnummer);
           });
       }, 100);
