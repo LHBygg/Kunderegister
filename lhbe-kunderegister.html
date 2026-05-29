@@ -1351,22 +1351,21 @@ function openPD(pid) {
     sdkCurrProjId = '';
     sdkCurrUnderProjId = '';
     if (p.Underprosjekt && p.Hovedprosjektnummer) {
-      // Ressursplaner: hentes fra hovedprosjektet (131)
-      // Timer: hentes fra underprosjektet (1012)
-      // Slå opp underprosjekt-ID FØRST, så start loadSDK etterpå
       sdkCurrProsjektnr = p.Hovedprosjektnummer;
       var underNr = p.Prosjektnummer.split('-').pop();
       setTimeout(function() {
+        // Slå opp underprosjekt-ID for timer, start deretter loadSDKMed
         sdkGet('/Projects?projectNumber=' + encodeURIComponent(underNr) + '&active=true')
           .then(function(d) {
             var list = d.Data || d.data || d.Items || d.items || d || [];
-            if (Array.isArray(list) && list.length) {
-              sdkCurrUnderProjId = list[0].Id || list[0].id || list[0].ID || '';
-            }
+            var underId = (Array.isArray(list) && list.length)
+              ? (list[0].Id || list[0].id || list[0].ID || '')
+              : '';
+            sdkCurrUnderProjId = underId;
+            loadSDK(p.Hovedprosjektnummer);
           })
-          .catch(function() {})
-          .finally(function() {
-            // Start ressursplanlegger uansett om underprosjekt ble funnet eller ikke
+          .catch(function() {
+            sdkCurrUnderProjId = '';
             loadSDK(p.Hovedprosjektnummer);
           });
       }, 100);
@@ -1946,7 +1945,9 @@ function loadSDK(prosjektnr) {
       var proj = list[0];
       var projId = proj.Id || proj.id || proj.ID;
       sdkCurrProjId = projId;
-      loadSDKData(projId, prosjektnr);
+      // Bruk underprosjekt-ID for timer hvis satt, ellers hovedprosjekt-ID
+      var timerId = sdkCurrUnderProjId || projId;
+      loadSDKData(projId, timerId, prosjektnr);
     } else {
       sdkError('Prosjekt ' + prosjektnr + ' ikke funnet i SmartDok');
     }
@@ -1991,7 +1992,7 @@ function loadSDKUnderprosjekt(hovedNr, underNr) {
   }).catch(function(e) { sdkError(e.message); });
 }
 
-function loadSDKData(projId, prosjektnr) {
+function loadSDKData(projId, timerId, prosjektnr) {
   sdkCurrProsjektnr = prosjektnr;
   sdkCurrProjId = projId;
   var now = new Date();
@@ -2001,8 +2002,6 @@ function loadSDKData(projId, prosjektnr) {
   weekEnd.setDate(weekStart.getDate() + 6);
   var fromStr = weekStart.toISOString().split('T')[0];
   var toStr = weekEnd.toISOString().split('T')[0];
-  // Timer: bruk underprosjekt-ID hvis satt (underprosjekter), ellers hovedprosjekt-ID
-  var timerId = sdkCurrUnderProjId || projId;
   var fraDato = (function(){ var d = new Date(); d.setDate(d.getDate()-90); return d.toISOString().split('.')[0]; })();
   var tilDato = new Date().toISOString().split('.')[0];
   Promise.all([
@@ -2137,7 +2136,8 @@ function reloadSDK() {
     el.style.minHeight = el.offsetHeight + 'px';
     el.innerHTML = '<div class="sdk-load"><div class="sdk-spin"></div>Laster...</div>';
   }
-  if (sdkCurrProjId) loadSDKData(sdkCurrProjId, sdkCurrProsjektnr);
+  var timerId = sdkCurrUnderProjId || sdkCurrProjId;
+  if (sdkCurrProjId) loadSDKData(sdkCurrProjId, timerId, sdkCurrProsjektnr);
   else if (sdkCurrProsjektnr) loadSDK(sdkCurrProsjektnr);
 }
 
