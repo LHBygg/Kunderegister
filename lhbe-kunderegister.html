@@ -935,7 +935,7 @@ function renderMannskap(resources, sdkProjects, plans, fromStr, toStr) {
     d.setDate(d.getDate() + 1);
   }
 
-  // Bygg prosjekt-fargeindeks (én farge per prosjekt)
+  // Bygg prosjekt-fargeindeks
   var projColorMap = {};
   var colorIdx = 0;
   plans.forEach(function(pl) {
@@ -946,32 +946,57 @@ function renderMannskap(resources, sdkProjects, plans, fromStr, toStr) {
     }
   });
 
-  // Grupper planer per PROSJEKT → liste over ressurser per prosjekt
-  var byProject = {};  // { pid: { name, num, color, resources: { rid: [plans] } } }
+  // Grupper planer per ressurs
+  var byResource = {};
   plans.forEach(function(plan) {
-    var pid = String(plan.ProjectId || plan._projId || '');
     var rid = plan.ResourceId;
-    if (!pid || !rid) return;
-    if (!byProject[pid]) {
-      byProject[pid] = {
-        name: plan._projName || '',
-        num: plan._projNum || '',
-        color: projColorMap[pid] || '#3b82f6',
-        resources: {}
-      };
-    }
-    if (!byProject[pid].resources[rid]) byProject[pid].resources[rid] = [];
-    byProject[pid].resources[rid].push(plan);
+    if (!rid) return;
+    if (!byResource[rid]) byResource[rid] = [];
+    byResource[rid].push(plan);
   });
 
-  // Sorter prosjekter etter navn (eller prosjektnummer)
-  var projIds = Object.keys(byProject).sort(function(a, b) {
-    var na = byProject[a].name || byProject[a].num || 'Z';
-    var nb = byProject[b].name || byProject[b].num || 'Z';
-    return na.localeCompare(nb, 'nb');
+  // Finn «primærprosjektet» per ressurs (prosjektet med flest planlagte dager i perioden)
+  function primaryProjForResource(rid) {
+    var planList = byResource[rid] || [];
+    var dayCount = {};
+    planList.forEach(function(plan) {
+      var pid = String(plan.ProjectId || plan._projId || '');
+      if (!pid) return;
+      // Tell antall virkedager planen dekker i perioden
+      var ps = plan.Start ? plan.Start.substring(0,10) : '';
+      var pe = plan.End ? plan.End.substring(0,10) : '';
+      days.forEach(function(day) {
+        if (ps <= day.date && pe >= day.date) {
+          dayCount[pid] = (dayCount[pid] || 0) + 1;
+        }
+      });
+    });
+    // Returner prosjektet med flest dager
+    var best = '';
+    var bestCount = -1;
+    Object.keys(dayCount).forEach(function(pid) {
+      if (dayCount[pid] > bestCount) { bestCount = dayCount[pid]; best = pid; }
+    });
+    return best;
+  }
+
+  // Sorter ressurser: primært etter primærprosjektets navn, sekundært etter eget navn
+  var resIds = Object.keys(byResource).sort(function(a, b) {
+    var ppA = primaryProjForResource(a);
+    var ppB = primaryProjForResource(b);
+    var planA = plans.filter(function(p) { return String(p.ProjectId||p._projId||'') === ppA; })[0];
+    var planB = plans.filter(function(p) { return String(p.ProjectId||p._projId||'') === ppB; })[0];
+    var pnameA = planA ? (planA._projName || planA._projNum || 'Z') : 'Z';
+    var pnameB = planB ? (planB._projName || planB._projNum || 'Z') : 'Z';
+    var projCmp = pnameA.localeCompare(pnameB, 'nb');
+    if (projCmp !== 0) return projCmp;
+    // Samme prosjekt – sorter alfabetisk på navn
+    var ra = resources.filter(function(r) { return r.Id == a; })[0];
+    var rb = resources.filter(function(r) { return r.Id == b; })[0];
+    return (ra ? ra.Name : 'Z').localeCompare(rb ? rb.Name : 'Z', 'nb');
   });
 
-  if (!projIds.length) {
+  if (!resIds.length) {
     body.innerHTML = '<div style="font-size:13px;color:var(--tx3);padding:24px;text-align:center;">Ingen planlagt mannskap i denne perioden</div>';
     return;
   }
@@ -995,8 +1020,8 @@ function renderMannskap(resources, sdkProjects, plans, fromStr, toStr) {
   html.push('<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;">');
   html.push('<div style="min-width:' + totalW + 'px;">');
 
-  // Sticky ukeheader
-  html.push('<div style="display:flex;border-bottom:1px solid var(--br);position:sticky;top:0;z-index:5;background:var(--bg);">');
+  // Ukeheader
+  html.push('<div style="display:flex;border-bottom:1px solid var(--br);">');
   html.push('<div style="width:' + NAME_W + 'px;flex-shrink:0;"></div>');
   weekGroups.forEach(function(wg) {
     var firstDay = days[wg.start];
@@ -1007,8 +1032,8 @@ function renderMannskap(resources, sdkProjects, plans, fromStr, toStr) {
   });
   html.push('</div>');
 
-  // Sticky datoheader
-  html.push('<div style="display:flex;border-bottom:2px solid var(--br2);margin-bottom:2px;position:sticky;top:18px;z-index:5;background:var(--bg);">');
+  // Datoheader
+  html.push('<div style="display:flex;border-bottom:2px solid var(--br2);margin-bottom:2px;">');
   html.push('<div style="width:' + NAME_W + 'px;flex-shrink:0;font-size:10px;color:var(--tx3);padding:3px 8px;font-weight:500;">Ansatt</div>');
   days.forEach(function(day) {
     var bg = day.isToday ? 'background:rgba(232,184,75,.15);' : '';
@@ -1019,78 +1044,87 @@ function renderMannskap(resources, sdkProjects, plans, fromStr, toStr) {
   });
   html.push('</div>');
 
-  // Én seksjon per prosjekt
-  projIds.forEach(function(pid) {
-    var proj = byProject[pid];
-    var pcolor = proj.color;
-    var plabel = proj.name || ('Prosjekt ' + pid);
-    var pnum = proj.num;
+  // En rad per ressurs – gruppert etter primærprosjekt med separator mellom grupper
+  var lastProjLabel = null;
+  resIds.forEach(function(rid) {
+    var res = resources.filter(function(r) { return r.Id == rid; })[0];
+    var navn = res ? res.Name : 'Ukjent';
+    var init = navn.split(' ').map(function(w){return w[0]||'';}).slice(0,2).join('').toUpperCase();
+    var avColor = projColors[parseInt(rid) % projColors.length];
 
-    // Prosjekt-seksjonsheader (farget venstre kant + prosjektnavn)
-    html.push('<div style="display:flex;align-items:stretch;background:var(--bg3);border-left:4px solid ' + pcolor + ';border-bottom:1px solid var(--br2);margin-top:10px;">');
-    html.push('<div style="width:' + (NAME_W - 4) + 'px;flex-shrink:0;display:flex;align-items:center;gap:8px;padding:8px 10px;">');
-    html.push('<div style="width:10px;height:10px;border-radius:3px;background:' + pcolor + ';flex-shrink:0;"></div>');
-    html.push('<div>');
-    html.push('<div style="font-size:13px;font-weight:600;color:var(--tx);">' + plabel + '</div>');
-    if (pnum) html.push('<div style="font-size:10px;font-family:monospace;color:var(--acc);margin-top:1px;">' + pnum + '</div>');
-    html.push('</div></div>');
-    // Tomme dag-celler i headeren
-    days.forEach(function(day) {
-      var bg = day.isToday ? 'background:rgba(232,184,75,.08);' : 'background:var(--bg3);';
-      html.push('<div style="width:' + DAY_W + 'px;flex-shrink:0;border-left:1px solid var(--br);' + bg + '"></div>');
-    });
+    // Finn primærprosjektets navn for denne ressursen – bruk til separator
+    var pp = primaryProjForResource(rid);
+    var ppPlan = plans.filter(function(p) { return String(p.ProjectId||p._projId||'') === pp; })[0];
+    var ppName = ppPlan ? (ppPlan._projName || ppPlan._projNum || '') : '';
+    var ppNum  = ppPlan ? (ppPlan._projNum || '') : '';
+    var ppColor = projColorMap[pp] || '#3b82f6';
+
+    // Legg inn prosjekt-separator når prosjektet skifter
+    if (ppName !== lastProjLabel) {
+      lastProjLabel = ppName;
+      html.push('<div style="display:flex;align-items:center;gap:8px;padding:6px 10px;margin-top:8px;background:var(--bg3);border-top:1px solid var(--br2);border-bottom:1px solid var(--br2);">');
+      html.push('<div style="width:10px;height:10px;border-radius:3px;background:' + ppColor + ';flex-shrink:0;"></div>');
+      html.push('<div style="font-size:12px;font-weight:600;color:var(--tx);">' + (ppName || 'Ukjent prosjekt') + '</div>');
+      if (ppNum) html.push('<div style="font-size:10px;font-family:monospace;color:var(--acc);">' + ppNum + '</div>');
+      html.push('</div>');
+    }
+
+    html.push('<div style="display:flex;align-items:stretch;border-bottom:1px solid var(--br);min-height:46px;">');
+    // Navn-kolonne
+    html.push('<div style="width:' + NAME_W + 'px;flex-shrink:0;display:flex;align-items:center;gap:6px;padding:3px 8px;">');
+    html.push('<div class="res-av" style="background:' + avColor + ';width:22px;height:22px;font-size:9px;flex-shrink:0;">' + init + '</div>');
+    html.push('<div style="font-size:12px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:' + (NAME_W - 40) + 'px;" title="' + navn + '">' + navn + '</div>');
     html.push('</div>');
 
-    // Sorter ressurser i dette prosjektet alfabetisk
-    var resIds = Object.keys(proj.resources).sort(function(a, b) {
-      var ra = resources.filter(function(r) { return r.Id == a; })[0];
-      var rb = resources.filter(function(r) { return r.Id == b; })[0];
-      var na = ra ? ra.Name : 'Z';
-      var nb = rb ? rb.Name : 'Z';
-      return na.localeCompare(nb, 'nb');
-    });
+    // Dag-kolonner med fargede blokker – identisk med v4.8
+    days.forEach(function(day, di) {
+      var bg = day.isToday ? 'background:rgba(232,184,75,.06);' : (di % 10 === 0 ? 'background:rgba(255,255,255,.02);' : '');
+      html.push('<div style="width:' + DAY_W + 'px;flex-shrink:0;border-left:1px solid var(--br);position:relative;' + bg + '">');
 
-    // En rad per ressurs under dette prosjektet
-    resIds.forEach(function(rid) {
-      var res = resources.filter(function(r) { return r.Id == rid; })[0];
-      var navn = res ? res.Name : 'Ukjent';
-      var init = navn.split(' ').map(function(w){return w[0]||'';}).slice(0,2).join('').toUpperCase();
-
-      html.push('<div style="display:flex;align-items:stretch;border-bottom:1px solid var(--br);min-height:44px;border-left:4px solid ' + pcolor + ';">');
-      // Navn-kolonne (innrykk pga. prosjektfarge-kant)
-      html.push('<div style="width:' + (NAME_W - 4) + 'px;flex-shrink:0;display:flex;align-items:center;gap:6px;padding:3px 8px 3px 20px;">');
-      html.push('<div class="res-av" style="background:' + pcolor + ';width:22px;height:22px;font-size:9px;flex-shrink:0;opacity:.85;">' + init + '</div>');
-      html.push('<div style="font-size:12px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:' + (NAME_W - 68) + 'px;" title="' + navn + '">' + navn + '</div>');
-      html.push('</div>');
-
-      // Dag-kolonner
-      days.forEach(function(day, di) {
-        var bg = day.isToday ? 'background:rgba(232,184,75,.06);' : '';
-        html.push('<div style="width:' + DAY_W + 'px;flex-shrink:0;border-left:1px solid var(--br);position:relative;' + bg + '">');
-
-        proj.resources[rid].forEach(function(plan) {
-          var ps = plan.Start ? plan.Start.substring(0,10) : '';
-          var pe = plan.End ? plan.End.substring(0,10) : '';
-          if (ps <= day.date && pe >= day.date) {
-            var isStart = ps === day.date || day.dow === 1;
-            var isEnd = pe === day.date || day.dow === 5;
-            var rLeft = isStart ? '3px' : '0';
-            var rRight = isEnd ? '3px' : '0';
-            html.push('<div style="position:absolute;top:2px;bottom:2px;left:0;right:0;background:' + pcolor + ';border-radius:' + rLeft + ' ' + rRight + ' ' + rRight + ' ' + rLeft + ';display:flex;align-items:center;overflow:hidden;" title="' + plabel + '">');
-            if (isStart) {
-              html.push('<div style="padding:0 5px;overflow:hidden;min-width:0;">');
-              html.push('<div style="font-size:10px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 2px rgba(0,0,0,.3);">&#10003;</div>');
-              html.push('</div>');
-            }
+      byResource[rid].forEach(function(plan) {
+        var ps = plan.Start ? plan.Start.substring(0,10) : '';
+        var pe = plan.End ? plan.End.substring(0,10) : '';
+        if (ps <= day.date && pe >= day.date) {
+          var pid = String(plan.ProjectId || plan._projId || '');
+          var pcolor = projColorMap[pid] || '#3b82f6';
+          var pname = plan._projName || '';
+          var pnum = plan._projNum || '';
+          var label = pname || (pnum ? 'Prosjekt ' + pnum : '');
+          var isStart = ps === day.date || day.dow === 1;
+          var isEnd = pe === day.date || day.dow === 5;
+          var rLeft = isStart ? '3px' : '0';
+          var rRight = isEnd ? '3px' : '0';
+          html.push('<div style="position:absolute;top:2px;bottom:2px;left:0;right:0;background:' + pcolor + ';border-radius:' + rLeft + ' ' + rRight + ' ' + rRight + ' ' + rLeft + ';display:flex;align-items:center;overflow:hidden;" title="' + label + (pnum ? ' (' + pnum + ')' : '') + '">');
+          if (isStart && label) {
+            html.push('<div style="padding:0 5px;overflow:hidden;min-width:0;">');
+            html.push('<div style="font-size:10px;font-weight:600;color:#fff;white-space:normal;word-break:break-word;line-height:1.25;text-shadow:0 1px 2px rgba(0,0,0,.3);">' + label + '</div>');
+            if (pnum) html.push('<div style="font-size:9px;font-weight:500;color:rgba(255,255,255,.85);line-height:1.2;">' + pnum + '</div>');
             html.push('</div>');
           }
-        });
-
-        html.push('</div>');
+          html.push('</div>');
+        }
       });
+
       html.push('</div>');
     });
+    html.push('</div>');
   });
+
+  // Fargeforklaring
+  html.push('<div style="margin-top:12px;display:flex;flex-wrap:wrap;gap:6px;">');
+  Object.keys(projColorMap).forEach(function(pid) {
+    var plan = plans.filter(function(p) { return String(p.ProjectId||p._projId||'') === pid; })[0];
+    var pname = plan ? (plan._projName || '') : '';
+    var pnum = plan ? (plan._projNum || '') : '';
+    var label = pname || ('Prosjekt ' + pid);
+    var pcolor = projColorMap[pid];
+    if (!label) return;
+    html.push('<div style="display:flex;align-items:center;gap:5px;background:var(--bg2);border:1px solid var(--br);border-radius:20px;padding:3px 10px;">');
+    html.push('<div style="width:10px;height:10px;border-radius:2px;background:' + pcolor + ';flex-shrink:0;"></div>');
+    html.push('<span style="font-size:11px;color:var(--tx2);">' + label + (pnum ? ' &bull; ' + pnum : '') + '</span>');
+    html.push('</div>');
+  });
+  html.push('</div>');
 
   html.push('</div></div>');
   body.innerHTML = html.join('');
