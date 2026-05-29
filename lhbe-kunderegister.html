@@ -1373,10 +1373,10 @@ function openPD(pid) {
               console.log('SubProjects liste lengde:', subs.length);
               if (subs.length > 0) console.log('Første SubProject:', JSON.stringify(subs[0]));
               var sub = subs.filter(function(s) {
-                return String(s.Number || s.ProjectNumber || s.No || '') === String(underNr);
+                return String(s.SubProjectNumber || '') === String(underNr);
               })[0];
               if (sub) {
-                sdkCurrSubProjId = sub.Id || sub.id || sub.ID || '';
+                sdkCurrSubProjId = sub.Id || '';
                 console.log('Fant SubProjectId:', sdkCurrSubProjId);
               } else {
                 console.log('Fant ikke underprosjekt med nummer:', underNr);
@@ -2060,7 +2060,7 @@ function renderSDK(resources, plans, hours, fromStr, toStr) {
   } else {
     // Filtrer planer på underprosjekt hvis vi viser et underprosjekt
     var filtPlans = (sdkCurrSubProjId)
-      ? plans.filter(function(pl) { return String(pl.SubProjectId || '') === String(sdkCurrSubProjId); })
+      ? plans.filter(function(pl) { return pl.SubProjectId == sdkCurrSubProjId; })
       : plans;
     if (sdkCurrSubProjId && !filtPlans.length) filtPlans = plans; // fallback
     if (!filtPlans.length) {
