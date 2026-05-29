@@ -874,39 +874,44 @@ function loadMannskap() {
     });
     Promise.all(planRequests).then(function(allPlans) {
       var flatPlans = [].concat.apply([], allPlans);
-      // Hent prosjektnavn for unike ProjectId-er
-      var projIds = [];
+
+      // Hent SubProjects for alle prosjekter med planer i perioden
+      var uniqueProjIds = [];
       flatPlans.forEach(function(pl) {
-        var pid = String(pl.ProjectId || '');
-        if (pid && projIds.indexOf(pid) === -1) projIds.push(pid);
+        var pid = String(pl.ProjectId || pl._projId || '');
+        if (pid && uniqueProjIds.indexOf(pid) === -1) uniqueProjIds.push(pid);
       });
-      // Hent unike ProjectId-er fra planene
-      var uniquePids = [];
-      flatPlans.forEach(function(pl) {
-        var pid = String(pl.ProjectId || '');
-        if (pid && uniquePids.indexOf(pid) === -1) uniquePids.push(pid);
-      });
-      var nameRequests = uniquePids.map(function(pid) {
-        return sdkGet('/Projects/' + pid)
+
+      // Hent SubProjects-lister parallelt
+      var subProjRequests = uniqueProjIds.map(function(pid) {
+        return sdkGet('/Projects/' + pid + '/SubProjects')
           .then(function(d) {
-            // Prøv direkte objekt eller liste
-            var proj = (d && d.Id) ? d : ((d.Data || d.data || d.Items || d || [])[0]);
-            var name = proj ? (proj.Name || proj.name || proj.Title || proj.ProjectName || '') : '';
-            var num = proj ? (proj.ProjectNumber || proj.projectNumber || proj.Number || '') : '';
-            return { id: pid, name: name, num: num };
+            var subs = d.Items || d.Data || d.data || d || [];
+            if (!Array.isArray(subs)) subs = [];
+            var map = {};
+            subs.forEach(function(s) { map[s.Id] = { name: s.SubProjectName || '', num: s.SubProjectNumber || '' }; });
+            return { projId: pid, map: map };
           })
-          .catch(function() { return { id: pid, name: '', num: '' }; });
+          .catch(function() { return { projId: pid, map: {} }; });
       });
-      Promise.all(nameRequests).then(function(projNames) {
-        var nameMap = {};
-        projNames.forEach(function(p) { nameMap[p.id] = p; });
+
+      Promise.all(subProjRequests).then(function(subResults) {
+        // Bygg oppslagstabell: SubProjectId → {name, num}
+        var subMap = {};
+        subResults.forEach(function(r) { Object.assign(subMap, r.map); });
+
+        // Berik planene med underprosjektnavn
         flatPlans.forEach(function(pl) {
-          var pid = String(pl.ProjectId || pl._projId || '');
-          if (nameMap[pid]) {
-            pl._projName = nameMap[pid].name;
-            pl._projNum = nameMap[pid].num;
+          var spId = pl.SubProjectId;
+          if (spId && subMap[spId]) {
+            pl._subProjName = subMap[spId].name;
+            pl._subProjNum  = subMap[spId].num;
+          } else {
+            pl._subProjName = pl._projName || '';
+            pl._subProjNum  = pl._projNum || '';
           }
         });
+
         renderMannskap(resources, [], flatPlans, fromStr, toStr);
       });
     });
@@ -919,6 +924,164 @@ function renderMannskap(resources, sdkProjects, plans, fromStr, toStr) {
   var body = document.getElementById('mvBody');
   var today = new Date().toISOString().split('T')[0];
   var projColors = ['#3b82f6','#22c55e','#f97316','#a855f7','#06b6d4','#e8b84b','#ef4444','#ec4899','#14b8a6','#8b5cf6'];
+
+  // Bygg liste over alle dager i perioden (man-fre)
+  var days = [];
+  var d = new Date(fromStr + 'T12:00:00');
+  var end = new Date(toStr + 'T12:00:00');
+  while (d <= end) {
+    var dow = d.getDay();
+    if (dow >= 1 && dow <= 5) {
+      days.push({
+        date: d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'),
+        label: d.getDate() + '.',
+        month: d.getMonth(),
+        dow: dow,
+        isToday: d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0') === today
+      });
+    }
+    d.setDate(d.getDate() + 1);
+  }
+
+  // Fargeindeks basert på SubProjectId (underprosjekt) – fallback på ProjectId
+  var projColorMap = {};
+  var colorIdx = 0;
+  plans.forEach(function(pl) {
+    var key = String(pl.SubProjectId || pl.ProjectId || pl._projId || '');
+    if (key && !projColorMap[key]) {
+      projColorMap[key] = projColors[colorIdx % projColors.length];
+      colorIdx++;
+    }
+  });
+
+  // Grupper planer per ressurs
+  var byResource = {};
+  plans.forEach(function(plan) {
+    var rid = plan.ResourceId;
+    if (!rid) return;
+    if (!byResource[rid]) byResource[rid] = [];
+    byResource[rid].push(plan);
+  });
+
+  // Sorter ressurser alfabetisk på navn
+  var resIds = Object.keys(byResource).sort(function(a, b) {
+    var ra = resources.filter(function(r) { return r.Id == a; })[0];
+    var rb = resources.filter(function(r) { return r.Id == b; })[0];
+    return (ra ? ra.Name : 'Z').localeCompare(rb ? rb.Name : 'Z', 'nb');
+  });
+
+  if (!resIds.length) {
+    body.innerHTML = '<div style="font-size:13px;color:var(--tx3);padding:24px;text-align:center;">Ingen planlagt mannskap i denne perioden</div>';
+    return;
+  }
+
+  // Bygg ukeheader-grupperinger
+  var weekGroups = [];
+  var lastWeek = -1;
+  days.forEach(function(day, i) {
+    var d2 = new Date(day.date + 'T12:00:00');
+    var wn = getWeekNumber(d2);
+    if (wn !== lastWeek) { weekGroups.push({ week: wn, start: i, count: 0 }); lastWeek = wn; }
+    weekGroups[weekGroups.length-1].count++;
+  });
+
+  var NAME_W = 200;
+  var DAY_W = 70;
+  var totalW = NAME_W + days.length * DAY_W;
+  var mndNavn = ['jan','feb','mar','apr','mai','jun','jul','aug','sep','okt','nov','des'];
+
+  var html = [];
+  html.push('<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;">');
+  html.push('<div style="min-width:' + totalW + 'px;">');
+
+  // Ukeheader
+  html.push('<div style="display:flex;border-bottom:1px solid var(--br);">');
+  html.push('<div style="width:' + NAME_W + 'px;flex-shrink:0;"></div>');
+  weekGroups.forEach(function(wg) {
+    var firstDay = days[wg.start];
+    var d3 = new Date(firstDay.date + 'T12:00:00');
+    html.push('<div style="width:' + (wg.count * DAY_W) + 'px;text-align:center;font-size:10px;font-weight:600;color:var(--tx3);padding:3px 0;border-left:1px solid var(--br2);text-transform:uppercase;">');
+    html.push('Uke ' + wg.week + ' &bull; ' + mndNavn[d3.getMonth()]);
+    html.push('</div>');
+  });
+  html.push('</div>');
+
+  // Datoheader
+  html.push('<div style="display:flex;border-bottom:2px solid var(--br2);margin-bottom:2px;">');
+  html.push('<div style="width:' + NAME_W + 'px;flex-shrink:0;font-size:10px;color:var(--tx3);padding:3px 8px;font-weight:500;">Ansatt</div>');
+  days.forEach(function(day) {
+    var bg = day.isToday ? 'background:rgba(232,184,75,.15);' : '';
+    var fw = day.isToday ? 'font-weight:700;color:var(--acc);' : '';
+    html.push('<div style="width:' + DAY_W + 'px;text-align:center;font-size:10px;color:var(--tx3);padding:3px 0;' + bg + fw + 'border-left:1px solid var(--br);">');
+    html.push(day.label);
+    html.push('</div>');
+  });
+  html.push('</div>');
+
+  // En rad per ressurs – alfabetisk
+  resIds.forEach(function(rid) {
+    var res = resources.filter(function(r) { return r.Id == rid; })[0];
+    var navn = res ? res.Name : 'Ukjent';
+    var init = navn.split(' ').map(function(w){return w[0]||'';}).slice(0,2).join('').toUpperCase();
+    var avColor = projColors[parseInt(rid) % projColors.length];
+
+    html.push('<div style="display:flex;align-items:stretch;border-bottom:1px solid var(--br);min-height:46px;">');
+    html.push('<div style="width:' + NAME_W + 'px;flex-shrink:0;display:flex;align-items:center;gap:6px;padding:3px 8px;">');
+    html.push('<div class="res-av" style="background:' + avColor + ';width:22px;height:22px;font-size:9px;flex-shrink:0;">' + init + '</div>');
+    html.push('<div style="font-size:12px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:' + (NAME_W - 40) + 'px;" title="' + navn + '">' + navn + '</div>');
+    html.push('</div>');
+
+    days.forEach(function(day, di) {
+      var bg = day.isToday ? 'background:rgba(232,184,75,.06);' : (di % 10 === 0 ? 'background:rgba(255,255,255,.02);' : '');
+      html.push('<div style="width:' + DAY_W + 'px;flex-shrink:0;border-left:1px solid var(--br);position:relative;' + bg + '">');
+
+      byResource[rid].forEach(function(plan) {
+        var ps = plan.Start ? plan.Start.substring(0,10) : '';
+        var pe = plan.End ? plan.End.substring(0,10) : '';
+        if (ps <= day.date && pe >= day.date) {
+          var colorKey = String(plan.SubProjectId || plan.ProjectId || plan._projId || '');
+          var pcolor = projColorMap[colorKey] || '#3b82f6';
+          // Vis underprosjektnavn hvis tilgjengelig, ellers prosjektnavn
+          var label = plan._subProjName || plan._projName || '';
+          var pnum  = plan._subProjNum  || plan._projNum  || '';
+          var isStart = ps === day.date || day.dow === 1;
+          var isEnd   = pe === day.date || day.dow === 5;
+          var rLeft  = isStart ? '3px' : '0';
+          var rRight = isEnd   ? '3px' : '0';
+          html.push('<div style="position:absolute;top:2px;bottom:2px;left:0;right:0;background:' + pcolor + ';border-radius:' + rLeft + ' ' + rRight + ' ' + rRight + ' ' + rLeft + ';display:flex;align-items:center;overflow:hidden;" title="' + label + (pnum ? ' (' + pnum + ')' : '') + '">');
+          if (isStart && label) {
+            html.push('<div style="padding:0 5px;overflow:hidden;min-width:0;">');
+            html.push('<div style="font-size:10px;font-weight:600;color:#fff;white-space:normal;word-break:break-word;line-height:1.25;text-shadow:0 1px 2px rgba(0,0,0,.3);">' + label + '</div>');
+            if (pnum) html.push('<div style="font-size:9px;font-weight:500;color:rgba(255,255,255,.85);line-height:1.2;">' + pnum + '</div>');
+            html.push('</div>');
+          }
+          html.push('</div>');
+        }
+      });
+
+      html.push('</div>');
+    });
+    html.push('</div>');
+  });
+
+  // Fargeforklaring per underprosjekt
+  html.push('<div style="margin-top:12px;display:flex;flex-wrap:wrap;gap:6px;">');
+  Object.keys(projColorMap).forEach(function(key) {
+    var plan = plans.filter(function(p) { return String(p.SubProjectId || p.ProjectId || p._projId || '') === key; })[0];
+    var label  = plan ? (plan._subProjName || plan._projName || '') : '';
+    var pnum   = plan ? (plan._subProjNum  || plan._projNum  || '') : '';
+    var pcolor = projColorMap[key];
+    if (!label) return;
+    html.push('<div style="display:flex;align-items:center;gap:5px;background:var(--bg2);border:1px solid var(--br);border-radius:20px;padding:3px 10px;">');
+    html.push('<div style="width:10px;height:10px;border-radius:2px;background:' + pcolor + ';flex-shrink:0;"></div>');
+    html.push('<span style="font-size:11px;color:var(--tx2);">' + label + (pnum ? ' &bull; ' + pnum : '') + '</span>');
+    html.push('</div>');
+  });
+  html.push('</div>');
+
+  html.push('</div></div>');
+  body.innerHTML = html.join('');
+}
 
   // Bygg liste over alle dager i perioden (man-fre)
   var days = [];
