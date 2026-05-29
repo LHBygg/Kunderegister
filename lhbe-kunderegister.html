@@ -1347,13 +1347,16 @@ function openPD(pid) {
   document.getElementById('pdov').classList.add('on');
   if (s === 'Aktiv' && p.Prosjektnummer) {
     sdkWeekOffset = 0;
-    // Underprosjekt: SmartDok kjenner kun kortnummeret (delen etter siste bindestrek, f.eks. 1012 fra 131-1012)
-    var sdkNr = (p.Underprosjekt && p.Prosjektnummer.indexOf('-') > -1)
-      ? p.Prosjektnummer.split('-').pop()
-      : p.Prosjektnummer;
-    sdkCurrProsjektnr = sdkNr;
     sdkCurrProjId = '';
-    setTimeout(function() { loadSDK(sdkNr); }, 100);
+    if (p.Underprosjekt && p.Hovedprosjektnummer) {
+      // Underprosjekt: søk opp hovedprosjekt (f.eks. 131) → finn underprosjekt (f.eks. 1012) under det
+      var underNr = p.Prosjektnummer.split('-').pop();
+      sdkCurrProsjektnr = underNr;
+      setTimeout(function() { loadSDKUnderprosjekt(p.Hovedprosjektnummer, underNr); }, 100);
+    } else {
+      sdkCurrProsjektnr = p.Prosjektnummer;
+      setTimeout(function() { loadSDK(p.Prosjektnummer); }, 100);
+    }
   }
 }
 
@@ -1930,6 +1933,44 @@ function loadSDK(prosjektnr) {
     } else {
       sdkError('Prosjekt ' + prosjektnr + ' ikke funnet i SmartDok');
     }
+  }).catch(function(e) { sdkError(e.message); });
+}
+
+// Underprosjekt: slå opp via hovedprosjektnummer → finn underprosjektet → hent ressursplanlegger
+function loadSDKUnderprosjekt(hovedNr, underNr) {
+  // Steg 1: finn intern ID for hovedprosjektet (f.eks. 131)
+  sdkGet('/Projects?projectNumber=' + encodeURIComponent(hovedNr) + '&active=true').then(function(d) {
+    var list = d.Data || d.data || d.Items || d.items || d || [];
+    if (!Array.isArray(list)) list = [];
+    if (!list.length) {
+      sdkError('Hovedprosjekt ' + hovedNr + ' ikke funnet i SmartDok');
+      return;
+    }
+    var hovedId = list[0].Id || list[0].id || list[0].ID;
+    // Steg 2: hent underprosjekter under dette prosjektet
+    return sdkGet('/Projects?parentId=' + hovedId + '&count=100').then(function(d2) {
+      var subList = d2.Data || d2.data || d2.Items || d2.items || d2 || [];
+      if (!Array.isArray(subList)) subList = [];
+      // Finn underprosjektet med matching nummer
+      var under = subList.filter(function(p) {
+        var pNum = String(p.ProjectNumber || p.projectNumber || p.Number || '');
+        return pNum === String(underNr);
+      })[0];
+      if (!under) {
+        // Fallback: prøv direkte søk på underprosjektnummeret
+        return sdkGet('/Projects?projectNumber=' + encodeURIComponent(underNr) + '&active=true').then(function(d3) {
+          var list3 = d3.Data || d3.data || d3.Items || d3.items || d3 || [];
+          if (!Array.isArray(list3)) list3 = [];
+          if (!list3.length) { sdkError('Underprosjekt ' + underNr + ' ikke funnet i SmartDok'); return; }
+          var projId = list3[0].Id || list3[0].id || list3[0].ID;
+          sdkCurrProjId = projId;
+          loadSDKData(projId, underNr);
+        });
+      }
+      var projId = under.Id || under.id || under.ID;
+      sdkCurrProjId = projId;
+      loadSDKData(projId, underNr);
+    });
   }).catch(function(e) { sdkError(e.message); });
 }
 
