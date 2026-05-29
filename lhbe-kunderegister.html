@@ -1351,18 +1351,25 @@ function openPD(pid) {
     sdkCurrProjId = '';
     sdkCurrUnderProjId = '';
     if (p.Underprosjekt && p.Hovedprosjektnummer) {
-      // Ressursplaner hentes fra hovedprosjektet (131)
-      // Timer hentes fra underprosjektet (1012) – slå opp ID asynkront
-      var underNr = p.Prosjektnummer.split('-').pop();
+      // Ressursplaner: hentes fra hovedprosjektet (131)
+      // Timer: hentes fra underprosjektet (1012)
+      // Slå opp underprosjekt-ID FØRST, så start loadSDK etterpå
       sdkCurrProsjektnr = p.Hovedprosjektnummer;
-      // Hent underprosjekt-ID for timehenting i bakgrunnen
-      sdkGet('/Projects?projectNumber=' + encodeURIComponent(underNr) + '&active=true').then(function(d) {
-        var list = d.Data || d.data || d.Items || d.items || d || [];
-        if (Array.isArray(list) && list.length) {
-          sdkCurrUnderProjId = list[0].Id || list[0].id || list[0].ID || '';
-        }
-      }).catch(function() {});
-      setTimeout(function() { loadSDK(p.Hovedprosjektnummer); }, 100);
+      var underNr = p.Prosjektnummer.split('-').pop();
+      setTimeout(function() {
+        sdkGet('/Projects?projectNumber=' + encodeURIComponent(underNr) + '&active=true')
+          .then(function(d) {
+            var list = d.Data || d.data || d.Items || d.items || d || [];
+            if (Array.isArray(list) && list.length) {
+              sdkCurrUnderProjId = list[0].Id || list[0].id || list[0].ID || '';
+            }
+          })
+          .catch(function() {})
+          .finally(function() {
+            // Start ressursplanlegger uansett om underprosjekt ble funnet eller ikke
+            loadSDK(p.Hovedprosjektnummer);
+          });
+      }, 100);
     } else {
       sdkCurrProsjektnr = p.Prosjektnummer;
       setTimeout(function() { loadSDK(p.Prosjektnummer); }, 100);
