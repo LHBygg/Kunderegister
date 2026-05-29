@@ -1347,9 +1347,13 @@ function openPD(pid) {
   document.getElementById('pdov').classList.add('on');
   if (s === 'Aktiv' && p.Prosjektnummer) {
     sdkWeekOffset = 0;
-    sdkCurrProsjektnr = p.Prosjektnummer;
+    // Underprosjekt: SmartDok kjenner kun kortnummeret (delen etter siste bindestrek, f.eks. 1012 fra 131-1012)
+    var sdkNr = (p.Underprosjekt && p.Prosjektnummer.indexOf('-') > -1)
+      ? p.Prosjektnummer.split('-').pop()
+      : p.Prosjektnummer;
+    sdkCurrProsjektnr = sdkNr;
     sdkCurrProjId = '';
-    setTimeout(function() { loadSDK(p.Prosjektnummer); }, 100);
+    setTimeout(function() { loadSDK(sdkNr); }, 100);
   }
 }
 
