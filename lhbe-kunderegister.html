@@ -631,6 +631,14 @@ function init() {
   document.getElementById('loginBtn').addEventListener('click', signIn);
   document.getElementById('exportBtn').addEventListener('click', exportCSV);
   document.getElementById('settingsBtn').addEventListener('click', toggleSP);
+  // Lukk innstillingspanel ved klikk utenfor
+  document.addEventListener('click', function(e) {
+    var panel = document.getElementById('spPanel');
+    var btn = document.getElementById('settingsBtn');
+    if (panel.classList.contains('on') && !panel.contains(e.target) && !btn.contains(e.target)) {
+      panel.classList.remove('on');
+    }
+  });
   document.getElementById('userBtn').addEventListener('click', signOut);
   document.getElementById('newCustBtn').addEventListener('click', function() { openCM(); });
   document.getElementById('pdmCloseBtn').addEventListener('click', closePD);
@@ -1475,8 +1483,19 @@ function saveCust() {
   if (!navn) { toast('Navn er pakrevd', 'w'); return; }
   var body = { Title: navn, Kontaktperson: document.getElementById('cKont').value, Telefon: document.getElementById('cTlf').value, Epost: document.getElementById('cEpost').value, Adresse: document.getElementById('cAdr').value, Orgnr: document.getElementById('cOrg').value, Kundetype: custType };
   var url = id ? SP + '/_api/web/lists(guid\'' + CL + '\')/items(' + id + ')' : SP + '/_api/web/lists(guid\'' + CL + '\')/items';
-  var req = id ? spPatch(url, body) : spPost(url, body);
-  req.then(function() { toast(id ? 'Kunde oppdatert' : 'Kunde opprettet', 's'); closeMov('custMov'); loadData(); }).catch(function(e) { toast('Feil: ' + e.message, 'e'); });
+  if (id) {
+    // Bekreft endring ved redigering
+    document.getElementById('confIco').textContent = '✏️';
+    document.getElementById('confTit').textContent = 'Lagre endringer?';
+    document.getElementById('confTxt').textContent = 'Er du sikker på at du vil lagre endringene på ' + navn + '?';
+    document.getElementById('confOk').textContent = 'Ja, lagre';
+    document.getElementById('confOk').onclick = function() {
+      spPatch(url, body).then(function() { toast('Kunde oppdatert', 's'); closeMov('confMov'); closeMov('custMov'); loadData(); }).catch(function(e) { toast('Feil: ' + e.message, 'e'); });
+    };
+    openMov('confMov');
+  } else {
+    spPost(url, body).then(function() { toast('Kunde opprettet', 's'); closeMov('custMov'); loadData(); }).catch(function(e) { toast('Feil: ' + e.message, 'e'); });
+  }
 }
 
 function getNextKalkylenr() {
@@ -1508,11 +1527,12 @@ function toggleUnderprosjekt() {
   document.getElementById('pHovedWrap').style.display = isUnder ? '' : 'none';
   document.getElementById('pNrPrefix').style.display = isUnder ? '' : 'none';
   if (isUnder) {
-    // Fyll dropdown med aktive/kalkyle hovedprosjekter
+    // Fyll dropdown med aktive/kalkyle hovedprosjekter for denne kunden
+    var kn = document.getElementById('pKunde').value;
     var sel = document.getElementById('pHovedSel');
     sel.innerHTML = '<option value="">- Velg hovedprosjekt -</option>';
     var hovedprosjekter = projects.filter(function(p) {
-      return !p.Underprosjekt && p.Status !== 'Avsluttet';
+      return !p.Underprosjekt && p.Status !== 'Avsluttet' && p.Kundenavn === kn;
     });
     hovedprosjekter.forEach(function(p) {
       var opt = document.createElement('option');
@@ -1661,8 +1681,19 @@ function saveProj() {
     body.Hovedprosjektnavn = selectedOpt ? (selectedOpt.dataset.navn || '') : '';
   }
   var url = id ? SP + '/_api/web/lists(guid\'' + PL + '\')/items(' + id + ')' : SP + '/_api/web/lists(guid\'' + PL + '\')/items';
-  var req = id ? spPatch(url, body) : spPost(url, body);
-  req.then(function() { toast(id ? 'Prosjekt oppdatert' : 'Prosjekt opprettet', 's'); closeMov('projMov'); loadData(); }).catch(function(e) { toast('Feil: ' + e.message, 'e'); });
+  if (id) {
+    // Bekreft endring ved redigering
+    document.getElementById('confIco').textContent = '✏️';
+    document.getElementById('confTit').textContent = 'Lagre endringer?';
+    document.getElementById('confTxt').textContent = 'Er du sikker på at du vil lagre endringene på ' + navn + '?';
+    document.getElementById('confOk').textContent = 'Ja, lagre';
+    document.getElementById('confOk').onclick = function() {
+      spPatch(url, body).then(function() { toast('Prosjekt oppdatert', 's'); closeMov('confMov'); closeMov('projMov'); loadData(); }).catch(function(e) { toast('Feil: ' + e.message, 'e'); });
+    };
+    openMov('confMov');
+  } else {
+    spPost(url, body).then(function() { toast('Prosjekt opprettet', 's'); closeMov('projMov'); loadData(); }).catch(function(e) { toast('Feil: ' + e.message, 'e'); });
+  }
 }
 
 function setSt(id, s) {
