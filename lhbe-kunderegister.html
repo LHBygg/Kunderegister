@@ -615,6 +615,7 @@ var sdkCurrProsjektnr = '';
 var sdkCurrProjId = '';
 var sdkCurrUnderProjId = ''; // Satt for underprosjekter – brukes til timehenting
 var sdkCurrUnderNavn = '';  // Underprosjektnavn – brukes til filtrering av timer
+var sdkCurrSubProjId = '';  // SubProjectId fra SmartDok – brukes til filtrering av planer
 
 function init() {
   ms = new msal.PublicClientApplication(MSAL_CONFIG);
@@ -1351,23 +1352,30 @@ function openPD(pid) {
     sdkWeekOffset = 0;
     sdkCurrProjId = '';
     sdkCurrUnderProjId = '';
+    sdkCurrSubProjId = '';
     if (p.Underprosjekt && p.Hovedprosjektnummer) {
       sdkCurrProsjektnr = p.Hovedprosjektnummer;
-      sdkCurrUnderNavn = p.Title || ''; // brukes til å filtrere timer på underprosjektnavn
+      sdkCurrUnderNavn = p.Title || '';
       var underNr = p.Prosjektnummer.split('-').pop();
       setTimeout(function() {
-        // Slå opp underprosjekt-ID for timer, start deretter loadSDKMed
-        sdkGet('/Projects?projectNumber=' + encodeURIComponent(underNr) + '&active=true')
+        // Steg 1: finn intern ID for hovedprosjektet
+        sdkGet('/Projects?projectNumber=' + encodeURIComponent(p.Hovedprosjektnummer) + '&active=true')
           .then(function(d) {
             var list = d.Data || d.data || d.Items || d.items || d || [];
-            var underId = (Array.isArray(list) && list.length)
-              ? (list[0].Id || list[0].id || list[0].ID || '')
-              : '';
-            sdkCurrUnderProjId = underId;
-            loadSDK(p.Hovedprosjektnummer);
+            if (!Array.isArray(list) || !list.length) { loadSDK(p.Hovedprosjektnummer); return; }
+            var hovedInternId = list[0].Id || list[0].id || list[0].ID || '';
+            // Steg 2: hent underprosjektlisten for å finne SubProjectId for underNr
+            return sdkGet('/Projects/' + hovedInternId + '/SubProjects').then(function(d2) {
+              var subs = d2.Data || d2.data || d2.Items || d2.items || d2 || [];
+              if (!Array.isArray(subs)) subs = [];
+              var sub = subs.filter(function(s) {
+                return String(s.Number || s.ProjectNumber || s.No || '') === String(underNr);
+              })[0];
+              if (sub) sdkCurrSubProjId = sub.Id || sub.id || sub.ID || '';
+              loadSDK(p.Hovedprosjektnummer);
+            });
           })
           .catch(function() {
-            sdkCurrUnderProjId = '';
             loadSDK(p.Hovedprosjektnummer);
           });
       }, 100);
@@ -1378,7 +1386,7 @@ function openPD(pid) {
   }
 }
 
-function closePD() { document.getElementById('pdov').classList.remove('on'); activePID = null; activePath = ''; sdkCurrUnderProjId = ''; sdkCurrUnderNavn = ''; }
+function closePD() { document.getElementById('pdov').classList.remove('on'); activePID = null; activePath = ''; sdkCurrUnderProjId = ''; sdkCurrUnderNavn = ''; sdkCurrSubProjId = ''; }
 
 function openF(pid, mappenavn) {
   var fb = document.getElementById('fb_' + mappenavn);
@@ -2040,14 +2048,18 @@ function renderSDK(resources, plans, hours, fromStr, toStr) {
   if (!plans.length) {
     html.push('<div style="font-size:12px;color:var(--tx3);padding:8px 0;margin-bottom:12px">Ingen planlagt mannskap denne uken</div>');
   } else {
-    if (plans.length > 0) {
-      console.log('SmartDok Plans - første objekt:', JSON.stringify(plans[0]));
-      console.log('SmartDok Plans - alle feltnavn:', Object.keys(plans[0]).join(', '));
-    }
+    // Filtrer planer på underprosjekt hvis vi viser et underprosjekt
+    var filtPlans = (sdkCurrSubProjId)
+      ? plans.filter(function(pl) { return String(pl.SubProjectId || '') === String(sdkCurrSubProjId); })
+      : plans;
+    if (sdkCurrSubProjId && !filtPlans.length) filtPlans = plans; // fallback
+    if (!filtPlans.length) {
+      html.push('<div style="font-size:12px;color:var(--tx3);padding:8px 0;margin-bottom:12px">Ingen planlagt mannskap denne uken</div>');
+    } else {
     var today = new Date().toISOString().split('T')[0];
     var dayNames = ['Man','Tir','Ons','Tor','Fre'];
     var byPerson = {};
-    plans.forEach(function(plan) {
+    filtPlans.forEach(function(plan) {
       var rid = plan.ResourceId;
       if (!byPerson[rid]) byPerson[rid] = { plan: plan, days: [] };
       var planStart = plan.Start ? plan.Start.substring(0, 10) : '';
@@ -2094,6 +2106,7 @@ function renderSDK(resources, plans, hours, fromStr, toStr) {
       html.push('</div>');
       html.push('</div>');
     });
+    } // slutt på filtPlans.length-blokken
   }
   html.push('<div style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--tx3);margin-bottom:8px;margin-top:14px;font-weight:500">Timer brukt</div>');
   if (!hours.length) {
