@@ -2040,6 +2040,10 @@ function renderSDK(resources, plans, hours, fromStr, toStr) {
   if (!plans.length) {
     html.push('<div style="font-size:12px;color:var(--tx3);padding:8px 0;margin-bottom:12px">Ingen planlagt mannskap denne uken</div>');
   } else {
+    if (plans.length > 0) {
+      console.log('SmartDok Plans - første objekt:', JSON.stringify(plans[0]));
+      console.log('SmartDok Plans - alle feltnavn:', Object.keys(plans[0]).join(', '));
+    }
     var today = new Date().toISOString().split('T')[0];
     var dayNames = ['Man','Tir','Ons','Tor','Fre'];
     var byPerson = {};
