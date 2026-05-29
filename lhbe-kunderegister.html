@@ -2095,19 +2095,23 @@ function renderSDK(resources, plans, hours, fromStr, toStr) {
   if (!hours.length) {
     html.push('<div style="font-size:12px;color:var(--tx3);padding:8px 0">Ingen registrerte timer</div>');
   } else {
-    // Filtrer på underprosjektnavn hvis vi viser et underprosjekt
+    // Filtrer timer på underprosjekt hvis vi viser et underprosjekt
+    // Bruker SubProjectNumber (kortnr, f.eks. "1012") som primærfilter
     var filtrerteTimer = hours;
-    if (hours.length > 0) {
-      console.log('SmartDok WorkHours - første objekt:', JSON.stringify(hours[0]));
-      console.log('SmartDok WorkHours - alle feltnavn:', Object.keys(hours[0]).join(', '));
-    }
     if (sdkCurrUnderNavn) {
-      var navnLower = sdkCurrUnderNavn.toLowerCase();
+      // Hent kortnummeret fra prosjektnummeret (131-1012 → 1012)
+      var aktivPid = activePID ? projects.filter(function(x){ return x.ID === activePID; })[0] : null;
+      var underNrFilter = (aktivPid && aktivPid.Underprosjekt && aktivPid.Prosjektnummer)
+        ? aktivPid.Prosjektnummer.split('-').pop()
+        : '';
       var filtered = hours.filter(function(h) {
-        var sp = h.SubProject || h.SubProjectName || h.SubprojectName || h.Subproject || h.subProject || h.subproject || '';
-        return sp.toLowerCase().indexOf(navnLower) > -1 || navnLower.indexOf(sp.toLowerCase()) > -1;
+        // Prøv nummer-match først (mest pålitelig)
+        if (underNrFilter && String(h.SubProjectNumber || h.SubProjectNo || '') === underNrFilter) return true;
+        // Fallback: navn-match
+        var sp = h.SubProjectName || '';
+        var navnLower = sdkCurrUnderNavn.toLowerCase();
+        return sp.toLowerCase().indexOf(navnLower) > -1;
       });
-      // Bruk filtrert liste kun hvis noe ble funnet – ellers vis alle (fallback)
       if (filtered.length) filtrerteTimer = filtered;
     }
     var validWages = ['Fastlonn', 'Timelonn', 'Overtid 50 %', 'Overtid 100 %', 'Fastlønn', 'Timelønn'];
