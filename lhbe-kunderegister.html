@@ -367,7 +367,11 @@ tr.erow td{padding:0;background:var(--bg2);border-bottom:1px solid var(--br2);}
     <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
     <input type="text" id="srchIn" placeholder="Sok kunde, kontaktperson...">
   </div>
-  <div class="ftabs">
+  <div class="ftabs" id="viewTabs">
+    <button class="ftab on" id="viewKunder" onclick="setView('kunder',this)">&#128119; Kunder</button>
+    <button class="ftab" id="viewProsjekter" onclick="setView('prosjekter',this)">&#128196; Prosjekter</button>
+  </div>
+  <div class="ftabs" id="filterTabs">
     <button class="ftab on" data-filter="alle">Alle</button>
     <button class="ftab" data-filter="kalkyle">Kalkyle</button>
     <button class="ftab" data-filter="aktiv">Aktive</button>
@@ -391,6 +395,10 @@ tr.erow td{padding:0;background:var(--bg2);border-bottom:1px solid var(--br2);}
     </div>
   </div>
   <div id="mvBody"><div class="sdk-load"><div class="sdk-spin"></div>Kobler til SmartDok...</div></div>
+</div>
+
+<div id="projView" style="display:none;padding:0 24px 32px;">
+  <div id="projViewBody"></div>
 </div>
 
 <div class="tw">
@@ -605,7 +613,7 @@ var SP = 'https://lhbent.sharepoint.com/sites/Industriveien1ASLHBygg';
 var CL = 'D702DBE2-269F-41A0-8107-55C681AEC5BF';
 var PL = '3DB9CF64-778C-48D8-8F32-044AC6EE249C';
 var SCOPES = ['https://lhbent.sharepoint.com/AllSites.Write', 'User.Read'];
-var ms, acc, customers = [], projects = [], activeFilter = 'alle', activeSort = 'az', custType = 'Firma', expanded = {}, activePath = '', activePID = null;
+var ms, acc, customers = [], projects = [], activeFilter = 'alle', activeSort = 'az', activeView = 'kunder', custType = 'Firma', expanded = {}, activePath = '', activePID = null;
 var SDK_BASE = 'https://lhbe-smartdok.tom-andre.workers.dev';
 var SDK_TOKEN = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE3Nzk0NTI3NDQsImV4cCI6MTgxMDk4ODc0NCwiY29tcGFueUlkIjoxMDUzOSwidG9rZW5JZCI6IjEzODE2ZWY3LWMwOTgtNGUxMi1hZTQzLTgxZTkzNTNkMWM0ZiJ9.dAqK-m2uCT-kenMIO63RTuwrUK1g2YlEuGm9oiP-ukt4JXHrzR-XAhbnrZ_nkF5JQsq1dLHR-3XaEUTU3iJa0m2JIoy38zTekJh79Sq3HlO7JYij3k_Jm8J2BT-FbTnIdGhWMX4gyaN30rLfWjla9FBh0LiDMC1MVUG7Gku3NPzyMfy-8MnlKiE56woLH_NfDYerlejIYtpKO-miinIRVZblFLmkLgenMOGyBuuTI_DI1_rZ1Cp2xjmdviLYZtL5yJgPRcvXWTZXfrc4nWn8Z9SYluSgcr088jFIHBvPjq8CVa3vuDbGpysI3TGSKp2xZN6gGoLwzznt9k4a5hdx5g';
 var sdkSession = null;
@@ -657,7 +665,9 @@ function init() {
   document.getElementById('projCancelBtn').addEventListener('click', function() { closeMov('projMov'); });
   document.getElementById('projSaveBtn').addEventListener('click', saveProj);
   document.getElementById('confCancelBtn').addEventListener('click', function() { closeMov('confMov'); });
-  document.getElementById('srchIn').addEventListener('input', renderTable);
+  document.getElementById('srchIn').addEventListener('input', function() {
+    if (activeView === 'prosjekter') renderProjView(); else renderTable();
+  });
   document.getElementById('spCustAdminBtn').addEventListener('click', openCustAdmin);
   document.getElementById('spProjAdminBtn').addEventListener('click', openProjAdmin);
   document.getElementById('custAdminCloseBtn').addEventListener('click', function() { closeMov('custAdminMov'); });
@@ -666,7 +676,7 @@ function init() {
   document.getElementById('projAdminCancelBtn').addEventListener('click', function() { closeMov('projAdminMov'); });
   document.getElementById('custAdminSrch').addEventListener('input', renderCustAdminList);
   document.getElementById('projAdminSrch').addEventListener('input', renderProjAdminList);
-  document.querySelectorAll('.ftab').forEach(function(btn) {
+  document.querySelectorAll('#filterTabs .ftab').forEach(function(btn) {
     btn.addEventListener('click', function() {
       if (this.dataset.filter === 'mannskap') { openMannskap(this); return; }
       setFilter(this.dataset.filter, this);
@@ -775,7 +785,7 @@ function loadData() {
     customers = results[0].value || [];
     projects = results[1].value || [];
     updateStats();
-    renderTable();
+    if (activeView === 'prosjekter') renderProjView(); else renderTable();
   }).catch(function(e) {
     if (e.errorCode === 'interaction_in_progress') {
       setTimeout(loadData, 1500);
@@ -804,22 +814,30 @@ function fmtDate(d) { return d ? d.substring(0, 10) : ''; }
 
 function setFilter(f, el) {
   activeFilter = f;
-  document.querySelectorAll('.ftab').forEach(function(t) { t.classList.remove('on'); });
-  el.classList.add('on');
-  // Skjul/vis mannskap-visning
+  document.querySelectorAll('#filterTabs .ftab').forEach(function(t) { t.classList.remove('on'); });
+  if (el) el.classList.add('on');
+  // Skjul mannskap
   document.getElementById('mannskapView').style.display = 'none';
-  document.querySelector('.tw').style.display = '';
   document.querySelector('.stats').style.display = '';
-  renderTable();
+  if (activeView === 'prosjekter') {
+    document.querySelector('.tw').style.display = 'none';
+    document.getElementById('projView').style.display = '';
+    renderProjView();
+  } else {
+    document.querySelector('.tw').style.display = '';
+    document.getElementById('projView').style.display = 'none';
+    renderTable();
+  }
 }
 
 var mvOffset = 0; // antall 4-ukers perioder fremover/bakover
 
 function openMannskap(el) {
-  document.querySelectorAll('.ftab').forEach(function(t) { t.classList.remove('on'); });
-  el.classList.add('on');
+  document.querySelectorAll('#filterTabs .ftab').forEach(function(t) { t.classList.remove('on'); });
+  if (el) el.classList.add('on');
   activeFilter = 'mannskap';
   document.querySelector('.tw').style.display = 'none';
+  document.getElementById('projView').style.display = 'none';
   document.querySelector('.stats').style.display = 'none';
   document.getElementById('mannskapView').style.display = '';
   mvWeekOffset = 0;
@@ -828,6 +846,76 @@ function openMannskap(el) {
 
 function mvPrev() { mvOffset--; loadMannskap(); }
 function mvNext() { mvOffset++; loadMannskap(); }
+
+function setView(v, el) {
+  activeView = v;
+  saveSetting('view', v);
+  document.querySelectorAll('#viewTabs .ftab').forEach(function(t) { t.classList.remove('on'); });
+  if (el) el.classList.add('on');
+  // Oppdater søkefelt placeholder
+  document.getElementById('srchIn').placeholder = v === 'kunder' ? 'Sok kunde, kontaktperson...' : 'Sok prosjekt, kundenavn...';
+  // Skjul mannskap når bytte skjer
+  document.getElementById('mannskapView').style.display = 'none';
+  document.querySelector('.stats').style.display = '';
+  // Nullstill filterfane til Alle hvis mannskap var aktiv
+  if (activeFilter === 'mannskap') {
+    activeFilter = 'alle';
+    document.querySelectorAll('#filterTabs .ftab').forEach(function(t) { t.classList.remove('on'); });
+    var alleFane = document.querySelector('#filterTabs .ftab[data-filter="alle"]');
+    if (alleFane) alleFane.classList.add('on');
+  }
+  if (v === 'prosjekter') {
+    document.querySelector('.tw').style.display = 'none';
+    document.getElementById('projView').style.display = '';
+    renderProjView();
+  } else {
+    document.querySelector('.tw').style.display = '';
+    document.getElementById('projView').style.display = 'none';
+    renderTable();
+  }
+}
+
+function getFilteredProjects() {
+  var q = (document.getElementById('srchIn').value || '').toLowerCase();
+  var statusMap = { kalkyle: 'Under kalkyle', aktiv: 'Aktiv', avsluttet: 'Avsluttet' };
+  var s = statusMap[activeFilter];
+  var list = projects.slice();
+  if (s) list = list.filter(function(p) { return p.Status === s; });
+  if (q) list = list.filter(function(p) {
+    return (p.Title || '').toLowerCase().indexOf(q) > -1 ||
+           (p.Kundenavn || '').toLowerCase().indexOf(q) > -1 ||
+           (p.Prosjektnummer || '').toLowerCase().indexOf(q) > -1;
+  });
+  // Sorter alfabetisk på prosjektnavn
+  list.sort(function(a, b) { return (a.Title || '').localeCompare(b.Title || '', 'nb'); });
+  return list;
+}
+
+function renderProjView() {
+  var list = getFilteredProjects();
+  var body = document.getElementById('projViewBody');
+  if (!list.length) {
+    body.innerHTML = '<div class="empty">Ingen prosjekter funnet</div>';
+    return;
+  }
+  // Grupper etter kundenavn
+  var byKunde = {};
+  list.forEach(function(p) {
+    var kn = p.Kundenavn || 'Ukjent kunde';
+    if (!byKunde[kn]) byKunde[kn] = [];
+    byKunde[kn].push(p);
+  });
+  var kundeNavn = Object.keys(byKunde).sort(function(a, b) { return a.localeCompare(b, 'nb'); });
+  var html = [];
+  kundeNavn.forEach(function(kn) {
+    html.push('<div style="margin-bottom:20px;">');
+    html.push('<div style="font-size:12px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.5px;padding:8px 0 6px;border-bottom:1px solid var(--br);margin-bottom:10px;">' + kn + '</div>');
+    html.push('<div class="pgrid">');
+    byKunde[kn].forEach(function(p) { html.push(renderPC(p)); });
+    html.push('</div></div>');
+  });
+  body.innerHTML = html.join('');
+}
 
 function loadMannskap() {
   // 4 uker fra mandag i innevaerende uke + offset
@@ -1771,6 +1859,16 @@ function loadSettings() {
     if (sortBtn) {
       document.querySelectorAll('#sortAZ,#sortZA,#sortFirma,#sortPrivat').forEach(function(b){b.classList.remove('on');});
       sortBtn.classList.add('on');
+    }
+    // Last visningsvalg (kunder/prosjekter)
+    activeView = s.view || 'kunder';
+    var vBtn = document.getElementById(activeView === 'prosjekter' ? 'viewProsjekter' : 'viewKunder');
+    if (vBtn) {
+      document.querySelectorAll('#viewTabs .ftab').forEach(function(b){b.classList.remove('on');});
+      vBtn.classList.add('on');
+    }
+    if (activeView === 'prosjekter') {
+      document.getElementById('srchIn').placeholder = 'Sok prosjekt, kundenavn...';
     }
   } catch(e) {}
 }
