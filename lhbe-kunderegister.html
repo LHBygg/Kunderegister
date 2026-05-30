@@ -2093,6 +2093,7 @@ function genTimerPdf() {
     ]);
   }).then(function(results) {
     var hours = results[0].Data || results[0].data || results[0].Items || results[0] || [];
+    if (hours.length > 0) { console.log('SmartDok WorkHours feltnavn:', Object.keys(hours[0])); console.log('Første time-objekt:', JSON.stringify(hours[0])); }
     var resources = results[1].Data || results[1].data || results[1].Items || results[1] || [];
     if (!Array.isArray(hours)) hours = [];
     if (!Array.isArray(resources)) resources = [];
