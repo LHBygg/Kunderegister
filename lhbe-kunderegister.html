@@ -602,6 +602,38 @@ tr.erow td{padding:0;background:var(--bg2);border-bottom:1px solid var(--br2);}
   </div>
 </div>
 
+<!-- MODAL: TIMER PDF -->
+<div class="mov hid" id="timerPdfMov">
+  <div class="mbox sm">
+    <div class="mhdr"><div class="mhdr-t">Eksporter timeliste</div><button class="mclose" id="timerPdfCloseBtn">x</button></div>
+    <div class="mbody">
+      <div class="fg">
+        <label class="fl">Måned</label>
+        <select class="fi2" id="timerPdfMnd">
+          <option value="1">Januar</option>
+          <option value="2">Februar</option>
+          <option value="3">Mars</option>
+          <option value="4">April</option>
+          <option value="5">Mai</option>
+          <option value="6">Juni</option>
+          <option value="7">Juli</option>
+          <option value="8">August</option>
+          <option value="9">September</option>
+          <option value="10">Oktober</option>
+          <option value="11">November</option>
+          <option value="12">Desember</option>
+        </select>
+      </div>
+      <div class="fg">
+        <label class="fl">År</label>
+        <select class="fi2" id="timerPdfAar"></select>
+      </div>
+      <div style="font-size:12px;color:var(--tx3);margin-top:4px">Én PDF per ansatt med timer for valgt måned.</div>
+    </div>
+    <div class="mftr"><button class="btn" id="timerPdfCancelBtn">Avbryt</button><button class="btn pri" id="timerPdfOkBtn">Hent og eksporter</button></div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -669,6 +701,19 @@ function init() {
   document.getElementById('projCancelBtn').addEventListener('click', function() { closeMov('projMov'); });
   document.getElementById('projSaveBtn').addEventListener('click', saveProj);
   document.getElementById('confCancelBtn').addEventListener('click', function() { closeMov('confMov'); });
+  document.getElementById('timerPdfCloseBtn').addEventListener('click', function() { closeMov('timerPdfMov'); });
+  document.getElementById('timerPdfCancelBtn').addEventListener('click', function() { closeMov('timerPdfMov'); });
+  document.getElementById('timerPdfOkBtn').addEventListener('click', genTimerPdf);
+  // Fyll årstall i dropdown (inneværende år og 2 år tilbake)
+  var aarSel = document.getElementById('timerPdfAar');
+  var iAar = new Date().getFullYear();
+  for (var y = iAar; y >= iAar - 2; y--) {
+    var opt = document.createElement('option');
+    opt.value = y; opt.textContent = y;
+    aarSel.appendChild(opt);
+  }
+  // Sett inneværende måned som standard
+  document.getElementById('timerPdfMnd').value = new Date().getMonth() + 1;
   document.getElementById('srchIn').addEventListener('input', function() {
     if (activeView === 'prosjekter') renderProjView(); else renderTable();
   });
@@ -1401,6 +1446,9 @@ function openPD(pid) {
   }
   bodyHtml.push('<div class="pdsec"><div class="pdsect">Handlinger</div><div style="display:flex;gap:8px;flex-wrap:wrap">');
   bodyHtml.push('<button class="btn" onclick="pdfProsjekt(' + p.ID + ')">&#128438; Eksporter PDF</button>');
+  if (s === 'Aktiv' && p.Prosjektnummer) {
+    bodyHtml.push('<button class="btn" onclick="openTimerPdfMov(' + p.ID + ')">&#128202; Timer PDF</button>');
+  }
   if (s === 'Under kalkyle') {
     if (p.Prosjektnummer && p.Kalkylenummer) {
       bodyHtml.push('<button class="btn" onclick="setSt(' + p.ID + ',\'Aktiv\');closePD()">Sett Aktiv</button>');
@@ -2009,6 +2057,177 @@ function cDelPFromAdmin(id, navn) {
     }).catch(function(e) { toast('Feil: ' + e.message, 'e'); });
   };
   openMov('confMov');
+}
+
+var timerPdfProjId = null;
+
+function openTimerPdfMov(pid) {
+  timerPdfProjId = pid;
+  openMov('timerPdfMov');
+}
+
+function genTimerPdf() {
+  var pid = timerPdfProjId;
+  if (!pid) return;
+  var p = projects.filter(function(x) { return x.ID === pid; })[0];
+  if (!p) return;
+  var mnd = parseInt(document.getElementById('timerPdfMnd').value);
+  var aar = parseInt(document.getElementById('timerPdfAar').value);
+  var mndNavn = ['','Januar','Februar','Mars','April','Mai','Juni','Juli','August','September','Oktober','November','Desember'];
+  var fraDato = aar + '-' + String(mnd).padStart(2,'0') + '-01T00:00:00';
+  var sisteDag = new Date(aar, mnd, 0).getDate();
+  var tilDato = aar + '-' + String(mnd).padStart(2,'0') + '-' + String(sisteDag).padStart(2,'0') + 'T23:59:59';
+  var okBtn = document.getElementById('timerPdfOkBtn');
+  okBtn.textContent = 'Henter timer...';
+  okBtn.disabled = true;
+  // Finn riktig prosjekt-ID i SmartDok
+  var prosjektnr = p.Underprosjekt && p.Hovedprosjektnummer ? p.Hovedprosjektnummer : p.Prosjektnummer;
+  sdkGet('/Projects?projectNumber=' + encodeURIComponent(prosjektnr) + '&active=true').then(function(d) {
+    var list = d.Data || d.data || d.Items || d || [];
+    if (!Array.isArray(list) || !list.length) throw new Error('Prosjekt ikke funnet i SmartDok');
+    var sdkProjId = list[0].Id || list[0].id;
+    // Hent timer og resources parallelt
+    return Promise.all([
+      sdkGet('/WorkHours?projectId=' + sdkProjId + '&fromDate=' + fraDato + '&toDate=' + tilDato + '&count=500'),
+      sdkGet('/ResourcePlanning/Resources?active=true&count=100')
+    ]);
+  }).then(function(results) {
+    var hours = results[0].Data || results[0].data || results[0].Items || results[0] || [];
+    var resources = results[1].Data || results[1].data || results[1].Items || results[1] || [];
+    if (!Array.isArray(hours)) hours = [];
+    if (!Array.isArray(resources)) resources = [];
+    // Filtrer kun gyldige lønnsarter
+    var gyldig = ['Fastlonn','Timelonn','Overtid 50 %','Overtid 100 %','Fastlønn','Timelønn'];
+    var filtrert = hours.filter(function(h) {
+      var w = h.WageName || '';
+      return gyldig.indexOf(w) > -1 || w.indexOf('Overtid') > -1;
+    });
+    // Hvis underprosjekt – filtrer på underprosjektnummer
+    if (p.Underprosjekt && p.Prosjektnummer) {
+      var underNr = p.Prosjektnummer.split('-').pop();
+      var underFiltrert = filtrert.filter(function(h) {
+        return String(h.SubProjectNumber || h.SubProjectNo || '') === underNr;
+      });
+      if (underFiltrert.length) filtrert = underFiltrert;
+    }
+    if (!filtrert.length) {
+      toast('Ingen timer funnet for ' + mndNavn[mnd] + ' ' + aar, 'w');
+      okBtn.textContent = 'Hent og eksporter';
+      okBtn.disabled = false;
+      return;
+    }
+    // Grupper per ansatt
+    var byAnsatt = {};
+    filtrert.forEach(function(h) {
+      var uid = h.UserID || h.UserId || 'ukjent';
+      var res = resources.filter(function(r) { return r.UserId === uid || r.userId === uid; })[0];
+      var navn = res ? res.Name : (h.EmployeeName || h.employeeName || ('Ansatt ' + uid));
+      if (!byAnsatt[uid]) byAnsatt[uid] = { navn: navn, timer: [] };
+      byAnsatt[uid].timer.push(h);
+    });
+    // Sorter timer per ansatt på dato
+    Object.keys(byAnsatt).forEach(function(uid) {
+      byAnsatt[uid].timer.sort(function(a, b) {
+        return (a.Date || a.WorkDate || '').localeCompare(b.Date || b.WorkDate || '');
+      });
+    });
+    // Generer én PDF per ansatt
+    var ansattListe = Object.keys(byAnsatt).sort(function(a, b) {
+      return byAnsatt[a].navn.localeCompare(byAnsatt[b].navn, 'nb');
+    });
+    ansattListe.forEach(function(uid) {
+      var entry = byAnsatt[uid];
+      var html = byggTimerPdfHtml(p, entry.navn, entry.timer, mndNavn[mnd], aar);
+      pdfPrint(html, 'Timeliste_' + entry.navn.replace(/\s+/g,'_') + '_' + mndNavn[mnd] + '_' + aar);
+    });
+    closeMov('timerPdfMov');
+    toast('Åpnet ' + ansattListe.length + ' timeliste(r) for utskrift', 's');
+  }).catch(function(e) {
+    toast('Feil: ' + e.message, 'e');
+  }).finally(function() {
+    okBtn.textContent = 'Hent og eksporter';
+    okBtn.disabled = false;
+  });
+}
+
+function byggTimerPdfHtml(p, ansattNavn, timer, mndNavn, aar) {
+  var dato = new Date().toLocaleDateString('nb-NO', { day:'2-digit', month:'2-digit', year:'numeric' });
+  var dagNavn = ['søn','man','tir','ons','tor','fre','lør'];
+  var totalTimer = timer.reduce(function(s, h) { return s + (parseFloat(h.NetHours || 0)); }, 0);
+
+  // Grupper per uke
+  var perUke = {};
+  timer.forEach(function(h) {
+    var d = new Date((h.Date || h.WorkDate || '').substring(0,10) + 'T12:00:00');
+    var uke = getWeekNumber(d);
+    if (!perUke[uke]) perUke[uke] = [];
+    perUke[uke].push(h);
+  });
+
+  var rader = '';
+  Object.keys(perUke).sort(function(a,b){return a-b;}).forEach(function(uke) {
+    var ukeTimer = perUke[uke].reduce(function(s,h){return s+(parseFloat(h.NetHours||0));},0);
+    rader += '<tr style="background:#f4f6fa"><td colspan="6" style="font-size:10px;font-weight:700;color:#5a6478;text-transform:uppercase;letter-spacing:.5px;padding:5px 8px;border-bottom:2px solid #e8eaf0">Uke ' + uke + '</td>' +
+      '<td style="font-size:11px;font-weight:700;color:#c8950a;font-family:monospace;text-align:right;padding:5px 8px;border-bottom:2px solid #e8eaf0">' + ukeTimer.toFixed(1) + '</td></tr>';
+    perUke[uke].forEach(function(h) {
+      var d = new Date((h.Date || h.WorkDate || '').substring(0,10) + 'T12:00:00');
+      var datoStr = String(d.getDate()).padStart(2,'0') + '.' + String(d.getMonth()+1).padStart(2,'0') + '.' + d.getFullYear();
+      var dag = dagNavn[d.getDay()];
+      var tidStr = h.StartTime && h.EndTime ? h.StartTime.substring(0,5) + '–' + h.EndTime.substring(0,5) : (h.Time || h.Period || '');
+      var aktivitet = h.ActivityName || h.Activity || '';
+      var lonnsart = h.WageName || '';
+      var kommentar = h.Comment || h.comment || '';
+      var netto = parseFloat(h.NetHours || 0).toFixed(1);
+      rader += '<tr>' +
+        '<td style="font-size:11px;white-space:nowrap;padding:7px 8px;border-bottom:1px solid #f4f6fa;vertical-align:top">' + datoStr + '<br><span style="font-size:9px;color:#9aa3b5">' + dag + '</span></td>' +
+        '<td style="font-size:10px;font-family:monospace;color:#5a6478;white-space:nowrap;padding:7px 8px;border-bottom:1px solid #f4f6fa;vertical-align:top">' + tidStr + '</td>' +
+        '<td style="font-size:11px;color:#5a6478;padding:7px 8px;border-bottom:1px solid #f4f6fa;vertical-align:top">' + aktivitet + '</td>' +
+        '<td style="font-size:10px;color:#9aa3b5;white-space:nowrap;padding:7px 8px;border-bottom:1px solid #f4f6fa;vertical-align:top">' + lonnsart + '</td>' +
+        '<td style="font-size:11px;color:#1a2035;padding:7px 8px;border-bottom:1px solid #f4f6fa;vertical-align:top;line-height:1.4">' + kommentar + '</td>' +
+        '<td style="font-size:11px;font-family:monospace;font-weight:600;text-align:right;white-space:nowrap;padding:7px 8px;border-bottom:1px solid #f4f6fa;vertical-align:top">' + netto + '</td>' +
+        '</tr>';
+    });
+  });
+
+  // Totalsum-rad
+  rader += '<tr style="background:#f8f7f0">' +
+    '<td colspan="5" style="font-size:12px;font-weight:700;text-align:right;padding:8px;color:#5a6478;border-top:2px solid #e8b84b">Totalt ' + mndNavn + ' ' + aar + '</td>' +
+    '<td style="font-size:14px;font-weight:700;font-family:monospace;color:#c8950a;text-align:right;padding:8px;border-top:2px solid #e8b84b">' + totalTimer.toFixed(1) + '</td>' +
+    '</tr>';
+
+  return '<!DOCTYPE html><html><head><meta charset="UTF-8">' +
+    '<style>@import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@500&display=swap");' +
+    '*{box-sizing:border-box;margin:0;padding:0}body{font-family:"DM Sans",sans-serif;background:#fff;color:#1a2035}' +
+    '@page{size:A4 landscape;margin:15mm 15mm 15mm 15mm}' +
+    '@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}</style></head><body>' +
+    '<div style="max-width:100%;padding:0">' +
+    '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:0">' +
+    '<div><div style="font-size:15px;font-weight:700">LH Bygg Entrepren\u00f8r AS</div><div style="font-size:10px;color:#9aa3b5;letter-spacing:1px;text-transform:uppercase;margin-top:2px">lhbe.no</div></div>' +
+    '<div style="text-align:right"><div style="font-size:18px;font-weight:700">Timeliste</div><div style="font-size:11px;color:#9aa3b5;margin-top:3px">' + mndNavn + ' ' + aar + ' &nbsp;·&nbsp; Generert ' + dato + '</div></div>' +
+    '</div>' +
+    '<div style="height:3px;background:#e8b84b;margin:12px 0 16px"></div>' +
+    '<div style="margin-bottom:16px">' +
+    '<div style="font-size:15px;font-weight:700;margin-bottom:2px">' + (p.Title||'') + '</div>' +
+    '<div style="font-size:11px;color:#9aa3b5;text-transform:uppercase;letter-spacing:.8px">' + (p.Kundenavn||'') + (p.Prosjektnummer ? ' &nbsp;·&nbsp; ' + p.Prosjektnummer : '') + (p.Prosjektleder ? ' &nbsp;·&nbsp; PL: ' + p.Prosjektleder : '') + '</div>' +
+    '</div>' +
+    '<div style="background:#1a2035;padding:8px 12px;display:flex;justify-content:space-between;align-items:center;margin-bottom:0">' +
+    '<span style="font-size:14px;font-weight:700;color:#fff">' + ansattNavn + '</span>' +
+    '<span style="font-size:13px;font-weight:700;color:#e8b84b;font-family:monospace">' + totalTimer.toFixed(1) + ' t &nbsp;·&nbsp; ' + mndNavn + ' ' + aar + '</span>' +
+    '</div>' +
+    '<table style="width:100%;border-collapse:collapse">' +
+    '<thead><tr style="border-bottom:2px solid #e8eaf0">' +
+    '<th style="font-size:9px;font-weight:700;color:#9aa3b5;text-transform:uppercase;letter-spacing:.8px;text-align:left;padding:6px 8px">Dato</th>' +
+    '<th style="font-size:9px;font-weight:700;color:#9aa3b5;text-transform:uppercase;letter-spacing:.8px;text-align:left;padding:6px 8px">Tid</th>' +
+    '<th style="font-size:9px;font-weight:700;color:#9aa3b5;text-transform:uppercase;letter-spacing:.8px;text-align:left;padding:6px 8px">Aktivitet</th>' +
+    '<th style="font-size:9px;font-weight:700;color:#9aa3b5;text-transform:uppercase;letter-spacing:.8px;text-align:left;padding:6px 8px">L\u00f8nnsart</th>' +
+    '<th style="font-size:9px;font-weight:700;color:#9aa3b5;text-transform:uppercase;letter-spacing:.8px;text-align:left;padding:6px 8px">Kommentar</th>' +
+    '<th style="font-size:9px;font-weight:700;color:#9aa3b5;text-transform:uppercase;letter-spacing:.8px;text-align:right;padding:6px 8px">Timer</th>' +
+    '</tr></thead>' +
+    '<tbody>' + rader + '</tbody></table>' +
+    '<div style="margin-top:20px;border-top:1px solid #e8eaf0;padding-top:10px;display:flex;justify-content:space-between;font-size:10px;color:#c8cdd9">' +
+    '<span>LH Bygg Entrepren\u00f8r AS \u2014 lhbe.no</span>' +
+    '<span>Generert av Kunde/Prosjektregister v5.0</span>' +
+    '</div></div></body></html>';
 }
 
 function pdfKunde(cid) {
