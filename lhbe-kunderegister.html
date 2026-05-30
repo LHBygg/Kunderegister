@@ -785,7 +785,7 @@ function loadData() {
     customers = results[0].value || [];
     projects = results[1].value || [];
     updateStats();
-    if (activeView === 'prosjekter') renderProjView(); else renderTable();
+    applyDeferredView();
   }).catch(function(e) {
     if (e.errorCode === 'interaction_in_progress') {
       setTimeout(loadData, 1500);
@@ -794,6 +794,19 @@ function loadData() {
       console.error(e);
     }
   });
+}
+
+function applyDeferredView() {
+  // Kalles etter loadData() er ferdig – bytter nå til lagret visning
+  if (activeView === 'prosjekter') {
+    document.querySelector('.tw').style.display = 'none';
+    document.getElementById('projView').style.display = '';
+    renderProjView();
+  } else {
+    document.querySelector('.tw').style.display = '';
+    document.getElementById('projView').style.display = 'none';
+    renderTable();
+  }
 }
 
 function updateStats() {
@@ -1860,7 +1873,8 @@ function loadSettings() {
       document.querySelectorAll('#sortAZ,#sortZA,#sortFirma,#sortPrivat').forEach(function(b){b.classList.remove('on');});
       sortBtn.classList.add('on');
     }
-    // Last visningsvalg (kunder/prosjekter)
+    // Last visningsvalg (kunder/prosjekter) – oppdater knapper og placeholder,
+    // men IKKE bytt DOM-visning her. applyDeferredView() kalles etter loadData() er ferdig.
     activeView = s.view || 'kunder';
     var vBtn = document.getElementById(activeView === 'prosjekter' ? 'viewProsjekter' : 'viewKunder');
     if (vBtn) {
@@ -1870,6 +1884,9 @@ function loadSettings() {
     if (activeView === 'prosjekter') {
       document.getElementById('srchIn').placeholder = 'Sok prosjekt, kundenavn...';
     }
+    // Alltid start i Kunder-visning i DOM til data er klar
+    document.querySelector('.tw').style.display = '';
+    document.getElementById('projView').style.display = 'none';
   } catch(e) {}
 }
 
