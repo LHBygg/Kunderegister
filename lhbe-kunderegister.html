@@ -789,7 +789,7 @@ function loadData() {
     customers = results[0].value || [];
     projects = results[1].value || [];
     updateStats();
-    if (activeView === 'prosjekter') renderProjView(); else renderTable();
+    applyDeferredView();
   }).catch(function(e) {
     if (e.errorCode === 'interaction_in_progress') {
       setTimeout(loadData, 1500);
@@ -798,6 +798,18 @@ function loadData() {
       console.error(e);
     }
   });
+}
+
+function applyDeferredView() {
+  if (activeView === 'prosjekter') {
+    document.querySelector('.tw').style.display = 'none';
+    document.getElementById('projView').style.display = '';
+    renderProjView();
+  } else {
+    document.querySelector('.tw').style.display = '';
+    document.getElementById('projView').style.display = 'none';
+    renderTable();
+  }
 }
 
 function updateStats() {
@@ -1240,7 +1252,7 @@ function renderTable() {
     rows.push('<td>' + epost + '</td>');
     rows.push('<td><div>' + pcount + '</div>' + pact2 + '</td>');
     rows.push('<td>' + portVal + '</td>');
-    rows.push('<td onclick="event.stopPropagation()"><button class="btn sm" onclick="openEditC(' + c.ID + ')">&#9998;</button> <button class="btn sm" title="Last ned kunderapport" onclick="pdfKunde(' + c.ID + ')">&#128438;</button></td>');
+    rows.push('<td onclick="event.stopPropagation()" style="white-space:nowrap"><button class="btn sm" title="Eksporter kunderapport" onclick="pdfKunde(' + c.ID + ')">&#128438;</button> <button class="btn sm" onclick="openEditC(' + c.ID + ')">&#9998;</button></td>');
     rows.push('</tr>');
     if (io) {
       rows.push('<tr class="erow"><td colspan="9"><div class="ebox">');
@@ -1869,7 +1881,8 @@ function loadSettings() {
       document.querySelectorAll('#sortAZ,#sortZA,#sortFirma,#sortPrivat').forEach(function(b){b.classList.remove('on');});
       sortBtn.classList.add('on');
     }
-    // Last visningsvalg (kunder/prosjekter)
+    // Last visningsvalg – les og sett activeView, men hold DOM i Kunder-visning
+    // til applyDeferredView() kalles etter at loadData() er ferdig
     activeView = s.view || 'kunder';
     var vBtn = document.getElementById(activeView === 'prosjekter' ? 'viewProsjekter' : 'viewKunder');
     if (vBtn) {
@@ -1879,6 +1892,9 @@ function loadSettings() {
     if (activeView === 'prosjekter') {
       document.getElementById('srchIn').placeholder = 'Sok prosjekt, kundenavn...';
     }
+    // Alltid start i Kunder-visning i DOM til data er klar
+    document.querySelector('.tw').style.display = '';
+    document.getElementById('projView').style.display = 'none';
   } catch(e) {}
 }
 
