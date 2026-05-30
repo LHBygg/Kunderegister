@@ -2197,8 +2197,11 @@ function byggTimerPdfBlokk(p, ansattNavn, timer, mndNavn, aar) {
       // Formater klokkeslett fra desimalformat (7.5 = 07:30)
       function fmtKl(v) {
         if (v === null || v === undefined) return '';
+        // SmartDok lagrer klokkeslett som HHMM/100: 15.3 = 15:30, 7.0 = 07:00
         var h2 = Math.floor(v);
-        var m = Math.round((v - h2) * 60);
+        var m = Math.round((v - h2) * 100);
+        // Normaliser hvis minutter >= 60
+        if (m >= 60) { h2 += Math.floor(m/60); m = m % 60; }
         return String(h2).padStart(2,'0') + ':' + String(m).padStart(2,'0');
       }
       var fra = h.OrdinaryHoursFrom !== null && h.OrdinaryHoursFrom !== undefined ? fmtKl(h.OrdinaryHoursFrom) : '';
