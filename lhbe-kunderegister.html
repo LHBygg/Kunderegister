@@ -2093,7 +2093,6 @@ function genTimerPdf() {
     ]);
   }).then(function(results) {
     var hours = results[0].Data || results[0].data || results[0].Items || results[0] || [];
-    if (hours.length > 0) { console.log('SmartDok WorkHours feltnavn:', Object.keys(hours[0])); console.log('Første time-objekt:', JSON.stringify(hours[0])); }
     var resources = results[1].Data || results[1].data || results[1].Items || results[1] || [];
     if (!Array.isArray(hours)) hours = [];
     if (!Array.isArray(resources)) resources = [];
@@ -2185,28 +2184,39 @@ function byggTimerPdfBlokk(p, ansattNavn, timer, mndNavn, aar) {
   var rader = '';
   Object.keys(perUke).sort(function(a,b){return a-b;}).forEach(function(uke) {
     var ukeTimer = perUke[uke].reduce(function(s,h){return s+(parseFloat(h.NetHours||0));},0);
-    rader += '<tr style="background:#f4f6fa"><td colspan="4" style="font-size:10px;font-weight:700;color:#5a6478;text-transform:uppercase;letter-spacing:.5px;padding:5px 8px;border-bottom:2px solid #e8eaf0">Uke ' + uke + '</td>' +
+    rader += '<tr style="background:#f4f6fa"><td colspan="5" style="font-size:10px;font-weight:700;color:#5a6478;text-transform:uppercase;letter-spacing:.5px;padding:5px 8px;border-bottom:2px solid #e8eaf0">Uke ' + uke + '</td>' +
       '<td style="font-size:11px;font-weight:700;color:#c8950a;font-family:monospace;text-align:right;padding:5px 8px;border-bottom:2px solid #e8eaf0">' + ukeTimer.toFixed(1) + '</td></tr>';
     perUke[uke].forEach(function(h) {
       var d = new Date((h.Date || h.WorkDate || '').substring(0,10) + 'T12:00:00');
       var datoStr = String(d.getDate()).padStart(2,'0') + '.' + String(d.getMonth()+1).padStart(2,'0') + '.' + d.getFullYear();
       var dag = dagNavn[d.getDay()];
-      var aktivitet = h.ActivityName || h.Activity || '';
+      var aktivitet = h.WorkDescription || h.ActivityName || h.Activity || '';
       var lonnsart = h.WageName || '';
       var kommentar = h.Comment || h.comment || '';
       var netto = parseFloat(h.NetHours || 0).toFixed(1);
+      // Formater klokkeslett fra desimalformat (7.5 = 07:30)
+      function fmtKl(v) {
+        if (v === null || v === undefined) return '';
+        var h2 = Math.floor(v);
+        var m = Math.round((v - h2) * 60);
+        return String(h2).padStart(2,'0') + ':' + String(m).padStart(2,'0');
+      }
+      var fra = h.OrdinaryHoursFrom !== null && h.OrdinaryHoursFrom !== undefined ? fmtKl(h.OrdinaryHoursFrom) : '';
+      var til = h.OrdinaryHoursTo !== null && h.OrdinaryHoursTo !== undefined ? fmtKl(h.OrdinaryHoursTo) : '';
+      var tidStr = fra && til ? fra + '\u2013' + til : '';
       rader += '<tr>' +
         '<td style="font-size:11px;white-space:nowrap;padding:7px 8px;border-bottom:1px solid #f4f6fa;vertical-align:top;width:80px">' + datoStr + '<br><span style="font-size:9px;color:#9aa3b5">' + dag + '</span></td>' +
+        '<td style="font-size:10px;font-family:monospace;color:#5a6478;white-space:nowrap;padding:7px 8px;border-bottom:1px solid #f4f6fa;vertical-align:top;width:70px">' + tidStr + '</td>' +
         '<td style="font-size:11px;color:#5a6478;padding:7px 8px;border-bottom:1px solid #f4f6fa;vertical-align:top;width:90px">' + aktivitet + '</td>' +
-        '<td style="font-size:10px;color:#9aa3b5;white-space:nowrap;padding:7px 8px;border-bottom:1px solid #f4f6fa;vertical-align:top;width:80px">' + lonnsart + '</td>' +
+        '<td style="font-size:10px;color:#9aa3b5;white-space:nowrap;padding:7px 8px;border-bottom:1px solid #f4f6fa;vertical-align:top;width:75px">' + lonnsart + '</td>' +
         '<td style="font-size:11px;color:#1a2035;padding:7px 8px;border-bottom:1px solid #f4f6fa;vertical-align:top;line-height:1.5">' + kommentar + '</td>' +
-        '<td style="font-size:11px;font-family:monospace;font-weight:600;text-align:right;white-space:nowrap;padding:7px 8px;border-bottom:1px solid #f4f6fa;vertical-align:top;width:50px">' + netto + '</td>' +
+        '<td style="font-size:11px;font-family:monospace;font-weight:600;text-align:right;white-space:nowrap;padding:7px 8px;border-bottom:1px solid #f4f6fa;vertical-align:top;width:45px">' + netto + '</td>' +
         '</tr>';
     });
   });
 
   rader += '<tr style="background:#f8f7f0">' +
-    '<td colspan="4" style="font-size:12px;font-weight:700;text-align:right;padding:8px;color:#5a6478;border-top:2px solid #e8b84b">Totalt ' + mndNavn + ' ' + aar + '</td>' +
+    '<td colspan="5" style="font-size:12px;font-weight:700;text-align:right;padding:8px;color:#5a6478;border-top:2px solid #e8b84b">Totalt ' + mndNavn + ' ' + aar + '</td>' +
     '<td style="font-size:14px;font-weight:700;font-family:monospace;color:#c8950a;text-align:right;padding:8px;border-top:2px solid #e8b84b">' + totalTimer.toFixed(1) + '</td>' +
     '</tr>';
 
@@ -2227,10 +2237,11 @@ function byggTimerPdfBlokk(p, ansattNavn, timer, mndNavn, aar) {
     '<table>' +
     '<thead><tr style="border-bottom:2px solid #e8eaf0">' +
     '<th style="font-size:9px;font-weight:700;color:#9aa3b5;text-transform:uppercase;letter-spacing:.8px;text-align:left;padding:6px 8px;width:80px">Dato</th>' +
+    '<th style="font-size:9px;font-weight:700;color:#9aa3b5;text-transform:uppercase;letter-spacing:.8px;text-align:left;padding:6px 8px;width:70px">Tid</th>' +
     '<th style="font-size:9px;font-weight:700;color:#9aa3b5;text-transform:uppercase;letter-spacing:.8px;text-align:left;padding:6px 8px;width:90px">Aktivitet</th>' +
-    '<th style="font-size:9px;font-weight:700;color:#9aa3b5;text-transform:uppercase;letter-spacing:.8px;text-align:left;padding:6px 8px;width:80px">L\u00f8nnsart</th>' +
+    '<th style="font-size:9px;font-weight:700;color:#9aa3b5;text-transform:uppercase;letter-spacing:.8px;text-align:left;padding:6px 8px;width:75px">L\u00f8nnsart</th>' +
     '<th style="font-size:9px;font-weight:700;color:#9aa3b5;text-transform:uppercase;letter-spacing:.8px;text-align:left;padding:6px 8px">Kommentar</th>' +
-    '<th style="font-size:9px;font-weight:700;color:#9aa3b5;text-transform:uppercase;letter-spacing:.8px;text-align:right;padding:6px 8px;width:50px">Timer</th>' +
+    '<th style="font-size:9px;font-weight:700;color:#9aa3b5;text-transform:uppercase;letter-spacing:.8px;text-align:right;padding:6px 8px;width:45px">Timer</th>' +
     '</tr></thead>' +
     '<tbody>' + rader + '</tbody></table>' +
     '<div style="margin-top:20px;border-top:1px solid #e8eaf0;padding-top:10px;display:flex;justify-content:space-between;font-size:10px;color:#c8cdd9">' +
