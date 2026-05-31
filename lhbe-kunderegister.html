@@ -1519,7 +1519,8 @@ function openF(pid, mappenavn) {
     var hovedProj = projects.filter(function(h) { return h.Prosjektnummer === p.Hovedprosjektnummer && !h.Underprosjekt; })[0];
     var hovedNavn = hovedProj ? (hovedProj.Title || '') : (p.Kundenavn || '');
     var uMappe = hovedNavn + ' ' + (p.Prosjektnummer || '') + ' ' + (p.Title || '');
-    if (s === 'Under kalkyle') base = 'Felles/LHBE/Kalkyle Underprosjekter/' + uMappe + '/' + mappenavn;
+    var uKalkyleMappe = (p.Kalkylenummer || '') + ' - ' + hovedNavn + ' ' + (p.Title || '');
+    if (s === 'Under kalkyle') base = 'Felles/LHBE/Kalkyle Underprosjekter/' + uKalkyleMappe + '/' + mappenavn;
     else if (s === 'Avsluttet') base = 'Felles/LHBE/Avsluttede underprosjekter/' + uMappe + '/' + mappenavn;
     else base = 'Felles/LHBE/Underprosjekter/' + uMappe + '/' + mappenavn;
   }
