@@ -1324,7 +1324,7 @@ function renderTable() {
       rows.push('<tr class="erow"><td colspan="9"><div class="ebox">');
       rows.push('<div class="ehdr"><div class="etitle">' + (c.Title || '') + '</div>');
       rows.push('<div style="display:flex;gap:6px;flex-wrap:wrap">');
-      rows.push('<button class="btn sm" title="Eksporter kunderapport" onclick="event.stopPropagation();pdfKunde(' + c.ID + ')">&#128438; PDF</button>');
+      rows.push('<button class="btn sm" title="Eksporter kunderapport" onclick="event.stopPropagation();pdfKunde(' + c.ID + ')">&#128438; Kunderapport</button>');
       rows.push('<button class="btn sm pri" onclick="event.stopPropagation();openNP(\'' + (c.Title || '').replace(/'/g, '') + '\')">+ Nytt prosjekt</button>');
       rows.push('</div></div>');
       rows.push('<div class="ftabs" style="margin-bottom:10px;border-bottom:1px solid var(--br);padding-bottom:0;">');
