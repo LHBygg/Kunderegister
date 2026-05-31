@@ -72,7 +72,7 @@ tr.erow td{padding:0;background:var(--bg2);border-bottom:1px solid var(--br2);}
 .ehdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
 .etitle{font-size:12px;color:var(--tx2);font-weight:500;}
 .pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px;}
-.pcard{background:var(--bg3);border:1px solid var(--br);border-radius:var(--rl);padding:13px;cursor:pointer;transition:all .2s;}
+.pcard{background:var(--bg3);border:1px solid var(--br);border-radius:var(--rl);padding:13px;cursor:pointer;transition:all .2s;}body.compact .pcard{padding:7px 10px;}body.compact .pcinfo{display:none;}body.compact .pcnote{display:none;}body.compact .pctop{margin-bottom:4px;}body.compact .pcacts{margin-top:4px;}body.compact .pcname{font-size:13px;}
 .pcard:hover{border-color:var(--br2);background:var(--bg4);}
 .pcard.aktiv{border-left:3px solid var(--grn);}
 .pcard.kalkyle{border-left:3px solid var(--org);}
@@ -1363,16 +1363,8 @@ function renderPC(p) {
   html.push('</div>');
   if (p.Notat) html.push('<div class="pcnote">' + p.Notat + '</div>');
   html.push('<div class="pcacts">');
-  if (s === 'Under kalkyle') {
-    var kanSetteAktiv = p.Prosjektnummer && p.Kalkylenummer;
-    if (kanSetteAktiv) {
-      html.push('<button class="pca grn" onclick="event.stopPropagation();setSt(' + p.ID + ',\'Aktiv\')">Sett Aktiv</button>');
-    } else {
-      html.push('<button class="pca" style="opacity:.4;cursor:not-allowed;" title="Fyll inn Prosjektnummer og Kalkylenummer forst" disabled>Sett Aktiv</button>');
-    }
-  }
-  if (s === 'Aktiv') html.push('<button class="pca" onclick="event.stopPropagation();setSt(' + p.ID + ',\'Avsluttet\')">Avsluttet</button>');
   html.push('<button class="pca" onclick="event.stopPropagation();openPD(' + p.ID + ')">Apne</button>');
+  html.push('<button class="pca" onclick="event.stopPropagation();openEditP(' + p.ID + ')">Rediger</button>');
   html.push('</div></div>');
   return html.join('');
 }
@@ -1946,6 +1938,7 @@ function loadSettings() {
     var cpTog = document.getElementById('cpTog');
     if (cpTog) { if (compact) cpTog.classList.add('on'); else cpTog.classList.remove('on'); }
     if (compact) document.querySelectorAll('table.ct tbody td').forEach(function(td){ td.style.padding='7px 12px'; });
+    if (compact) document.body.classList.add('compact'); else document.body.classList.remove('compact');
     activeSort = s.sort || 'az';
     var sortBtn = document.getElementById('sort' + activeSort.charAt(0).toUpperCase() + activeSort.slice(1));
     if (sortBtn) {
@@ -1993,6 +1986,7 @@ function toggleCompact(el) {
   el.classList.toggle('on');
   var v = el.classList.contains('on');
   document.querySelectorAll('table.ct tbody td').forEach(function(td) { td.style.padding = v ? '7px 12px' : '11px 12px'; });
+  if (v) document.body.classList.add('compact'); else document.body.classList.remove('compact');
   saveSetting('compact', v);
 }
 
