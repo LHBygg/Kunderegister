@@ -334,6 +334,12 @@ tr.erow td{padding:0;background:var(--bg2);border-bottom:1px solid var(--br2);}
 
 /* ── SMAL MOBIL – lukket Z Fold / ~360-390px ───────────── */
 @media(max-width:390px){
+  /* Skjul logo-tekst – behold kun bilde */
+  .logo span{display:none;}
+  /* Hindre at knapper skyves ut av header */
+  .hbtn{flex-shrink:0;}
+  .logo{flex-shrink:0;}
+
   /* Toolbar: view-tabs kompakt */
   #viewKunder,#viewProsjekter{padding:6px 8px;font-size:12px;}
   .ftab{padding:5px 8px;font-size:12px;}
