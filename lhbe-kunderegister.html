@@ -2900,7 +2900,7 @@ function renderUEView() {
     html.push('<div style="display:flex;gap:6px;">');
     html.push('<button class="btn sm" onclick="openNyUEKontakt(' + u.ID + ')">+ Kontakt</button>');
     html.push('<button class="btn sm" onclick="openEditUE(' + u.ID + ')">Rediger</button>');
-    html.push('<button class="btn sm danger" onclick="slettUE(' + u.ID + ','' + (u.Title||'').replace(/'/g,"\'") + '')">Slett</button>');
+    html.push('<button class="btn sm danger" onclick="cDelUE(' + u.ID + ')">Slett</button>');
     html.push('</div></div>');
     if (kontakter.length) {
       html.push('<div style="padding:8px 16px;">');
@@ -2971,6 +2971,11 @@ function saveUE() {
     closeMov('ueMov');
     loadUEData();
   }).catch(function(e) { toast('Feil: ' + e.message, 'e'); });
+}
+
+function cDelUE(id) {
+  var u = ueList.filter(function(x){return x.ID==id;})[0];
+  slettUE(id, u ? u.Title : 'denne UE-en');
 }
 
 function slettUE(id, navn) {
