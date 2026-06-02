@@ -4,7 +4,340 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>LH Bygg Kunde/Prosjektregister v5.3</title>
-<script src="msal-browser.min.js"></script>
+<script src="msal-browser.min.js">
+// ===================== UE-REGISTER FUNKSJONER =====================
+
+function loadUEData() {
+  document.getElementById('ueBody').innerHTML = '<div class="sdk-load"><div class="sdk-spin"></div>Laster...</div>';
+  Promise.all([
+    spGet(SP + '/_api/web/lists(guid'' + UEL + '')/items?$select=ID,Title,Orgnr,Fagomrade,Adresse&$top=500&$orderby=Title'),
+    spGet(SP + '/_api/web/lists(guid'' + UEKL + '')/items?$select=ID,Title,UEId,Rolle,Telefon,Epost&$top=500')
+  ]).then(function(res) {
+    ueList = res[0].value || [];
+    ueKontakter = res[1].value || [];
+    renderUEView();
+  }).catch(function(e) {
+    document.getElementById('ueBody').innerHTML = '<div style="padding:24px;color:var(--red);">Feil ved lasting: ' + e.message + '</div>';
+  });
+}
+
+function renderUEView() {
+  var q = (document.getElementById('srchIn').value || '').toLowerCase();
+  var liste = ueList.filter(function(u) {
+    if (!q) return true;
+    return (u.Title||'').toLowerCase().includes(q) || (u.Fagomrade||'').toLowerCase().includes(q);
+  });
+  document.getElementById('ueSubLbl').textContent = ueList.length + ' firma registrert';
+  if (!liste.length) {
+    document.getElementById('ueBody').innerHTML = '<div style="text-align:center;padding:40px;color:var(--tx3);">Ingen UE-er registrert ennå. Trykk "+ Ny UE" for å legge til.</div>';
+    return;
+  }
+  var html = [];
+  liste.forEach(function(u) {
+    var kontakter = ueKontakter.filter(function(k) { return k.UEId == u.ID; });
+    var initials = (u.Title||'?').split(' ').map(function(w){return w[0];}).join('').substring(0,2).toUpperCase();
+    html.push('<div style="background:var(--bg2);border:1px solid var(--br);border-radius:var(--rl);margin-bottom:10px;overflow:hidden;">');
+    html.push('<div style="display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--br);">');
+    html.push('<div style="width:36px;height:36px;border-radius:50%;background:rgba(59,130,246,.15);color:var(--blu);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;flex-shrink:0;">' + initials + '</div>');
+    html.push('<div style="flex:1;min-width:0;">');
+    html.push('<div style="font-weight:600;font-size:14px;">' + (u.Title||'-') + '</div>');
+    html.push('<div style="font-size:12px;color:var(--tx3);margin-top:2px;">');
+    if (u.Orgnr) html.push('Org.nr ' + u.Orgnr + ' &nbsp;·&nbsp; ');
+    if (u.Fagomrade) html.push('<span style="background:var(--bg3);border:1px solid var(--br);border-radius:20px;padding:1px 8px;font-size:11px;">' + u.Fagomrade + '</span>');
+    html.push('</div></div>');
+    html.push('<div style="display:flex;gap:6px;">');
+    html.push('<button class="btn sm" onclick="openNyUEKontakt(' + u.ID + ')">+ Kontakt</button>');
+    html.push('<button class="btn sm" onclick="openEditUE(' + u.ID + ')">Rediger</button>');
+    html.push('<button class="btn sm danger" onclick="slettUE(' + u.ID + ','' + (u.Title||'').replace(/'/g,"\'") + '')">Slett</button>');
+    html.push('</div></div>');
+    if (kontakter.length) {
+      html.push('<div style="padding:8px 16px;">');
+      kontakter.forEach(function(k) {
+        html.push('<div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--br);">');
+        html.push('<div style="width:26px;height:26px;border-radius:50%;background:var(--bg3);color:var(--tx2);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;flex-shrink:0;">' + (k.Title||'?').split(' ').map(function(w){return w[0];}).join('').substring(0,2).toUpperCase() + '</div>');
+        html.push('<div style="flex:1;min-width:0;">');
+        html.push('<div style="font-size:13px;font-weight:500;">' + (k.Title||'-') + '</div>');
+        html.push('<div style="font-size:11px;color:var(--tx3);">');
+        if (k.Rolle) html.push(k.Rolle);
+        if (k.Telefon) html.push((k.Rolle?' &nbsp;·&nbsp; ':'') + '<a href="tel:' + k.Telefon + '" style="color:var(--blu);text-decoration:none;">' + k.Telefon + '</a>');
+        if (k.Epost) html.push(' &nbsp;·&nbsp; <a href="mailto:' + k.Epost + '" style="color:var(--blu);text-decoration:none;">' + k.Epost + '</a>');
+        html.push('</div></div>');
+        html.push('<button class="btn sm danger" onclick="slettUEKontakt(' + k.ID + ')">Slett</button>');
+        html.push('</div>');
+      });
+      html.push('</div>');
+    } else {
+      html.push('<div style="padding:10px 16px;font-size:12px;color:var(--tx3);">Ingen kontaktpersoner lagt til ennå.</div>');
+    }
+    html.push('</div>');
+  });
+  document.getElementById('ueBody').innerHTML = html.join('');
+}
+
+function openNyUE() {
+  document.getElementById('uemT').textContent = 'Ny underentreprenor';
+  document.getElementById('ueId').value = '';
+  document.getElementById('ueNavn').value = '';
+  document.getElementById('ueOrgnr').value = '';
+  document.getElementById('ueAdresse').value = '';
+  var sel = document.getElementById('ueFag');
+  sel.innerHTML = '<option value="">Velg fagomrade</option>';
+  UE_FAGOMRADER.forEach(function(f) { sel.innerHTML += '<option value="' + f + '">' + f + '</option>'; });
+  sel.value = '';
+  openMov('ueMov');
+}
+
+function openEditUE(id) {
+  var u = ueList.filter(function(x){return x.ID==id;})[0];
+  if (!u) return;
+  document.getElementById('uemT').textContent = 'Rediger UE';
+  document.getElementById('ueId').value = u.ID;
+  document.getElementById('ueNavn').value = u.Title||'';
+  document.getElementById('ueOrgnr').value = u.Orgnr||'';
+  document.getElementById('ueAdresse').value = u.Adresse||'';
+  var sel = document.getElementById('ueFag');
+  sel.innerHTML = '<option value="">Velg fagomrade</option>';
+  UE_FAGOMRADER.forEach(function(f) { sel.innerHTML += '<option value="' + f + '">' + f + '</option>'; });
+  sel.value = u.Fagomrade||'';
+  openMov('ueMov');
+}
+
+function saveUE() {
+  var id = document.getElementById('ueId').value;
+  var navn = (document.getElementById('ueNavn').value||'').trim();
+  if (!navn) { toast('Firmanavn er pakrevd', 'w'); return; }
+  var body = {
+    Title: navn,
+    Orgnr: document.getElementById('ueOrgnr').value.trim(),
+    Fagomrade: document.getElementById('ueFag').value,
+    Adresse: document.getElementById('ueAdresse').value.trim()
+  };
+  var url = id ? SP + '/_api/web/lists(guid'' + UEL + '')/items(' + id + ')' : SP + '/_api/web/lists(guid'' + UEL + '')/items';
+  var req = id ? spPatch(url, body) : spPost(url, body);
+  req.then(function() {
+    toast(id ? 'UE oppdatert' : 'UE opprettet', 's');
+    closeMov('ueMov');
+    loadUEData();
+  }).catch(function(e) { toast('Feil: ' + e.message, 'e'); });
+}
+
+function slettUE(id, navn) {
+  document.getElementById('confIco').textContent = '🗑️';
+  document.getElementById('confTit').textContent = 'Slett UE?';
+  document.getElementById('confTxt').textContent = 'Er du sikker pa at du vil slette ' + navn + '? Kontaktpersoner slettes ikke automatisk.';
+  document.getElementById('confOk').textContent = 'Ja, slett';
+  document.getElementById('confOk').onclick = function() {
+    spDel(SP + '/_api/web/lists(guid'' + UEL + '')/items(' + id + ')').then(function() {
+      toast('UE slettet', 's'); closeMov('confMov'); loadUEData();
+    }).catch(function(e) { toast('Feil: ' + e.message, 'e'); });
+  };
+  openMov('confMov');
+}
+
+function openNyUEKontakt(ueId) {
+  document.getElementById('uekmT').textContent = 'Ny kontaktperson';
+  document.getElementById('ueKontaktId').value = '';
+  document.getElementById('ueKontaktUEId').value = ueId;
+  document.getElementById('ueKontaktNavn').value = '';
+  document.getElementById('ueKontaktRolle').value = '';
+  document.getElementById('ueKontaktTlf').value = '';
+  document.getElementById('ueKontaktEpost').value = '';
+  openMov('ueKontaktMov');
+}
+
+function saveUEKontakt(overrideData) {
+  var data = overrideData || null;
+  var id = data ? null : document.getElementById('ueKontaktId').value;
+  var ueId = data ? data.ueId : document.getElementById('ueKontaktUEId').value;
+  var navn = data ? data.navn : (document.getElementById('ueKontaktNavn').value||'').trim();
+  if (!navn) { if (!data) toast('Navn er pakrevd', 'w'); return Promise.reject('Navn mangler'); }
+  var body = {
+    Title: navn,
+    UEId: parseInt(ueId),
+    Rolle: data ? (data.rolle||'') : document.getElementById('ueKontaktRolle').value.trim(),
+    Telefon: data ? (data.tlf||'') : document.getElementById('ueKontaktTlf').value.trim(),
+    Epost: data ? (data.epost||'') : document.getElementById('ueKontaktEpost').value.trim()
+  };
+  var url = id ? SP + '/_api/web/lists(guid'' + UEKL + '')/items(' + id + ')' : SP + '/_api/web/lists(guid'' + UEKL + '')/items';
+  var req = id ? spPatch(url, body) : spPost(url, body);
+  if (data) return req;
+  return req.then(function() {
+    toast('Kontaktperson lagret', 's');
+    closeMov('ueKontaktMov');
+    loadUEData();
+  }).catch(function(e) { toast('Feil: ' + e.message, 'e'); });
+}
+
+function slettUEKontakt(id) {
+  document.getElementById('confIco').textContent = '🗑️';
+  document.getElementById('confTit').textContent = 'Slett kontaktperson?';
+  document.getElementById('confTxt').textContent = 'Er du sikker pa at du vil slette denne kontaktpersonen?';
+  document.getElementById('confOk').textContent = 'Ja, slett';
+  document.getElementById('confOk').onclick = function() {
+    spDel(SP + '/_api/web/lists(guid'' + UEKL + '')/items(' + id + ')').then(function() {
+      toast('Kontaktperson slettet', 's'); closeMov('confMov'); loadUEData();
+    }).catch(function(e) { toast('Feil: ' + e.message, 'e'); });
+  };
+  openMov('confMov');
+}
+
+// ===================== PROSJEKT UE FUNKSJONER =====================
+
+var puLagreChecked = true;
+
+function openProjUEMov(prosjektId) {
+  document.getElementById('puProsjektId').value = prosjektId;
+  document.getElementById('puKontaktWrap').style.display = 'none';
+  document.getElementById('puNyNavn').value = '';
+  document.getElementById('puNyRolle').value = '';
+  document.getElementById('puNyTlf').value = '';
+  document.getElementById('puNyEpost').value = '';
+  document.getElementById('puLagreToggle').style.display = 'none';
+  puLagreChecked = true;
+  var sel = document.getElementById('puFirmaSelect');
+  sel.innerHTML = '<option value="">Velg UE-firma...</option>';
+  ueList.sort(function(a,b){return (a.Title||'').localeCompare(b.Title||'');}).forEach(function(u) {
+    sel.innerHTML += '<option value="' + u.ID + '">' + (u.Title||'') + (u.Fagomrade ? ' — ' + u.Fagomrade : '') + '</option>';
+  });
+  openMov('projUEMov');
+}
+
+function oppdaterPUKontakter() {
+  var ueId = document.getElementById('puFirmaSelect').value;
+  var wrap = document.getElementById('puKontaktWrap');
+  if (!ueId) { wrap.style.display = 'none'; return; }
+  wrap.style.display = '';
+  var kontakter = ueKontakter.filter(function(k){return k.UEId == ueId;});
+  var html = [];
+  kontakter.forEach(function(k) {
+    html.push('<div style="display:flex;align-items:center;gap:8px;padding:7px 10px;border:1px solid var(--br2);border-radius:var(--r);margin-bottom:6px;cursor:pointer;background:var(--bg2);" onclick="velgPUKontakt(this,' + k.ID + ')" data-kid="' + k.ID + '">');
+    html.push('<div class="pu-radio" style="width:14px;height:14px;border-radius:50%;border:1.5px solid var(--br3);flex-shrink:0;"></div>');
+    html.push('<div style="flex:1;"><div style="font-size:13px;font-weight:500;">' + (k.Title||'-') + '</div>');
+    html.push('<div style="font-size:11px;color:var(--tx3);">' + [k.Rolle,k.Telefon].filter(Boolean).join(' · ') + '</div></div></div>');
+  });
+  document.getElementById('puKontaktListe').innerHTML = html.join('');
+  document.getElementById('puNyNavn').value = '';
+  document.getElementById('puLagreToggle').style.display = 'none';
+}
+
+function velgPUKontakt(el, kid) {
+  document.querySelectorAll('#puKontaktListe > div').forEach(function(d) {
+    d.style.border = '1px solid var(--br2)';
+    d.style.background = 'var(--bg2)';
+    d.querySelector('.pu-radio').style.background = '';
+    d.querySelector('.pu-radio').style.borderColor = 'var(--br3)';
+  });
+  el.style.border = '1px solid var(--blu)';
+  el.style.background = 'rgba(59,130,246,.08)';
+  el.querySelector('.pu-radio').style.background = 'var(--blu)';
+  el.querySelector('.pu-radio').style.borderColor = 'var(--blu)';
+  el.dataset.selected = '1';
+  document.getElementById('puNyNavn').value = '';
+  document.getElementById('puLagreToggle').style.display = 'none';
+}
+
+function oppdaterLagreToggle() {
+  var navn = (document.getElementById('puNyNavn').value||'').trim();
+  var ueId = document.getElementById('puFirmaSelect').value;
+  var toggle = document.getElementById('puLagreToggle');
+  if (navn && ueId) {
+    var firma = ueList.filter(function(u){return u.ID==ueId;})[0];
+    document.getElementById('puLagreTxt').textContent = 'Lagre ' + navn + ' i UE-registeret under ' + (firma ? firma.Title : '');
+    toggle.style.display = '';
+    document.querySelectorAll('#puKontaktListe > div').forEach(function(d){ d.dataset.selected=''; d.style.border='1px solid var(--br2)'; d.style.background='var(--bg2)'; d.querySelector('.pu-radio').style.background=''; d.querySelector('.pu-radio').style.borderColor='var(--br3)';});
+  } else {
+    toggle.style.display = 'none';
+  }
+}
+
+function togglePULagre() {
+  puLagreChecked = !puLagreChecked;
+  var cbx = document.getElementById('puLagreCbx');
+  cbx.style.background = puLagreChecked ? 'var(--blu)' : 'transparent';
+  cbx.innerHTML = puLagreChecked ? '<svg width="10" height="10" viewBox="0 0 12 12" fill="none"><polyline points="2,6 5,9 10,3" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>' : '';
+}
+
+function saveProjUE() {
+  var prosjektId = parseInt(document.getElementById('puProsjektId').value);
+  var ueId = parseInt(document.getElementById('puFirmaSelect').value);
+  if (!ueId) { toast('Velg et UE-firma', 'w'); return; }
+  var valgtKontakt = document.querySelector('#puKontaktListe > div[data-selected="1"]');
+  var nyNavn = (document.getElementById('puNyNavn').value||'').trim();
+  var kontaktId = 0, kontaktNavn = '', kontaktRolle = '', kontaktTlf = '', kontaktEpost = '';
+  if (valgtKontakt) {
+    var kid = parseInt(valgtKontakt.dataset.kid);
+    var k = ueKontakter.filter(function(x){return x.ID==kid;})[0];
+    if (k) { kontaktId=k.ID; kontaktNavn=k.Title||''; kontaktRolle=k.Rolle||''; kontaktTlf=k.Telefon||''; kontaktEpost=k.Epost||''; }
+  } else if (nyNavn) {
+    kontaktNavn = nyNavn;
+    kontaktRolle = (document.getElementById('puNyRolle').value||'').trim();
+    kontaktTlf = (document.getElementById('puNyTlf').value||'').trim();
+    kontaktEpost = (document.getElementById('puNyEpost').value||'').trim();
+  }
+  var body = { Title: kontaktNavn||'-', ProsjektID: prosjektId, UEId: ueId, KontaktId: kontaktId, KontaktNavn: kontaktNavn, KontaktRolle: kontaktRolle, KontaktTelefon: kontaktTlf, KontaktEpost: kontaktEpost };
+  spPost(SP + '/_api/web/lists(guid'' + PUEL + '')/items', body).then(function() {
+    var lagreLovnad = Promise.resolve();
+    if (nyNavn && puLagreChecked) {
+      lagreLovnad = saveUEKontakt({ ueId: ueId, navn: nyNavn, rolle: kontaktRolle, tlf: kontaktTlf, epost: kontaktEpost }).then(function() {
+        return spGet(SP + '/_api/web/lists(guid'' + UEKL + '')/items?$select=ID,Title,UEId,Rolle,Telefon,Epost&$top=500');
+      }).then(function(res) { ueKontakter = res.value||[]; });
+    }
+    return lagreLovnad;
+  }).then(function() {
+    toast('UE lagt til pa prosjektet', 's');
+    closeMov('projUEMov');
+    openPD(prosjektId);
+  }).catch(function(e) { toast('Feil: ' + e.message, 'e'); });
+}
+
+function renderProjektUE(pid) {
+  var el = document.getElementById('projUEListe_' + pid);
+  if (!el) return;
+  spGet(SP + '/_api/web/lists(guid'' + PUEL + '')/items?$filter=ProsjektID eq ' + pid + '&$select=ID,Title,UEId,KontaktNavn,KontaktRolle,KontaktTelefon,KontaktEpost&$top=100').then(function(res) {
+    var items = res.value||[];
+    if (!items.length) { el.innerHTML = '<div style="font-size:12px;color:var(--tx3);padding:4px 0;">Ingen UE-er lagt til.</div>'; return; }
+    var html = [];
+    items.forEach(function(item) {
+      var ue = ueList.filter(function(u){return u.ID==item.UEId;})[0];
+      var firmaNavn = ue ? ue.Title : 'Ukjent firma';
+      var fag = ue ? ue.Fagomrade : '';
+      var initials = firmaNavn.split(' ').map(function(w){return w[0];}).join('').substring(0,2).toUpperCase();
+      html.push('<div style="background:var(--bg3);border:1px solid var(--br);border-radius:var(--r);padding:10px 12px;margin-bottom:6px;display:flex;gap:10px;align-items:flex-start;">');
+      html.push('<div style="width:30px;height:30px;border-radius:50%;background:rgba(59,130,246,.15);color:var(--blu);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;flex-shrink:0;margin-top:1px;">' + initials + '</div>');
+      html.push('<div style="flex:1;min-width:0;">');
+      html.push('<div style="font-size:13px;font-weight:500;">' + firmaNavn + '</div>');
+      if (fag) html.push('<span style="display:inline-block;font-size:10px;background:var(--bg4);border:1px solid var(--br);border-radius:20px;padding:1px 8px;margin-top:3px;">' + fag + '</span>');
+      if (item.KontaktNavn) {
+        html.push('<div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:4px;">');
+        html.push('<div style="display:inline-flex;align-items:center;gap:5px;font-size:11px;background:var(--bg4);border:1px solid var(--br);border-radius:20px;padding:2px 8px;">');
+        html.push(item.KontaktNavn);
+        if (item.KontaktRolle) html.push(' <span style="color:var(--tx3);">· ' + item.KontaktRolle + '</span>');
+        if (item.KontaktTelefon) html.push(' · <a href="tel:' + item.KontaktTelefon + '" style="color:var(--blu);text-decoration:none;">' + item.KontaktTelefon + '</a>');
+        if (item.KontaktEpost) html.push(' · <a href="mailto:' + item.KontaktEpost + '" style="color:var(--blu);text-decoration:none;">' + item.KontaktEpost + '</a>');
+        html.push('</div></div>');
+      }
+      html.push('</div>');
+      html.push('<button class="btn sm danger" onclick="slettProjUE(' + item.ID + ',' + pid + ')">Slett</button>');
+      html.push('</div>');
+    });
+    el.innerHTML = html.join('');
+  }).catch(function() { el.innerHTML = '<div style="font-size:12px;color:var(--red);">Kunne ikke laste UE-er.</div>'; });
+}
+
+function slettProjUE(id, pid) {
+  document.getElementById('confIco').textContent = '🗑️';
+  document.getElementById('confTit').textContent = 'Fjern UE fra prosjekt?';
+  document.getElementById('confTxt').textContent = 'Er du sikker pa at du vil fjerne denne UE-en fra prosjektet?';
+  document.getElementById('confOk').textContent = 'Ja, fjern';
+  document.getElementById('confOk').onclick = function() {
+    spDel(SP + '/_api/web/lists(guid'' + PUEL + '')/items(' + id + ')').then(function() {
+      toast('UE fjernet', 's'); closeMov('confMov'); openPD(pid);
+    }).catch(function(e) { toast('Feil: ' + e.message, 'e'); });
+  };
+  openMov('confMov');
+}
+
+</script>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root{--acc:#e8b84b;--blu:#3b82f6;--grn:#22c55e;--org:#f97316;--red:#ef4444;
@@ -392,6 +725,7 @@ tr.erow td{padding:0;background:var(--bg2);border-bottom:1px solid var(--br2);}
   <div class="ftabs" id="viewTabs">
     <button class="ftab on" id="viewKunder" onclick="setView('kunder',this)">&#128119; Kunder</button>
     <button class="ftab" id="viewProsjekter" onclick="setView('prosjekter',this)">&#128196; Prosjekter</button>
+    <button class="ftab" id="viewUE" onclick="setView('ue',this)">&#128295; UE-register</button>
   </div>
   <div class="ftabs" id="filterTabs">
     <button class="ftab on" data-filter="alle">Alle</button>
@@ -422,6 +756,111 @@ tr.erow td{padding:0;background:var(--bg2);border-bottom:1px solid var(--br2);}
 
 <div id="projView" style="display:none;padding:0 24px 32px;">
   <div id="projViewBody"></div>
+</div>
+
+<div id="ueView" style="display:none;padding:18px 24px 32px;">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+    <div>
+      <div style="font-size:16px;font-weight:600;color:var(--tx)">UE-register</div>
+      <div style="font-size:12px;color:var(--tx3);margin-top:2px" id="ueSubLbl">Laster...</div>
+    </div>
+    <button class="btn pri" onclick="openNyUE()">+ Ny UE</button>
+  </div>
+  <div id="ueBody"><div class="sdk-load"><div class="sdk-spin"></div>Laster UE-register...</div></div>
+</div>
+
+<!-- UE FIRMA MODAL -->
+<div class="mov" id="ueMov">
+  <div class="mbox" style="max-width:480px;">
+    <div class="mhdr"><span id="uemT">Ny underentreprenor</span><button class="mclose" onclick="closeMov('ueMov')">&#x2715;</button></div>
+    <div class="mbody">
+      <input type="hidden" id="ueId">
+      <div class="fg2">
+        <div class="fg"><label class="lbl">Firmanavn *</label><input class="inp" id="ueNavn" placeholder="Firmanavn AS"></div>
+        <div class="fg"><label class="lbl">Org.nr</label><input class="inp" id="ueOrgnr" placeholder="987 654 321"></div>
+      </div>
+      <div class="fg2" style="margin-top:10px;">
+        <div class="fg"><label class="lbl">Fagomrade</label>
+          <select class="inp" id="ueFag">
+            <option value="">Velg fagomrade</option>
+          </select>
+        </div>
+        <div class="fg"><label class="lbl">Adresse</label><input class="inp" id="ueAdresse" placeholder="Gateadresse, poststed"></div>
+      </div>
+    </div>
+    <div class="mftr">
+      <button class="btn" onclick="closeMov('ueMov')">Avbryt</button>
+      <button class="btn pri" onclick="saveUE()">Lagre</button>
+    </div>
+  </div>
+</div>
+
+<!-- UE KONTAKTPERSON MODAL -->
+<div class="mov" id="ueKontaktMov">
+  <div class="mbox" style="max-width:460px;">
+    <div class="mhdr"><span id="uekmT">Ny kontaktperson</span><button class="mclose" onclick="closeMov('ueKontaktMov')">&#x2715;</button></div>
+    <div class="mbody">
+      <input type="hidden" id="ueKontaktId">
+      <input type="hidden" id="ueKontaktUEId">
+      <div class="fg"><label class="lbl">Navn *</label><input class="inp" id="ueKontaktNavn" placeholder="Fullt navn"></div>
+      <div class="fg2" style="margin-top:10px;">
+        <div class="fg"><label class="lbl">Rolle</label><input class="inp" id="ueKontaktRolle" placeholder="f.eks. Daglig leder"></div>
+        <div class="fg"><label class="lbl">Telefon</label><input class="inp" id="ueKontaktTlf" placeholder="+47 ..."></div>
+      </div>
+      <div class="fg" style="margin-top:10px;"><label class="lbl">E-post</label><input class="inp" id="ueKontaktEpost" placeholder="epost@firma.no"></div>
+    </div>
+    <div class="mftr">
+      <button class="btn" onclick="closeMov('ueKontaktMov')">Avbryt</button>
+      <button class="btn pri" onclick="saveUEKontakt()">Lagre</button>
+    </div>
+  </div>
+</div>
+
+<!-- PROSJEKT UE MODAL -->
+<div class="mov" id="projUEMov">
+  <div class="mbox" style="max-width:500px;">
+    <div class="mhdr"><span>Legg til underentreprenor</span><button class="mclose" onclick="closeMov('projUEMov')">&#x2715;</button></div>
+    <div class="mbody">
+      <input type="hidden" id="puProsjektId">
+      <div class="fg"><label class="lbl">Velg firma *</label>
+        <select class="inp" id="puFirmaSelect" onchange="oppdaterPUKontakter()">
+          <option value="">Velg UE-firma...</option>
+        </select>
+      </div>
+      <div id="puKontaktWrap" style="margin-top:12px;display:none;">
+        <div style="font-size:11px;color:var(--tx3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;font-weight:500;">Velg kontaktperson</div>
+        <div id="puKontaktListe"></div>
+        <div style="display:flex;align-items:center;gap:8px;margin:10px 0;">
+          <div style="flex:1;height:1px;background:var(--br2);"></div>
+          <span style="font-size:11px;color:var(--tx3);">eller legg til ny</span>
+          <div style="flex:1;height:1px;background:var(--br2);"></div>
+        </div>
+        <div style="background:var(--bg3);border-radius:var(--r);padding:12px;border:1px solid var(--br);">
+          <div style="font-size:11px;color:var(--tx3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;font-weight:500;">Ny kontaktperson</div>
+          <div class="fg2">
+            <div class="fg"><label class="lbl">Navn</label><input class="inp" id="puNyNavn" placeholder="Fullt navn" oninput="oppdaterLagreToggle()"></div>
+            <div class="fg"><label class="lbl">Rolle</label><input class="inp" id="puNyRolle" placeholder="f.eks. Anleggsleder"></div>
+          </div>
+          <div class="fg2" style="margin-top:8px;">
+            <div class="fg"><label class="lbl">Telefon</label><input class="inp" id="puNyTlf" placeholder="+47 ..."></div>
+            <div class="fg"><label class="lbl">E-post</label><input class="inp" id="puNyEpost" placeholder="valgfritt"></div>
+          </div>
+          <div id="puLagreToggle" style="display:none;margin-top:10px;background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.25);border-radius:var(--r);padding:8px 12px;cursor:pointer;" onclick="togglePULagre()">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <div id="puLagreCbx" style="width:16px;height:16px;border-radius:4px;border:1.5px solid var(--blu);background:var(--blu);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <svg width="10" height="10" viewBox="0 0 12 12" fill="none"><polyline points="2,6 5,9 10,3" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>
+              </div>
+              <div style="font-size:12px;color:var(--blu);" id="puLagreTxt">Lagre kontakten i UE-registeret</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="mftr">
+      <button class="btn" onclick="closeMov('projUEMov')">Avbryt</button>
+      <button class="btn pri" onclick="saveProjUE()">Lagre</button>
+    </div>
+  </div>
 </div>
 
 <div class="tw">
@@ -691,6 +1130,12 @@ var MSAL_CONFIG = {
 var SP = 'https://lhbent.sharepoint.com/sites/Industriveien1ASLHBygg';
 var CL = 'D702DBE2-269F-41A0-8107-55C681AEC5BF';
 var PL = '3DB9CF64-778C-48D8-8F32-044AC6EE249C';
+var UEL = 'b1df2e07-72a1-4b44-bc2d-d0193dd6a03c';
+var UEKL = 'ee46df72-4534-46b9-9c07-7c638f9300f8';
+var PUEL = '8f93b4f9-ef4d-4428-8647-feea79c31670';
+var UE_FAGOMRADER = ['Grunnarbeid','Betong / Mur','Tømrer','VVS','Ventilasjon','Elektro','Maler','Stillas','Annet'];
+var ueList = [];
+var ueKontakter = [];
 var SCOPES = ['https://lhbent.sharepoint.com/AllSites.Write', 'User.Read'];
 var ms, acc, customers = [], projects = [], activeFilter = 'alle', activeSort = 'az', activeView = 'kunder', custType = 'Firma', expanded = {}, activePath = '', activePID = null;
 var SDK_BASE = 'https://lhbe-smartdok.tom-andre.workers.dev';
@@ -871,10 +1316,14 @@ function spDel(url) {
 function loadData() {
   Promise.all([
     spGet(SP + '/_api/web/lists(guid\'' + CL + '\')/items?$select=ID,Title,Kontaktperson,Telefon,Epost,Adresse,Orgnr,Kundetype&$top=500'),
-    spGet(SP + '/_api/web/lists(guid\'' + PL + '\')/items?$select=ID,Title,Kundenavn,Prosjektnummer,Kalkylenummer,Oppstartsdato,Sluttdato,Pris,Status,Prosjektleder,Notat,Kontaktperson,Telefon,Adresse,Underprosjekt,Hovedprosjektnummer,Hovedprosjektnavn,S_x00f8_knadspliktig,Tiltaksklasse&$top=500')
+    spGet(SP + '/_api/web/lists(guid\'' + PL + '\')/items?$select=ID,Title,Kundenavn,Prosjektnummer,Kalkylenummer,Oppstartsdato,Sluttdato,Pris,Status,Prosjektleder,Notat,Kontaktperson,Telefon,Adresse,Underprosjekt,Hovedprosjektnummer,Hovedprosjektnavn,S_x00f8_knadspliktig,Tiltaksklasse&$top=500'),
+    spGet(SP + '/_api/web/lists(guid\'' + UEL + '\')/items?$select=ID,Title,Orgnr,Fagomrade,Adresse&$top=500'),
+    spGet(SP + '/_api/web/lists(guid\'' + UEKL + '\')/items?$select=ID,Title,UEId,Rolle,Telefon,Epost&$top=500')
   ]).then(function(results) {
     customers = results[0].value || [];
     projects = results[1].value || [];
+    ueList = results[2].value || [];
+    ueKontakter = results[3].value || [];
     updateStats();
     applyDeferredView();
   }).catch(function(e) {
@@ -955,22 +1404,27 @@ function setView(v, el) {
   saveSetting('view', v);
   document.querySelectorAll('#viewTabs .ftab').forEach(function(t) { t.classList.remove('on'); });
   if (el) el.classList.add('on');
-  // Oppdater søkefelt placeholder
-  document.getElementById('srchIn').placeholder = v === 'kunder' ? 'Sok kunde, kontaktperson...' : 'Sok prosjekt, kundenavn...';
-  // Skjul mannskap når bytte skjer
+  document.getElementById('srchIn').placeholder = v === 'kunder' ? 'Sok kunde, kontaktperson...' : v === 'ue' ? 'Sok UE-firma, fagomrade...' : 'Sok prosjekt, kundenavn...';
   document.getElementById('mannskapView').style.display = 'none';
-  document.querySelector('.stats').style.display = '';
-  // Nullstill filterfane til Alle hvis mannskap var aktiv
+  document.getElementById('ueView').style.display = 'none';
+  document.querySelector('.stats').style.display = v === 'ue' ? 'none' : '';
   if (activeFilter === 'mannskap') {
     activeFilter = 'alle';
     document.querySelectorAll('#filterTabs .ftab').forEach(function(t) { t.classList.remove('on'); });
     var alleFane = document.querySelector('#filterTabs .ftab[data-filter="alle"]');
     if (alleFane) alleFane.classList.add('on');
   }
+  document.getElementById('filterTabs').style.display = v === 'ue' ? 'none' : '';
+  document.getElementById('newCustBtn').style.display = v === 'ue' ? 'none' : '';
   if (v === 'prosjekter') {
     document.querySelector('.tw').style.display = 'none';
     document.getElementById('projView').style.display = '';
     renderProjView();
+  } else if (v === 'ue') {
+    document.querySelector('.tw').style.display = 'none';
+    document.getElementById('projView').style.display = 'none';
+    document.getElementById('ueView').style.display = '';
+    loadUEData();
   } else {
     document.querySelector('.tw').style.display = '';
     document.getElementById('projView').style.display = 'none';
@@ -1487,6 +1941,7 @@ function openPD(pid) {
     bodyHtml.push('<div class="pdsec"><div class="pdsect">Ressursplanlegger - SmartDok</div>');
     bodyHtml.push('<div style="font-size:12px;color:var(--tx3)">Vises kun paa aktive prosjekter med prosjektnummer.</div></div>');
   }
+  bodyHtml.push('<div class="pdsec"><div class="pdsect" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;"><span>Underentreprenorer</span><button class="btn sm" onclick="openProjUEMov(' + p.ID + ')">+ Legg til UE</button></div><div id="projUEListe_' + p.ID + '"><div class="sdk-load"><div class="sdk-spin"></div>Laster...</div></div></div>');
   bodyHtml.push('<div class="pdsec"><div class="pdsect">Handlinger</div><div style="display:flex;gap:8px;flex-wrap:wrap">');
   bodyHtml.push('<button class="btn" onclick="pdfProsjekt(' + p.ID + ')">&#128438; Prosjekt PDF</button>');
   if (s === 'Aktiv' && p.Prosjektnummer) {
@@ -1504,6 +1959,7 @@ function openPD(pid) {
   bodyHtml.push('</div></div>');
   document.getElementById('pdmB').innerHTML = bodyHtml.join('');
   document.getElementById('pdov').classList.add('on');
+  renderProjektUE(p.ID);
   if (s === 'Aktiv' && p.Prosjektnummer) {
     sdkWeekOffset = 0;
     sdkCurrProjId = '';
