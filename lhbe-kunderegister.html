@@ -1316,16 +1316,14 @@ function spDel(url) {
 function loadData() {
   Promise.all([
     spGet(SP + '/_api/web/lists(guid\'' + CL + '\')/items?$select=ID,Title,Kontaktperson,Telefon,Epost,Adresse,Orgnr,Kundetype&$top=500'),
-    spGet(SP + '/_api/web/lists(guid\'' + PL + '\')/items?$select=ID,Title,Kundenavn,Prosjektnummer,Kalkylenummer,Oppstartsdato,Sluttdato,Pris,Status,Prosjektleder,Notat,Kontaktperson,Telefon,Adresse,Underprosjekt,Hovedprosjektnummer,Hovedprosjektnavn,S_x00f8_knadspliktig,Tiltaksklasse&$top=500'),
-    spGet(SP + '/_api/web/lists(guid\'' + UEL + '\')/items?$select=ID,Title,Orgnr,Fagomr_x00e5_de,Adresse&$top=500'),
-    spGet(SP + '/_api/web/lists(guid\'' + UEKL + '\')/items?$select=ID,Title,UEId,Rolle,Telefon,Epost&$top=500')
+    spGet(SP + '/_api/web/lists(guid\'' + PL + '\')/items?$select=ID,Title,Kundenavn,Prosjektnummer,Kalkylenummer,Oppstartsdato,Sluttdato,Pris,Status,Prosjektleder,Notat,Kontaktperson,Telefon,Adresse,Underprosjekt,Hovedprosjektnummer,Hovedprosjektnavn,S_x00f8_knadspliktig,Tiltaksklasse&$top=500')
   ]).then(function(results) {
     customers = results[0].value || [];
     projects = results[1].value || [];
-    ueList = results[2].value || [];
-    ueKontakter = results[3].value || [];
     updateStats();
     applyDeferredView();
+    // Last UE-data i bakgrunnen – blokkerer ikke appen
+    loadUEBakgrunn();
   }).catch(function(e) {
     if (e.errorCode === 'interaction_in_progress') {
       setTimeout(loadData, 1500);
@@ -1333,6 +1331,16 @@ function loadData() {
       toast('Kunne ikke laste data – prøv å laste siden på nytt', 'e');
       console.error(e);
     }
+  });
+}
+
+function loadUEBakgrunn() {
+  Promise.all([
+    spGet(SP + '/_api/web/lists(guid\'' + UEL + '\')/items?$select=ID,Title,Orgnr,Fagomr_x00e5_de,Adresse&$top=500').catch(function(e){ console.warn('UE-liste feil:', e); return {value:[]}; }),
+    spGet(SP + '/_api/web/lists(guid\'' + UEKL + '\')/items?$select=ID,Title,UEId,Rolle,Telefon,Epost&$top=500').catch(function(e){ console.warn('UEKontakter feil:', e); return {value:[]}; })
+  ]).then(function(res) {
+    ueList = res[0].value || [];
+    ueKontakter = res[1].value || [];
   });
 }
 
