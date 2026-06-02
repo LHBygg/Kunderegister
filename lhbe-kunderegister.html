@@ -2862,8 +2862,8 @@ window.addEventListener('DOMContentLoaded', init);
 function loadUEData() {
   document.getElementById('ueBody').innerHTML = '<div class="sdk-load"><div class="sdk-spin"></div>Laster...</div>';
   Promise.all([
-    spGet(SP + '/_api/web/lists(guid'' + UEL + '')/items?$select=ID,Title,Orgnr,Fagomr_x00e5_de,Adresse&$top=500&$orderby=Title'),
-    spGet(SP + '/_api/web/lists(guid'' + UEKL + '')/items?$select=ID,Title,UEId,Rolle,Telefon,Epost&$top=500')
+    spGet(SP + '/_api/web/lists(guid\'' + UEL + '\')/items?$select=ID,Title,Orgnr,Fagomr_x00e5_de,Adresse&$top=500&$orderby=Title'),
+    spGet(SP + '/_api/web/lists(guid\'' + UEKL + '\')/items?$select=ID,Title,UEId,Rolle,Telefon,Epost&$top=500')
   ]).then(function(res) {
     ueList = res[0].value || [];
     ueKontakter = res[1].value || [];
@@ -2964,7 +2964,7 @@ function saveUE() {
     Fagomr_x00e5_de: document.getElementById('ueFag').value,
     Adresse: document.getElementById('ueAdresse').value.trim()
   };
-  var url = id ? SP + '/_api/web/lists(guid'' + UEL + '')/items(' + id + ')' : SP + '/_api/web/lists(guid'' + UEL + '')/items';
+  var url = id ? SP + '/_api/web/lists(guid\'' + UEL + '\')/items(' + id + ')' : SP + '/_api/web/lists(guid\'' + UEL + '\')/items';
   var req = id ? spPatch(url, body) : spPost(url, body);
   req.then(function() {
     toast(id ? 'UE oppdatert' : 'UE opprettet', 's');
@@ -2979,7 +2979,7 @@ function slettUE(id, navn) {
   document.getElementById('confTxt').textContent = 'Er du sikker pa at du vil slette ' + navn + '? Kontaktpersoner slettes ikke automatisk.';
   document.getElementById('confOk').textContent = 'Ja, slett';
   document.getElementById('confOk').onclick = function() {
-    spDel(SP + '/_api/web/lists(guid'' + UEL + '')/items(' + id + ')').then(function() {
+    spDel(SP + '/_api/web/lists(guid\'' + UEL + '\')/items(' + id + ')').then(function() {
       toast('UE slettet', 's'); closeMov('confMov'); loadUEData();
     }).catch(function(e) { toast('Feil: ' + e.message, 'e'); });
   };
@@ -3010,7 +3010,7 @@ function saveUEKontakt(overrideData) {
     Telefon: data ? (data.tlf||'') : document.getElementById('ueKontaktTlf').value.trim(),
     Epost: data ? (data.epost||'') : document.getElementById('ueKontaktEpost').value.trim()
   };
-  var url = id ? SP + '/_api/web/lists(guid'' + UEKL + '')/items(' + id + ')' : SP + '/_api/web/lists(guid'' + UEKL + '')/items';
+  var url = id ? SP + '/_api/web/lists(guid\'' + UEKL + '\')/items(' + id + ')' : SP + '/_api/web/lists(guid\'' + UEKL + '\')/items';
   var req = id ? spPatch(url, body) : spPost(url, body);
   if (data) return req;
   return req.then(function() {
@@ -3026,7 +3026,7 @@ function slettUEKontakt(id) {
   document.getElementById('confTxt').textContent = 'Er du sikker pa at du vil slette denne kontaktpersonen?';
   document.getElementById('confOk').textContent = 'Ja, slett';
   document.getElementById('confOk').onclick = function() {
-    spDel(SP + '/_api/web/lists(guid'' + UEKL + '')/items(' + id + ')').then(function() {
+    spDel(SP + '/_api/web/lists(guid\'' + UEKL + '\')/items(' + id + ')').then(function() {
       toast('Kontaktperson slettet', 's'); closeMov('confMov'); loadUEData();
     }).catch(function(e) { toast('Feil: ' + e.message, 'e'); });
   };
@@ -3127,11 +3127,11 @@ function saveProjUE() {
     kontaktEpost = (document.getElementById('puNyEpost').value||'').trim();
   }
   var body = { Title: kontaktNavn||'-', ProsjektID: prosjektId, UEId: ueId, KontaktId: kontaktId, KontaktNavn: kontaktNavn, KontaktRolle: kontaktRolle, KontaktTelefon: kontaktTlf, KontaktEpost: kontaktEpost };
-  spPost(SP + '/_api/web/lists(guid'' + PUEL + '')/items', body).then(function() {
+  spPost(SP + '/_api/web/lists(guid\'' + PUEL + '\')/items', body).then(function() {
     var lagreLovnad = Promise.resolve();
     if (nyNavn && puLagreChecked) {
       lagreLovnad = saveUEKontakt({ ueId: ueId, navn: nyNavn, rolle: kontaktRolle, tlf: kontaktTlf, epost: kontaktEpost }).then(function() {
-        return spGet(SP + '/_api/web/lists(guid'' + UEKL + '')/items?$select=ID,Title,UEId,Rolle,Telefon,Epost&$top=500');
+        return spGet(SP + '/_api/web/lists(guid\'' + UEKL + '\')/items?$select=ID,Title,UEId,Rolle,Telefon,Epost&$top=500');
       }).then(function(res) { ueKontakter = res.value||[]; });
     }
     return lagreLovnad;
@@ -3145,7 +3145,7 @@ function saveProjUE() {
 function renderProjektUE(pid) {
   var el = document.getElementById('projUEListe_' + pid);
   if (!el) return;
-  spGet(SP + '/_api/web/lists(guid'' + PUEL + '')/items?$filter=ProsjektID eq ' + pid + '&$select=ID,Title,UEId,KontaktNavn,KontaktRolle,KontaktTelefon,KontaktEpost&$top=100').then(function(res) {
+  spGet(SP + '/_api/web/lists(guid\'' + PUEL + '\')/items?$filter=ProsjektID eq ' + pid + '&$select=ID,Title,UEId,KontaktNavn,KontaktRolle,KontaktTelefon,KontaktEpost&$top=100').then(function(res) {
     var items = res.value||[];
     if (!items.length) { el.innerHTML = '<div style="font-size:12px;color:var(--tx3);padding:4px 0;">Ingen UE-er lagt til.</div>'; return; }
     var html = [];
@@ -3182,7 +3182,7 @@ function slettProjUE(id, pid) {
   document.getElementById('confTxt').textContent = 'Er du sikker pa at du vil fjerne denne UE-en fra prosjektet?';
   document.getElementById('confOk').textContent = 'Ja, fjern';
   document.getElementById('confOk').onclick = function() {
-    spDel(SP + '/_api/web/lists(guid'' + PUEL + '')/items(' + id + ')').then(function() {
+    spDel(SP + '/_api/web/lists(guid\'' + PUEL + '\')/items(' + id + ')').then(function() {
       toast('UE fjernet', 's'); closeMov('confMov'); openPD(pid);
     }).catch(function(e) { toast('Feil: ' + e.message, 'e'); });
   };
