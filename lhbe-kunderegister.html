@@ -10,7 +10,7 @@
 function loadUEData() {
   document.getElementById('ueBody').innerHTML = '<div class="sdk-load"><div class="sdk-spin"></div>Laster...</div>';
   Promise.all([
-    spGet(SP + '/_api/web/lists(guid'' + UEL + '')/items?$select=ID,Title,Orgnr,Fagomrade,Adresse&$top=500&$orderby=Title'),
+    spGet(SP + '/_api/web/lists(guid'' + UEL + '')/items?$select=ID,Title,Orgnr,Fagomr_x00e5_de,Adresse&$top=500&$orderby=Title'),
     spGet(SP + '/_api/web/lists(guid'' + UEKL + '')/items?$select=ID,Title,UEId,Rolle,Telefon,Epost&$top=500')
   ]).then(function(res) {
     ueList = res[0].value || [];
@@ -25,7 +25,7 @@ function renderUEView() {
   var q = (document.getElementById('srchIn').value || '').toLowerCase();
   var liste = ueList.filter(function(u) {
     if (!q) return true;
-    return (u.Title||'').toLowerCase().includes(q) || (u.Fagomrade||'').toLowerCase().includes(q);
+    return (u.Title||'').toLowerCase().includes(q) || (u.Fagomr_x00e5_de||'').toLowerCase().includes(q);
   });
   document.getElementById('ueSubLbl').textContent = ueList.length + ' firma registrert';
   if (!liste.length) {
@@ -43,7 +43,7 @@ function renderUEView() {
     html.push('<div style="font-weight:600;font-size:14px;">' + (u.Title||'-') + '</div>');
     html.push('<div style="font-size:12px;color:var(--tx3);margin-top:2px;">');
     if (u.Orgnr) html.push('Org.nr ' + u.Orgnr + ' &nbsp;·&nbsp; ');
-    if (u.Fagomrade) html.push('<span style="background:var(--bg3);border:1px solid var(--br);border-radius:20px;padding:1px 8px;font-size:11px;">' + u.Fagomrade + '</span>');
+    if (u.Fagomr_x00e5_de) html.push('<span style="background:var(--bg3);border:1px solid var(--br);border-radius:20px;padding:1px 8px;font-size:11px;">' + u.Fagomr_x00e5_de + '</span>');
     html.push('</div></div>');
     html.push('<div style="display:flex;gap:6px;">');
     html.push('<button class="btn sm" onclick="openNyUEKontakt(' + u.ID + ')">+ Kontakt</button>');
@@ -98,7 +98,7 @@ function openEditUE(id) {
   var sel = document.getElementById('ueFag');
   sel.innerHTML = '<option value="">Velg fagomrade</option>';
   UE_FAGOMRADER.forEach(function(f) { sel.innerHTML += '<option value="' + f + '">' + f + '</option>'; });
-  sel.value = u.Fagomrade||'';
+  sel.value = u.Fagomr_x00e5_de||'';
   openMov('ueMov');
 }
 
@@ -109,7 +109,7 @@ function saveUE() {
   var body = {
     Title: navn,
     Orgnr: document.getElementById('ueOrgnr').value.trim(),
-    Fagomrade: document.getElementById('ueFag').value,
+    Fagomr_x00e5_de: document.getElementById('ueFag').value,
     Adresse: document.getElementById('ueAdresse').value.trim()
   };
   var url = id ? SP + '/_api/web/lists(guid'' + UEL + '')/items(' + id + ')' : SP + '/_api/web/lists(guid'' + UEL + '')/items';
@@ -197,7 +197,7 @@ function openProjUEMov(prosjektId) {
   var sel = document.getElementById('puFirmaSelect');
   sel.innerHTML = '<option value="">Velg UE-firma...</option>';
   ueList.sort(function(a,b){return (a.Title||'').localeCompare(b.Title||'');}).forEach(function(u) {
-    sel.innerHTML += '<option value="' + u.ID + '">' + (u.Title||'') + (u.Fagomrade ? ' — ' + u.Fagomrade : '') + '</option>';
+    sel.innerHTML += '<option value="' + u.ID + '">' + (u.Title||'') + (u.Fagomr_x00e5_de ? ' — ' + u.Fagomr_x00e5_de : '') + '</option>';
   });
   openMov('projUEMov');
 }
@@ -300,7 +300,7 @@ function renderProjektUE(pid) {
     items.forEach(function(item) {
       var ue = ueList.filter(function(u){return u.ID==item.UEId;})[0];
       var firmaNavn = ue ? ue.Title : 'Ukjent firma';
-      var fag = ue ? ue.Fagomrade : '';
+      var fag = ue ? ue.Fagomr_x00e5_de : '';
       var initials = firmaNavn.split(' ').map(function(w){return w[0];}).join('').substring(0,2).toUpperCase();
       html.push('<div style="background:var(--bg3);border:1px solid var(--br);border-radius:var(--r);padding:10px 12px;margin-bottom:6px;display:flex;gap:10px;align-items:flex-start;">');
       html.push('<div style="width:30px;height:30px;border-radius:50%;background:rgba(59,130,246,.15);color:var(--blu);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;flex-shrink:0;margin-top:1px;">' + initials + '</div>');
@@ -780,7 +780,7 @@ tr.erow td{padding:0;background:var(--bg2);border-bottom:1px solid var(--br2);}
         <div class="fg"><label class="lbl">Org.nr</label><input class="inp" id="ueOrgnr" placeholder="987 654 321"></div>
       </div>
       <div class="fg2" style="margin-top:10px;">
-        <div class="fg"><label class="lbl">Fagomrade</label>
+        <div class="fg"><label class="lbl">Fagomr_x00e5_de</label>
           <select class="inp" id="ueFag">
             <option value="">Velg fagomrade</option>
           </select>
@@ -1317,7 +1317,7 @@ function loadData() {
   Promise.all([
     spGet(SP + '/_api/web/lists(guid\'' + CL + '\')/items?$select=ID,Title,Kontaktperson,Telefon,Epost,Adresse,Orgnr,Kundetype&$top=500'),
     spGet(SP + '/_api/web/lists(guid\'' + PL + '\')/items?$select=ID,Title,Kundenavn,Prosjektnummer,Kalkylenummer,Oppstartsdato,Sluttdato,Pris,Status,Prosjektleder,Notat,Kontaktperson,Telefon,Adresse,Underprosjekt,Hovedprosjektnummer,Hovedprosjektnavn,S_x00f8_knadspliktig,Tiltaksklasse&$top=500'),
-    spGet(SP + '/_api/web/lists(guid\'' + UEL + '\')/items?$select=ID,Title,Orgnr,Fagomrade,Adresse&$top=500'),
+    spGet(SP + '/_api/web/lists(guid\'' + UEL + '\')/items?$select=ID,Title,Orgnr,Fagomr_x00e5_de,Adresse&$top=500'),
     spGet(SP + '/_api/web/lists(guid\'' + UEKL + '\')/items?$select=ID,Title,UEId,Rolle,Telefon,Epost&$top=500')
   ]).then(function(results) {
     customers = results[0].value || [];
