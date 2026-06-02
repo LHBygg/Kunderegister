@@ -439,25 +439,25 @@ tr.erow td{padding:0;background:var(--bg2);border-bottom:1px solid var(--br2);}
 <!-- UE FIRMA MODAL -->
 <div class="mov hid" id="ueMov">
   <div class="mbox" style="max-width:480px;">
-    <div class="mhdr"><span id="uemT">Ny underentreprenor</span><button class="mclose" onclick="closeMov('ueMov')">&#x2715;</button></div>
+    <div class="mhdr"><span id="uemT">Ny underentreprenør</span><button class="mclose" onclick="closeMov('ueMov')">&#x2715;</button></div>
     <div class="mbody">
       <input type="hidden" id="ueId">
       <div class="fg2">
-        <div class="fg"><label class="lbl">Firmanavn *</label><input class="inp" id="ueNavn" placeholder="Firmanavn AS"></div>
-        <div class="fg"><label class="lbl">Org.nr</label><input class="inp" id="ueOrgnr" placeholder="987 654 321"></div>
+        <div class="fg"><label class="fl">Firmanavn *</label><input class="fi2" id="ueNavn" placeholder="Firmanavn AS"></div>
+        <div class="fg"><label class="fl">Org.nr</label><input class="fi2" id="ueOrgnr" placeholder="987 654 321"></div>
       </div>
-      <div class="fg2" style="margin-top:10px;">
-        <div class="fg"><label class="lbl">Fagomr_x00e5_de</label>
-          <select class="inp" id="ueFag">
-            <option value="">Velg fagomrade</option>
+      <div class="fg2">
+        <div class="fg"><label class="fl">Fagområde</label>
+          <select class="fi2" id="ueFag">
+            <option value="">Velg fagområde</option>
           </select>
         </div>
-        <div class="fg"><label class="lbl">Adresse</label><input class="inp" id="ueAdresse" placeholder="Gateadresse, poststed"></div>
+        <div class="fg"><label class="fl">Adresse</label><input class="fi2" id="ueAdresse" placeholder="Gateadresse, poststed"></div>
       </div>
     </div>
     <div class="mftr">
       <button class="btn" onclick="closeMov('ueMov')">Avbryt</button>
-      <button class="btn pri" onclick="saveUE()">Lagre</button>
+      <button class="btn pri" onclick="saveUE()">Lagre UE</button>
     </div>
   </div>
 </div>
@@ -469,12 +469,12 @@ tr.erow td{padding:0;background:var(--bg2);border-bottom:1px solid var(--br2);}
     <div class="mbody">
       <input type="hidden" id="ueKontaktId">
       <input type="hidden" id="ueKontaktUEId">
-      <div class="fg"><label class="lbl">Navn *</label><input class="inp" id="ueKontaktNavn" placeholder="Fullt navn"></div>
-      <div class="fg2" style="margin-top:10px;">
-        <div class="fg"><label class="lbl">Rolle</label><input class="inp" id="ueKontaktRolle" placeholder="f.eks. Daglig leder"></div>
-        <div class="fg"><label class="lbl">Telefon</label><input class="inp" id="ueKontaktTlf" placeholder="+47 ..."></div>
+      <div class="fg"><label class="fl">Navn *</label><input class="fi2" id="ueKontaktNavn" placeholder="Fullt navn"></div>
+      <div class="fg2">
+        <div class="fg"><label class="fl">Rolle</label><input class="fi2" id="ueKontaktRolle" placeholder="f.eks. Daglig leder"></div>
+        <div class="fg"><label class="fl">Telefon</label><input class="fi2" id="ueKontaktTlf" placeholder="+47 ..."></div>
       </div>
-      <div class="fg" style="margin-top:10px;"><label class="lbl">E-post</label><input class="inp" id="ueKontaktEpost" placeholder="epost@firma.no"></div>
+      <div class="fg"><label class="fl">E-post</label><input class="fi2" id="ueKontaktEpost" placeholder="epost@firma.no"></div>
     </div>
     <div class="mftr">
       <button class="btn" onclick="closeMov('ueKontaktMov')">Avbryt</button>
@@ -489,8 +489,8 @@ tr.erow td{padding:0;background:var(--bg2);border-bottom:1px solid var(--br2);}
     <div class="mhdr"><span>Legg til underentreprenor</span><button class="mclose" onclick="closeMov('projUEMov')">&#x2715;</button></div>
     <div class="mbody">
       <input type="hidden" id="puProsjektId">
-      <div class="fg"><label class="lbl">Velg firma *</label>
-        <select class="inp" id="puFirmaSelect" onchange="oppdaterPUKontakter()">
+      <div class="fg"><label class="fl">Velg firma *</label>
+        <select class="fi2" id="puFirmaSelect" onchange="oppdaterPUKontakter()">
           <option value="">Velg UE-firma...</option>
         </select>
       </div>
@@ -505,12 +505,12 @@ tr.erow td{padding:0;background:var(--bg2);border-bottom:1px solid var(--br2);}
         <div style="background:var(--bg3);border-radius:var(--r);padding:12px;border:1px solid var(--br);">
           <div style="font-size:11px;color:var(--tx3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;font-weight:500;">Ny kontaktperson</div>
           <div class="fg2">
-            <div class="fg"><label class="lbl">Navn</label><input class="inp" id="puNyNavn" placeholder="Fullt navn" oninput="oppdaterLagreToggle()"></div>
-            <div class="fg"><label class="lbl">Rolle</label><input class="inp" id="puNyRolle" placeholder="f.eks. Anleggsleder"></div>
+            <div class="fg"><label class="fl">Navn</label><input class="fi2" id="puNyNavn" placeholder="Fullt navn" oninput="oppdaterLagreToggle()"></div>
+            <div class="fg"><label class="fl">Rolle</label><input class="fi2" id="puNyRolle" placeholder="f.eks. Anleggsleder"></div>
           </div>
           <div class="fg2" style="margin-top:8px;">
-            <div class="fg"><label class="lbl">Telefon</label><input class="inp" id="puNyTlf" placeholder="+47 ..."></div>
-            <div class="fg"><label class="lbl">E-post</label><input class="inp" id="puNyEpost" placeholder="valgfritt"></div>
+            <div class="fg"><label class="fl">Telefon</label><input class="fi2" id="puNyTlf" placeholder="+47 ..."></div>
+            <div class="fg"><label class="fl">E-post</label><input class="fi2" id="puNyEpost" placeholder="valgfritt"></div>
           </div>
           <div id="puLagreToggle" style="display:none;margin-top:10px;background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.25);border-radius:var(--r);padding:8px 12px;cursor:pointer;" onclick="togglePULagre()">
             <div style="display:flex;align-items:center;gap:8px;">
@@ -2933,7 +2933,7 @@ function openNyUE() {
   document.getElementById('ueOrgnr').value = '';
   document.getElementById('ueAdresse').value = '';
   var sel = document.getElementById('ueFag');
-  sel.innerHTML = '<option value="">Velg fagomrade</option>';
+  sel.innerHTML = '<option value="">Velg fagområde</option>';
   UE_FAGOMRADER.forEach(function(f) { sel.innerHTML += '<option value="' + f + '">' + f + '</option>'; });
   sel.value = '';
   openMov('ueMov');
@@ -2948,7 +2948,7 @@ function openEditUE(id) {
   document.getElementById('ueOrgnr').value = u.Orgnr||'';
   document.getElementById('ueAdresse').value = u.Adresse||'';
   var sel = document.getElementById('ueFag');
-  sel.innerHTML = '<option value="">Velg fagomrade</option>';
+  sel.innerHTML = '<option value="">Velg fagområde</option>';
   UE_FAGOMRADER.forEach(function(f) { sel.innerHTML += '<option value="' + f + '">' + f + '</option>'; });
   sel.value = u.Fagomr_x00e5_de||'';
   openMov('ueMov');
