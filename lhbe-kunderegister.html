@@ -393,6 +393,7 @@ tr.erow td{padding:0;background:var(--bg2);border-bottom:1px solid var(--br2);}
     <button class="ftab on" id="viewKunder" onclick="setView('kunder',this)">&#128119; Kunder</button>
     <button class="ftab" id="viewProsjekter" onclick="setView('prosjekter',this)">&#128196; Prosjekter</button>
     <button class="ftab" id="viewUE" onclick="setView('ue',this)">&#128295; UE-register</button>
+    <button class="ftab" id="viewLev" onclick="setView('lev',this)">&#128666; Leverandører</button>
   </div>
   <div class="ftabs" id="filterTabs">
     <button class="ftab on" data-filter="alle">Alle</button>
@@ -443,6 +444,26 @@ tr.erow td{padding:0;background:var(--bg2);border-bottom:1px solid var(--br2);}
     </div>
   </div>
   <div id="ueBody"><div class="sdk-load"><div class="sdk-spin"></div>Laster UE-register...</div></div>
+</div>
+
+<div id="levView" style="display:none;padding:18px 24px 32px;">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+    <div>
+      <div style="font-size:16px;font-weight:600;color:var(--tx)">Leverandørregister</div>
+      <div style="font-size:12px;color:var(--tx3);margin-top:2px" id="levSubLbl">Laster...</div>
+    </div>
+    <button class="btn pri" onclick="openNyLev()">+ Ny leverandør</button>
+  </div>
+  <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap;">
+    <select id="levKatFilter" onchange="renderLevView()" style="height:32px;border:1px solid var(--br2);border-radius:var(--r);background:var(--bg2);color:var(--tx);font-size:13px;padding:0 10px;cursor:pointer;">
+      <option value="">Alle kategorier</option>
+    </select>
+    <div style="display:flex;gap:4px;">
+      <button id="levSortAZ" class="ftab on" onclick="setLevSort('az',this)" style="font-size:12px;padding:5px 10px;">A–Å</button>
+      <button id="levSortZA" class="ftab" onclick="setLevSort('za',this)" style="font-size:12px;padding:5px 10px;">Å–A</button>
+    </div>
+  </div>
+  <div id="levBody"><div class="sdk-load"><div class="sdk-spin"></div>Laster leverandørregister...</div></div>
 </div>
 
 <!-- UE FIRMA MODAL -->
@@ -538,6 +559,74 @@ tr.erow td{padding:0;background:var(--bg2);border-bottom:1px solid var(--br2);}
     </div>
   </div>
 </div>
+
+<div class="mov hid" id="levModal">
+  <div class="mbox" style="max-width:480px;">
+    <div class="mhdr"><span id="levmT">Ny leverandør</span><button class="mclose" onclick="closeMov('levModal')">&#x2715;</button></div>
+    <div class="mbody">
+      <input type="hidden" id="levId">
+      <div class="fg"><label class="fl">Firmanavn *</label><input class="fi2" id="levNavn" placeholder="Firma AS"></div>
+      <div class="fg2" style="margin-top:8px;">
+        <div class="fg"><label class="fl">Org.nr</label><input class="fi2" id="levOrgnr" placeholder="000 000 000"></div>
+        <div class="fg"><label class="fl">Kategori</label>
+          <select class="fi2" id="levKategori"><option value="">Velg kategori</option></select>
+        </div>
+      </div>
+      <div class="fg" style="margin-top:8px;"><label class="fl">Nettside</label><input class="fi2" id="levNettside" placeholder="www.firma.no"></div>
+    </div>
+    <div class="mftr">
+      <button class="btn" onclick="closeMov('levModal')">Avbryt</button>
+      <button class="btn pri" onclick="lagreLev()">Lagre</button>
+    </div>
+  </div>
+</div>
+
+<div class="mov hid" id="levKontaktModal">
+  <div class="mbox" style="max-width:440px;">
+    <div class="mhdr"><span>Ny kontaktperson</span><button class="mclose" onclick="closeMov('levKontaktModal')">&#x2715;</button></div>
+    <div class="mbody">
+      <input type="hidden" id="levkId">
+      <input type="hidden" id="levkLevId">
+      <div class="fg"><label class="fl">Navn *</label><input class="fi2" id="levkNavn" placeholder="Fullt navn"></div>
+      <div class="fg2" style="margin-top:8px;">
+        <div class="fg"><label class="fl">Rolle</label><input class="fi2" id="levkRolle" placeholder="f.eks. Selger"></div>
+        <div class="fg"><label class="fl">Telefon</label><input class="fi2" id="levkTlf" placeholder="+47 ..."></div>
+      </div>
+      <div class="fg" style="margin-top:8px;"><label class="fl">E-post</label><input class="fi2" id="levkEpost" placeholder="epost@firma.no"></div>
+    </div>
+    <div class="mftr">
+      <button class="btn" onclick="closeMov('levKontaktModal')">Avbryt</button>
+      <button class="btn pri" onclick="lagreLevKontakt()">Lagre</button>
+    </div>
+  </div>
+</div>
+
+<div class="mov hid" id="projLevModal">
+  <div class="mbox" style="max-width:500px;">
+    <div class="mhdr"><span>Legg til leverandør</span><button class="mclose" onclick="closeMov('projLevModal')">&#x2715;</button></div>
+    <div class="mbody">
+      <input type="hidden" id="plProjId">
+      <div class="fg"><label class="fl">Velg leverandør *</label>
+        <select class="fi2" id="plLevId" onchange="onProjLevChange()">
+          <option value="">Velg leverandør...</option>
+        </select>
+      </div>
+      <div id="plKontaktWrap" style="margin-top:10px;display:none;">
+        <div class="fg"><label class="fl">Kontaktperson</label>
+          <select class="fi2" id="plKontaktId">
+            <option value="">Velg kontaktperson (valgfritt)</option>
+          </select>
+        </div>
+      </div>
+      <div class="fg" style="margin-top:10px;"><label class="fl">Notat</label><input class="fi2" id="plNotat" placeholder="f.eks. Armering, Betong tak..."></div>
+    </div>
+    <div class="mftr">
+      <button class="btn" onclick="closeMov('projLevModal')">Avbryt</button>
+      <button class="btn pri" onclick="lagreProjLev()">Lagre</button>
+    </div>
+  </div>
+</div>
+
 
 <div class="tw">
   <table class="ct">
@@ -812,6 +901,14 @@ var PUEL = '8f93b4f9-ef4d-4428-8647-feea79c31670';
 var UE_FAGOMRADER = ['Grunnarbeid','Betong / Mur','Tømrer','VVS','Ventilasjon','Elektro','Maler','Stillas','Annet'];
 var ueList = [];
 var ueKontakter = [];
+var LEVL = 'f32d8a04-25cc-4f68-a5d5-1ead5c5ff82b';
+var LEVKL = '30434dbc-a93e-43a4-aa5e-2f7a89d7e7dd';
+var PLEVL = '91a10cdc-2629-4f80-ae9a-95b05978e44b';
+var LEV_KATEGORIER = ['Byggvarer','Betong','Stål/Armering','Transport','Verktøy/maskin','Elektro','VVS-materiell','Annet'];
+var levList = [];
+var levKontakter = [];
+var prosjektLev = [];
+var levSortOrder = 'az';
 var SCOPES = ['https://lhbent.sharepoint.com/AllSites.Write', 'User.Read'];
 var ms, acc, customers = [], projects = [], activeFilter = 'alle', activeSort = 'az', activeView = 'kunder', custType = 'Firma', expanded = {}, activePath = '', activePID = null;
 var SDK_BASE = 'https://lhbe-smartdok.tom-andre.workers.dev';
@@ -878,7 +975,10 @@ function init() {
   // Sett inneværende måned som standard
   document.getElementById('timerPdfMnd').value = new Date().getMonth() + 1;
   document.getElementById('srchIn').addEventListener('input', function() {
-    if (activeView === 'prosjekter') renderProjView(); else renderTable();
+    if (activeView === 'prosjekter') renderProjView();
+    else if (activeView === 'ue') renderUEView();
+    else if (activeView === 'lev') renderLevView();
+    else renderTable();
   });
   document.getElementById('spCustAdminBtn').addEventListener('click', openCustAdmin);
   document.getElementById('spProjAdminBtn').addEventListener('click', openProjAdmin);
@@ -1000,6 +1100,7 @@ function loadData() {
     applyDeferredView();
     // Last UE-data i bakgrunnen – blokkerer ikke appen
     loadUEBakgrunn();
+    loadLevBakgrunn();
   }).catch(function(e) {
     if (e.errorCode === 'interaction_in_progress') {
       setTimeout(loadData, 1500);
@@ -1017,6 +1118,18 @@ function loadUEBakgrunn() {
   ]).then(function(res) {
     ueList = res[0].value || [];
     ueKontakter = res[1].value || [];
+  });
+}
+
+function loadLevBakgrunn() {
+  Promise.all([
+    spGet(SP + '/_api/web/lists(guid\'' + LEVL + '\')/items?$select=ID,Title,Orgnr,Kategori,Nettside&$top=500').catch(function(e){ console.warn('Lev-liste feil:', e); return {value:[]}; }),
+    spGet(SP + '/_api/web/lists(guid\'' + LEVKL + '\')/items?$select=ID,Title,LevId,Rolle,Telefon,Epost&$top=500').catch(function(e){ console.warn('LevKontakter feil:', e); return {value:[]}; }),
+    spGet(SP + '/_api/web/lists(guid\'' + PLEVL + '\')/items?$select=ID,Title,ProsjektId,LevId,KontaktId&$top=500').catch(function(e){ console.warn('ProsjektLev feil:', e); return {value:[]}; })
+  ]).then(function(res) {
+    levList = res[0].value || [];
+    levKontakter = res[1].value || [];
+    prosjektLev = res[2].value || [];
   });
 }
 
@@ -1088,18 +1201,21 @@ function setView(v, el) {
   saveSetting('view', v);
   document.querySelectorAll('#viewTabs .ftab').forEach(function(t) { t.classList.remove('on'); });
   if (el) el.classList.add('on');
-  document.getElementById('srchIn').placeholder = v === 'kunder' ? 'Sok kunde, kontaktperson...' : v === 'ue' ? 'Sok UE-firma, fagomrade...' : 'Sok prosjekt, kundenavn...';
+  var phMap = {kunder:'Sok kunde, kontaktperson...', ue:'Sok UE-firma, fagomrade...', lev:'Sok leverandor, kategori...', prosjekter:'Sok prosjekt, kundenavn...'};
+  document.getElementById('srchIn').placeholder = phMap[v] || 'Sok...';
   document.getElementById('mannskapView').style.display = 'none';
   document.getElementById('ueView').style.display = 'none';
-  document.querySelector('.stats').style.display = v === 'ue' ? 'none' : '';
+  document.getElementById('levView').style.display = 'none';
+  var regView = v === 'ue' || v === 'lev';
+  document.querySelector('.stats').style.display = regView ? 'none' : '';
   if (activeFilter === 'mannskap') {
     activeFilter = 'alle';
     document.querySelectorAll('#filterTabs .ftab').forEach(function(t) { t.classList.remove('on'); });
     var alleFane = document.querySelector('#filterTabs .ftab[data-filter="alle"]');
     if (alleFane) alleFane.classList.add('on');
   }
-  document.getElementById('filterTabs').style.display = v === 'ue' ? 'none' : '';
-  document.getElementById('newCustBtn').style.display = v === 'ue' ? 'none' : '';
+  document.getElementById('filterTabs').style.display = regView ? 'none' : '';
+  document.getElementById('newCustBtn').style.display = regView ? 'none' : '';
   if (v === 'prosjekter') {
     document.querySelector('.tw').style.display = 'none';
     document.getElementById('projView').style.display = '';
@@ -1109,6 +1225,11 @@ function setView(v, el) {
     document.getElementById('projView').style.display = 'none';
     document.getElementById('ueView').style.display = '';
     loadUEData();
+  } else if (v === 'lev') {
+    document.querySelector('.tw').style.display = 'none';
+    document.getElementById('projView').style.display = 'none';
+    document.getElementById('levView').style.display = '';
+    loadLevData();
   } else {
     document.querySelector('.tw').style.display = '';
     document.getElementById('projView').style.display = 'none';
@@ -1626,6 +1747,7 @@ function openPD(pid) {
     bodyHtml.push('<div style="font-size:12px;color:var(--tx3)">Vises kun paa aktive prosjekter med prosjektnummer.</div></div>');
   }
   bodyHtml.push('<div class="pdsec"><div class="pdsect" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;"><span>Underentreprenorer</span><button class="btn sm" onclick="openProjUEMov(' + p.ID + ')">+ Legg til UE</button></div><div id="projUEListe_' + p.ID + '"><div class="sdk-load"><div class="sdk-spin"></div>Laster...</div></div></div>');
+  bodyHtml.push('<div class="pdsec"><div class="pdsect" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;"><span>Leverandører</span><button class="btn sm" onclick="openProjLevMov(' + p.ID + ')">+ Legg til</button></div><div id="projLevListe_' + p.ID + '"><div class="sdk-load"><div class="sdk-spin"></div>Laster...</div></div></div>');
   bodyHtml.push('<div class="pdsec"><div class="pdsect">Handlinger</div><div style="display:flex;gap:8px;flex-wrap:wrap">');
   bodyHtml.push('<button class="btn" onclick="pdfProsjekt(' + p.ID + ')">&#128438; Prosjekt PDF</button>');
   if (s === 'Aktiv' && p.Prosjektnummer) {
@@ -1644,6 +1766,7 @@ function openPD(pid) {
   document.getElementById('pdmB').innerHTML = bodyHtml.join('');
   document.getElementById('pdov').classList.add('on');
   renderProjektUE(p.ID);
+  renderProjLevListe(p.ID);
   if (s === 'Aktiv' && p.Prosjektnummer) {
     sdkWeekOffset = 0;
     sdkCurrProjId = '';
@@ -2977,6 +3100,300 @@ function toggleUEKontakter(e, id, antall) {
   var open = el.style.display !== "none";
   el.style.display = open ? "none" : "block";
   if (pil) pil.style.transform = open ? "" : "rotate(90deg)";
+}
+
+
+// ===================== LEVERANDØR-FUNKSJONER =====================
+
+function loadLevData() {
+  document.getElementById('levBody').innerHTML = '<div class="sdk-load"><div class="sdk-spin"></div>Laster...</div>';
+  Promise.all([
+    spGet(SP + '/_api/web/lists(guid\'' + LEVL + '\')/items?$select=ID,Title,Orgnr,Kategori,Nettside&$top=500').catch(function(e){ return {value:[]}; }),
+    spGet(SP + '/_api/web/lists(guid\'' + LEVKL + '\')/items?$select=ID,Title,LevId,Rolle,Telefon,Epost&$top=500').catch(function(e){ return {value:[]}; }),
+    spGet(SP + '/_api/web/lists(guid\'' + PLEVL + '\')/items?$select=ID,Title,ProsjektId,LevId,KontaktId&$top=500').catch(function(e){ return {value:[]}; })
+  ]).then(function(res) {
+    levList = res[0].value || [];
+    levKontakter = res[1].value || [];
+    prosjektLev = res[2].value || [];
+    renderLevView();
+  }).catch(function(e) {
+    document.getElementById('levBody').innerHTML = '<div style="padding:24px;color:var(--red);">Feil ved lasting: ' + e.message + '</div>';
+  });
+}
+
+function setLevSort(order, btn) {
+  levSortOrder = order;
+  document.querySelectorAll('#levSortAZ,#levSortZA').forEach(function(b) { b.classList.remove('on'); });
+  btn.classList.add('on');
+  renderLevView();
+}
+
+function initLevFilter() {
+  var sel = document.getElementById('levKatFilter');
+  if (!sel) return;
+  var gjeldende = sel.value;
+  sel.innerHTML = '<option value="">Alle kategorier</option>';
+  LEV_KATEGORIER.forEach(function(k) {
+    sel.innerHTML += '<option value="' + k + '"' + (gjeldende === k ? ' selected' : '') + '>' + k + '</option>';
+  });
+}
+
+function renderLevView() {
+  initLevFilter();
+  var q = (document.getElementById('srchIn').value || '').toLowerCase();
+  var kat = document.getElementById('levKatFilter') ? document.getElementById('levKatFilter').value : '';
+  var liste = levList.filter(function(l) {
+    var matchQ = !q || (l.Title||'').toLowerCase().includes(q) || (l.Kategori||'').toLowerCase().includes(q);
+    var matchK = !kat || (l.Kategori||'') === kat;
+    return matchQ && matchK;
+  });
+  liste.sort(function(a, b) {
+    var na = (a.Title||'').toLowerCase();
+    var nb = (b.Title||'').toLowerCase();
+    return levSortOrder === 'az' ? na.localeCompare(nb) : nb.localeCompare(na);
+  });
+  var visTekst = levList.length === 0 ? '0 leverandører' : liste.length !== levList.length ? liste.length + ' av ' + levList.length + ' leverandører' : levList.length + ' leverandører';
+  document.getElementById('levSubLbl').textContent = visTekst;
+  if (!liste.length) {
+    var tomTekst = levList.length === 0 ? 'Ingen leverandører registrert ennå. Trykk "+ Ny leverandør" for å legge til.' : 'Ingen leverandører matcher valgt filter.';
+    document.getElementById('levBody').innerHTML = '<div style="text-align:center;padding:40px;color:var(--tx3);">' + tomTekst + '</div>';
+    return;
+  }
+  var html = [];
+  liste.forEach(function(l) {
+    var kontakter = levKontakter.filter(function(k) { return k.LevId == l.ID; });
+    var initials = (l.Title||'?').split(' ').map(function(w){return w[0];}).join('').substring(0,2).toUpperCase();
+    var kAntall = kontakter.length;
+    var kontaktId = 'lev-k-' + l.ID;
+    html.push('<div style="background:var(--bg2);border:1px solid var(--br);border-radius:var(--rl);margin-bottom:10px;overflow:hidden;">');
+    html.push('<div style="display:flex;align-items:center;gap:12px;padding:14px 16px;' + (kAntall ? 'cursor:pointer;' : '') + '" onclick="toggleLevKontakter(event,\'' + kontaktId + '\',' + kAntall + ')">');
+    html.push('<div style="width:36px;height:36px;border-radius:50%;background:rgba(16,185,129,.15);color:#10b981;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;flex-shrink:0;">' + initials + '</div>');
+    html.push('<div style="flex:1;min-width:0;">');
+    html.push('<div style="font-weight:600;font-size:14px;display:flex;align-items:center;gap:6px;">' + (l.Title||'-'));
+    if (kAntall) html.push('<span style="font-size:11px;background:rgba(16,185,129,.12);color:#10b981;border-radius:10px;padding:1px 7px;font-weight:500;">' + kAntall + '</span>');
+    html.push('</div>');
+    html.push('<div style="font-size:12px;color:var(--tx3);margin-top:2px;">');
+    if (l.Orgnr) html.push('Org.nr ' + l.Orgnr + ' &nbsp;·&nbsp; ');
+    if (l.Kategori) html.push('<span style="background:var(--bg3);border:1px solid var(--br);border-radius:20px;padding:1px 8px;font-size:11px;">' + l.Kategori + '</span>');
+    if (l.Nettside) html.push(' &nbsp;<a href="' + (l.Nettside.startsWith('http') ? l.Nettside : 'https://' + l.Nettside) + '" target="_blank" style="color:var(--blu);font-size:11px;">' + l.Nettside + '</a>');
+    html.push('</div></div>');
+    html.push('<div style="display:flex;align-items:center;gap:6px;">');
+    html.push('<button class="btn sm" onclick="openNyLevKontakt(' + l.ID + ')">+ Kontakt</button>');
+    html.push('<button class="btn sm" onclick="openEditLev(' + l.ID + ')">Rediger</button>');
+    html.push('<button class="btn sm danger" onclick="cDelLev(' + l.ID + ')">Slett</button>');
+    if (kAntall) html.push('<span id="' + kontaktId + '-pil" style="font-size:13px;color:var(--tx3);transition:transform .2s;display:inline-block;margin-left:2px;">▶</span>');
+    html.push('</div></div>');
+    if (kAntall) {
+      html.push('<div id="' + kontaktId + '" style="display:none;padding:8px 16px;border-top:1px solid var(--br);">');
+      kontakter.forEach(function(k) {
+        html.push('<div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--br);">');
+        html.push('<div style="width:26px;height:26px;border-radius:50%;background:var(--bg3);color:var(--tx2);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;flex-shrink:0;">' + (k.Title||'?').split(' ').map(function(w){return w[0];}).join('').substring(0,2).toUpperCase() + '</div>');
+        html.push('<div style="flex:1;min-width:0;">');
+        html.push('<div style="font-size:13px;font-weight:500;">' + (k.Title||'-') + '</div>');
+        html.push('<div style="font-size:11px;color:var(--tx3);">');
+        if (k.Rolle) html.push(k.Rolle);
+        if (k.Telefon) html.push((k.Rolle?' &nbsp;·&nbsp; ':'') + '<a href="tel:' + k.Telefon + '" style="color:var(--blu);text-decoration:none;">' + k.Telefon + '</a>');
+        if (k.Epost) html.push(' &nbsp;·&nbsp; <a href="mailto:' + k.Epost + '" style="color:var(--blu);text-decoration:none;">' + k.Epost + '</a>');
+        html.push('</div></div>');
+        html.push('<button class="btn sm danger" onclick="slettLevKontakt(' + k.ID + ')">Slett</button>');
+        html.push('</div>');
+      });
+      html.push('</div>');
+    }
+    html.push('</div>');
+  });
+  document.getElementById('levBody').innerHTML = html.join('');
+}
+
+function toggleLevKontakter(e, id, antall) {
+  if (!antall) return;
+  if (e.target.closest && e.target.closest('button')) return;
+  var el = document.getElementById(id);
+  var pil = document.getElementById(id + '-pil');
+  if (!el) return;
+  var open = el.style.display !== 'none';
+  el.style.display = open ? 'none' : 'block';
+  if (pil) pil.style.transform = open ? '' : 'rotate(90deg)';
+}
+
+function openNyLev() {
+  document.getElementById('levmT').textContent = 'Ny leverandør';
+  document.getElementById('levId').value = '';
+  document.getElementById('levNavn').value = '';
+  document.getElementById('levOrgnr').value = '';
+  document.getElementById('levNettside').value = '';
+  var sel = document.getElementById('levKategori');
+  sel.innerHTML = '<option value="">Velg kategori</option>';
+  LEV_KATEGORIER.forEach(function(k) { sel.innerHTML += '<option value="' + k + '">' + k + '</option>'; });
+  openMov('levModal');
+}
+
+function openEditLev(id) {
+  var l = levList.find(function(x) { return x.ID == id; });
+  if (!l) return;
+  document.getElementById('levmT').textContent = 'Rediger leverandør';
+  document.getElementById('levId').value = l.ID;
+  document.getElementById('levNavn').value = l.Title || '';
+  document.getElementById('levOrgnr').value = l.Orgnr || '';
+  document.getElementById('levNettside').value = l.Nettside || '';
+  var sel = document.getElementById('levKategori');
+  sel.innerHTML = '<option value="">Velg kategori</option>';
+  LEV_KATEGORIER.forEach(function(k) { sel.innerHTML += '<option value="' + k + '"' + (l.Kategori === k ? ' selected' : '') + '>' + k + '</option>'; });
+  openMov('levModal');
+}
+
+function lagreLev() {
+  var id = document.getElementById('levId').value;
+  var navn = document.getElementById('levNavn').value.trim();
+  var orgnr = document.getElementById('levOrgnr').value.trim();
+  var kat = document.getElementById('levKategori').value;
+  var nett = document.getElementById('levNettside').value.trim();
+  if (!navn) { toast('Navn er påkrevd','w'); return; }
+  var body = { Title: navn, Orgnr: orgnr, Kategori: kat, Nettside: nett };
+  var url = SP + '/_api/web/lists(guid\'' + LEVL + '\')/items';
+  var method = 'POST';
+  if (id) { url += '(' + id + ')'; method = 'PATCH'; }
+  spPost(url, body, method).then(function() {
+    closeMov('levModal');
+    toast(id ? 'Leverandør oppdatert' : 'Leverandør lagret');
+    loadLevData();
+    loadLevBakgrunn();
+  }).catch(function(e) { toast('Feil: ' + e.message,'e'); });
+}
+
+function cDelLev(id) {
+  var l = levList.find(function(x) { return x.ID == id; });
+  if (!l) return;
+  if (!confirm('Slett ' + l.Title + '?')) return;
+  spPost(SP + '/_api/web/lists(guid\'' + LEVL + '\')/items(' + id + ')', {}, 'DELETE').then(function() {
+    toast('Leverandør slettet');
+    loadLevData();
+    loadLevBakgrunn();
+  }).catch(function(e) { toast('Feil: ' + e.message,'e'); });
+}
+
+function openNyLevKontakt(levId) {
+  document.getElementById('levkId').value = '';
+  document.getElementById('levkLevId').value = levId;
+  document.getElementById('levkNavn').value = '';
+  document.getElementById('levkRolle').value = '';
+  document.getElementById('levkTlf').value = '';
+  document.getElementById('levkEpost').value = '';
+  openMov('levKontaktModal');
+}
+
+function lagreLevKontakt() {
+  var navn = document.getElementById('levkNavn').value.trim();
+  var levId = document.getElementById('levkLevId').value;
+  if (!navn) { toast('Navn er påkrevd','w'); return; }
+  var body = {
+    Title: navn,
+    LevId: parseInt(levId),
+    Rolle: document.getElementById('levkRolle').value.trim(),
+    Telefon: document.getElementById('levkTlf').value.trim(),
+    Epost: document.getElementById('levkEpost').value.trim()
+  };
+  spPost(SP + '/_api/web/lists(guid\'' + LEVKL + '\')/items', body, 'POST').then(function() {
+    closeMov('levKontaktModal');
+    toast('Kontakt lagret');
+    loadLevData();
+    loadLevBakgrunn();
+  }).catch(function(e) { toast('Feil: ' + e.message,'e'); });
+}
+
+function slettLevKontakt(id) {
+  if (!confirm('Slett kontaktperson?')) return;
+  spPost(SP + '/_api/web/lists(guid\'' + LEVKL + '\')/items(' + id + ')', {}, 'DELETE').then(function() {
+    toast('Kontakt slettet');
+    loadLevData();
+    loadLevBakgrunn();
+  }).catch(function(e) { toast('Feil: ' + e.message,'e'); });
+}
+
+// ===================== PROSJEKT-LEVERANDØR =====================
+
+function renderProjLevListe(projId) {
+  var container = document.getElementById('projLevListe_' + projId);
+  if (!container) return;
+  var koblinger = prosjektLev.filter(function(pl) { return pl.ProsjektId == projId; });
+  if (!koblinger.length) {
+    container.innerHTML = '<div style="font-size:12px;color:var(--tx3);padding:4px 0;">Ingen leverandører lagt til.</div>';
+    return;
+  }
+  var html = [];
+  koblinger.forEach(function(pl) {
+    var lev = levList.find(function(l) { return l.ID == pl.LevId; });
+    var k = levKontakter.find(function(x) { return x.ID == pl.KontaktId; });
+    var levNavn = lev ? lev.Title : 'Ukjent';
+    var levKat = lev ? lev.Kategori : '';
+    html.push('<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--br);">');
+    html.push('<div style="flex:1;min-width:0;">');
+    html.push('<div style="font-size:13px;font-weight:500;">' + levNavn + (pl.Title ? ' <span style="color:var(--tx3);font-weight:400;">– ' + pl.Title + '</span>' : '') + '</div>');
+    html.push('<div style="font-size:11px;color:var(--tx3);">');
+    if (levKat) html.push('<span style="background:var(--bg3);border:1px solid var(--br);border-radius:20px;padding:1px 6px;">' + levKat + '</span> ');
+    if (k) {
+      html.push(k.Title);
+      if (k.Telefon) html.push(' &nbsp;·&nbsp; <a href="tel:' + k.Telefon + '" style="color:var(--blu);text-decoration:none;">' + k.Telefon + '</a>');
+    }
+    html.push('</div></div>');
+    html.push('<button class="btn sm danger" onclick="slettProjLev(' + pl.ID + ',' + projId + ')">Slett</button>');
+    html.push('</div>');
+  });
+  container.innerHTML = html.join('');
+}
+
+function openProjLevMov(projId) {
+  document.getElementById('plProjId').value = projId;
+  document.getElementById('plNotat').value = '';
+  document.getElementById('plKontaktId').value = '';
+  var levSel = document.getElementById('plLevId');
+  levSel.innerHTML = '<option value="">Velg leverandør</option>';
+  var sortert = levList.slice().sort(function(a,b){ return (a.Title||'').localeCompare(b.Title||''); });
+  sortert.forEach(function(l) { levSel.innerHTML += '<option value="' + l.ID + '">' + l.Title + (l.Kategori ? ' (' + l.Kategori + ')' : '') + '</option>'; });
+  document.getElementById('plKontaktWrap').style.display = 'none';
+  openMov('projLevModal');
+}
+
+function onProjLevChange() {
+  var levId = document.getElementById('plLevId').value;
+  var wrap = document.getElementById('plKontaktWrap');
+  var sel = document.getElementById('plKontaktId');
+  sel.innerHTML = '<option value="">Velg kontaktperson (valgfritt)</option>';
+  if (!levId) { wrap.style.display = 'none'; return; }
+  var kontakter = levKontakter.filter(function(k) { return k.LevId == levId; });
+  if (kontakter.length) {
+    kontakter.forEach(function(k) { sel.innerHTML += '<option value="' + k.ID + '">' + k.Title + (k.Rolle ? ' – ' + k.Rolle : '') + '</option>'; });
+    wrap.style.display = '';
+  } else {
+    wrap.style.display = 'none';
+  }
+}
+
+function lagreProjLev() {
+  var projId = document.getElementById('plProjId').value;
+  var levId = document.getElementById('plLevId').value;
+  var kontaktId = document.getElementById('plKontaktId').value;
+  var notat = document.getElementById('plNotat').value.trim();
+  if (!levId) { toast('Velg leverandør','w'); return; }
+  var body = { Title: notat, ProsjektId: parseInt(projId), LevId: parseInt(levId) };
+  if (kontaktId) body.KontaktId = parseInt(kontaktId);
+  spPost(SP + '/_api/web/lists(guid\'' + PLEVL + '\')/items', body, 'POST').then(function() {
+    closeMov('projLevModal');
+    toast('Leverandør lagt til prosjekt');
+    loadLevBakgrunn();
+    prosjektLev.push(body);
+    renderProjLevListe(projId);
+  }).catch(function(e) { toast('Feil: ' + e.message,'e'); });
+}
+
+function slettProjLev(id, projId) {
+  if (!confirm('Fjern leverandør fra prosjekt?')) return;
+  spPost(SP + '/_api/web/lists(guid\'' + PLEVL + '\')/items(' + id + ')', {}, 'DELETE').then(function() {
+    toast('Leverandør fjernet');
+    prosjektLev = prosjektLev.filter(function(pl) { return pl.ID != id; });
+    renderProjLevListe(projId);
+    loadLevBakgrunn();
+  }).catch(function(e) { toast('Feil: ' + e.message,'e'); });
 }
 
 function openNyUE() {
