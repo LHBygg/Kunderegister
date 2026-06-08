@@ -3251,9 +3251,8 @@ function lagreLev() {
   if (!navn) { toast('Navn er påkrevd','w'); return; }
   var body = { Title: navn, Orgnr: orgnr, Kategori: kat, Nettside: nett };
   var url = SP + '/_api/web/lists(guid\'' + LEVL + '\')/items';
-  var method = 'POST';
-  if (id) { url += '(' + id + ')'; method = 'PATCH'; }
-  spPost(url, body, method).then(function() {
+  var p = id ? spPatch(url + '(' + id + ')', body) : spPost(url, body);
+  p.then(function() {
     closeMov('levModal');
     toast(id ? 'Leverandør oppdatert' : 'Leverandør lagret');
     loadLevData();
@@ -3265,7 +3264,7 @@ function cDelLev(id) {
   var l = levList.find(function(x) { return x.ID == id; });
   if (!l) return;
   if (!confirm('Slett ' + l.Title + '?')) return;
-  spPost(SP + '/_api/web/lists(guid\'' + LEVL + '\')/items(' + id + ')', {}, 'DELETE').then(function() {
+  spDel(SP + '/_api/web/lists(guid\'' + LEVL + '\')/items(' + id + ')').then(function() {
     toast('Leverandør slettet');
     loadLevData();
     loadLevBakgrunn();
@@ -3303,7 +3302,7 @@ function lagreLevKontakt() {
 
 function slettLevKontakt(id) {
   if (!confirm('Slett kontaktperson?')) return;
-  spPost(SP + '/_api/web/lists(guid\'' + LEVKL + '\')/items(' + id + ')', {}, 'DELETE').then(function() {
+  spDel(SP + '/_api/web/lists(guid\'' + LEVKL + '\')/items(' + id + ')').then(function() {
     toast('Kontakt slettet');
     loadLevData();
     loadLevBakgrunn();
@@ -3388,7 +3387,7 @@ function lagreProjLev() {
 
 function slettProjLev(id, projId) {
   if (!confirm('Fjern leverandør fra prosjekt?')) return;
-  spPost(SP + '/_api/web/lists(guid\'' + PLEVL + '\')/items(' + id + ')', {}, 'DELETE').then(function() {
+  spDel(SP + '/_api/web/lists(guid\'' + PLEVL + '\')/items(' + id + ')').then(function() {
     toast('Leverandør fjernet');
     prosjektLev = prosjektLev.filter(function(pl) { return pl.ID != id; });
     renderProjLevListe(projId);
