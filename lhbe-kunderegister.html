@@ -426,12 +426,21 @@ tr.erow td{padding:0;background:var(--bg2);border-bottom:1px solid var(--br2);}
 </div>
 
 <div id="ueView" style="display:none;padding:18px 24px 32px;">
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
     <div>
       <div style="font-size:16px;font-weight:600;color:var(--tx)">UE-register</div>
       <div style="font-size:12px;color:var(--tx3);margin-top:2px" id="ueSubLbl">Laster...</div>
     </div>
     <button class="btn pri" onclick="openNyUE()">+ Ny UE</button>
+  </div>
+  <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap;">
+    <select id="ueFagFilter" onchange="renderUEView()" style="height:32px;border:1px solid var(--br2);border-radius:var(--r);background:var(--bg2);color:var(--tx);font-size:13px;padding:0 10px;cursor:pointer;">
+      <option value="">Alle fagområder</option>
+    </select>
+    <div style="display:flex;gap:4px;">
+      <button id="ueSortAZ" class="ftab on" onclick="setUESort('az',this)" style="font-size:12px;padding:5px 10px;">A–Å</button>
+      <button id="ueSortZA" class="ftab" onclick="setUESort('za',this)" style="font-size:12px;padding:5px 10px;">Å–A</button>
+    </div>
   </div>
   <div id="ueBody"><div class="sdk-load"><div class="sdk-spin"></div>Laster UE-register...</div></div>
 </div>
@@ -2873,15 +2882,45 @@ function loadUEData() {
   });
 }
 
-function renderUEView() {
-  var q = (document.getElementById('srchIn').value || '').toLowerCase();
-  var liste = ueList.filter(function(u) {
-    if (!q) return true;
-    return (u.Title||'').toLowerCase().includes(q) || (u.Fagomr_x00e5_de||'').toLowerCase().includes(q);
+var ueSortOrder = 'az';
+
+function setUESort(order, btn) {
+  ueSortOrder = order;
+  document.querySelectorAll('#ueSortAZ,#ueSortZA').forEach(function(b) { b.classList.remove('on'); });
+  btn.classList.add('on');
+  renderUEView();
+}
+
+function initUEFilter() {
+  var sel = document.getElementById('ueFagFilter');
+  if (!sel) return;
+  var gjeldende = sel.value;
+  sel.innerHTML = '<option value="">Alle fagomrader</option>';
+  UE_FAGOMRADER.forEach(function(f) {
+    sel.innerHTML += '<option value="' + f + '"' + (gjeldende === f ? ' selected' : '') + '>' + f + '</option>';
   });
-  document.getElementById('ueSubLbl').textContent = ueList.length + ' firma registrert';
+}
+
+function renderUEView() {
+  initUEFilter();
+  var q = (document.getElementById('srchIn').value || '').toLowerCase();
+  var fag = (document.getElementById('ueFagFilter') ? document.getElementById('ueFagFilter').value : '');
+  var liste = ueList.filter(function(u) {
+    var matchQ = !q || (u.Title||'').toLowerCase().includes(q) || (u.Fagomr_x00e5_de||'').toLowerCase().includes(q);
+    var matchF = !fag || (u.Fagomr_x00e5_de||'') === fag;
+    return matchQ && matchF;
+  });
+  liste.sort(function(a, b) {
+    var na = (a.Title||'').toLowerCase();
+    var nb = (b.Title||'').toLowerCase();
+    return ueSortOrder === 'az' ? na.localeCompare(nb) : nb.localeCompare(na);
+  });
+  var visningsTekst = ueList.length + ' firma registrert';
+  if (liste.length !== ueList.length) visningsTekst = liste.length + ' av ' + ueList.length + ' firma';
+  document.getElementById('ueSubLbl').textContent = visningsTekst;
   if (!liste.length) {
-    document.getElementById('ueBody').innerHTML = '<div style="text-align:center;padding:40px;color:var(--tx3);">Ingen UE-er registrert ennå. Trykk "+ Ny UE" for å legge til.</div>';
+    var tomTekst = ueList.length === 0 ? 'Ingen UE-er registrert ennå. Trykk "+ Ny UE" for å legge til.' : 'Ingen firma matcher valgt filter.';
+    document.getElementById('ueBody').innerHTML = '<div style="text-align:center;padding:40px;color:var(--tx3);">' + tomTekst + '</div>';
     return;
   }
   var html = [];
