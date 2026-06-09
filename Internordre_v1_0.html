@@ -353,7 +353,7 @@ var MSAL_CONFIG = {
   auth:{
     clientId:'3b2da258-a2f9-41af-baab-f65265f45732',
     authority:'https://login.microsoftonline.com/c9d89f66-621a-4a0b-9734-8b98789d9791',
-    redirectUri: window.location.href.split('?')[0]
+    redirectUri:'https://lhbygg.github.io/Kunderegister/Internordre_v1_2.html'
   },
   cache:{cacheLocation:'localStorage',storeAuthStateInCookie:false}
 };
@@ -386,30 +386,30 @@ function initApp() {
   ms.initialize().then(function() {
     return ms.handleRedirectPromise();
   }).then(function(resp) {
-    if (resp && resp.account) msAcc = resp.account;
+    // Redirect-innlogging fullført
+    if (resp && resp.account) {
+      msAcc = resp.account;
+      lastData();
+      return;
+    }
+    // Sjekk eksisterende konto
     var accs = ms.getAllAccounts();
     if (accs.length > 0) {
       msAcc = accs[0];
-      // Verifiser at vi faktisk kan hente token før vi laster data
-      return ms.acquireTokenSilent({scopes: SCOPES, account: msAcc}).then(function(tok) {
+      // Prøv stille token-henting
+      ms.acquireTokenSilent({scopes: SCOPES, account: msAcc}).then(function() {
         lastData();
       }).catch(function() {
-        // Token utgått - tving ny innlogging
-        return ms.acquireTokenPopup({scopes: SCOPES}).then(function(r) {
-          msAcc = r.account;
-          lastData();
-        });
+        // Stille henting feilet - bruk redirect
+        ms.acquireTokenRedirect({scopes: SCOPES, account: msAcc});
       });
     } else {
+      // Ingen konto - redirect til Microsoft-innlogging
       visScreen('screenLogin');
-      document.getElementById('navnSel').innerHTML = '<option value="">Logger inn via Microsoft...</option>';
-      return ms.loginPopup({scopes: SCOPES}).then(function(r) {
-        msAcc = r.account;
-        lastData();
-      }).catch(function(e) {
-        document.getElementById('navnSel').innerHTML = '<option value="">Innlogging feilet – last siden på nytt</option>';
-        toast('Innlogging feilet: ' + (e.message||e), 'e');
-      });
+      document.getElementById('navnSel').innerHTML = '<option value="">Omdirigerer til innlogging...</option>';
+      setTimeout(function() {
+        ms.loginRedirect({scopes: SCOPES});
+      }, 800);
     }
   }).catch(function(e) {
     toast('Oppstart feilet: ' + (e.message||e), 'e');
@@ -417,16 +417,12 @@ function initApp() {
 }
 
 function getToken() {
-  if (!msAcc) {
-    return ms.loginPopup({scopes: SCOPES}).then(function(r) {
-      msAcc = r.account;
-      return ms.acquireTokenSilent({scopes: SCOPES, account: msAcc}).then(function(t){return t.accessToken;});
-    });
-  }
-  return ms.acquireTokenSilent({scopes: SCOPES, account: msAcc}).then(function(r){return r.accessToken;})
-  .catch(function(){return ms.acquireTokenPopup({scopes: SCOPES}).then(function(r){
-    msAcc = r.account; return r.accessToken;
-  });});
+  var req = {scopes: SCOPES, account: msAcc};
+  return ms.acquireTokenSilent(req).then(function(r){return r.accessToken;})
+  .catch(function() {
+    ms.acquireTokenRedirect(req);
+    return new Promise(function(){}); // Vent på redirect
+  });
 }
 
 function spGet(url) {
