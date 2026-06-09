@@ -384,28 +384,35 @@ document.getElementById('loginLogo').src = logoUrl;
 function initApp() {
   ms = new msal.PublicClientApplication(MSAL_CONFIG);
   ms.initialize().then(function() {
-    // Håndter redirect-respons først
     return ms.handleRedirectPromise();
   }).then(function(resp) {
     if (resp && resp.account) msAcc = resp.account;
     var accs = ms.getAllAccounts();
     if (accs.length > 0) {
       msAcc = accs[0];
-      lastData();
+      // Verifiser at vi faktisk kan hente token før vi laster data
+      return ms.acquireTokenSilent({scopes: SCOPES, account: msAcc}).then(function(tok) {
+        lastData();
+      }).catch(function() {
+        // Token utgått - tving ny innlogging
+        return ms.acquireTokenPopup({scopes: SCOPES}).then(function(r) {
+          msAcc = r.account;
+          lastData();
+        });
+      });
     } else {
-      // Vis innloggingsskjerm og last ansatte via popup
       visScreen('screenLogin');
-      document.getElementById('navnSel').innerHTML = '<option value="">Logger inn...</option>';
-      ms.loginPopup({scopes: SCOPES}).then(function(r) {
+      document.getElementById('navnSel').innerHTML = '<option value="">Logger inn via Microsoft...</option>';
+      return ms.loginPopup({scopes: SCOPES}).then(function(r) {
         msAcc = r.account;
         lastData();
-      }).catch(function(e) { 
-        document.getElementById('navnSel').innerHTML = '<option value="">Innlogging feilet - last siden på nytt</option>';
-        toast('Innlogging feilet: ' + e.message, 'e'); 
+      }).catch(function(e) {
+        document.getElementById('navnSel').innerHTML = '<option value="">Innlogging feilet – last siden på nytt</option>';
+        toast('Innlogging feilet: ' + (e.message||e), 'e');
       });
     }
   }).catch(function(e) {
-    toast('Oppstart feilet: ' + e.message, 'e');
+    toast('Oppstart feilet: ' + (e.message||e), 'e');
   });
 }
 
