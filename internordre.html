@@ -530,34 +530,71 @@ function startOrdre(retning) {
   visScreen('screenOrdre');
 }
 
-// ===================== FUZZY SØKEFUNKSJONER =====================
-function fuzzyMatch(tekst, søk) {
-  tekst = tekst.toLowerCase();
-  søk = søk.toLowerCase().trim();
-  if (!søk) return true;
-  // Delsøk på hvert ord
-  var ord = søk.split(/\s+/);
-  return ord.every(function(o) {
-    if (tekst.includes(o)) return true;
-    // Fuzzy: tillat 1 tegn feil for søkeord > 3 tegn
-    if (o.length > 3) {
-      for (var i = 0; i <= tekst.length - o.length + 1; i++) {
-        var sub = tekst.substr(i, o.length);
-        var feil = 0;
-        for (var j = 0; j < o.length; j++) if (sub[j] !== o[j]) feil++;
-        if (feil <= 1) return true;
-      }
+// ===================== SØKEFUNKSJONER =====================
+
+// Normaliser tekst: lowercase, erstatt ae/oe/aa, fjern spesialtegn
+function normaliser(s) {
+  return (s || '').toLowerCase()
+    .replace(/ae/g, 'a').replace(/oe/g, 'o').replace(/aa/g, 'a')
+    .replace(/[^a-z0-9 ]/g, ' ')
+    .replace(/\s+/g, ' ').trim();
+}
+
+// Score ett søkeord mot tekst
+// 3=eksakt substring, 2=fuzzy/nær-match, 0=ingen
+function scoreOrd(tekst, ord) {
+  if (!ord || !tekst) return 0;
+  if (tekst.includes(ord)) return 3;
+  if (ord.length >= 3) {
+    // Tillat 1 tegn feil (substitusjon)
+    for (var i = 0; i <= tekst.length - ord.length; i++) {
+      var sub = tekst.substr(i, ord.length);
+      var feil = 0;
+      for (var j = 0; j < ord.length; j++) if (sub[j] !== ord[j]) feil++;
+      if (feil <= 1) return 2;
     }
-    return false;
-  });
+    // Tillat 1 utelatt tegn (f.eks. "skrue" matcher "skruer" og "krue" matcher "skrue")
+    for (var k = 0; k < ord.length; k++) {
+      var kortOrd = ord.slice(0, k) + ord.slice(k + 1);
+      if (tekst.includes(kortOrd)) return 2;
+    }
+  }
+  return 0;
+}
+
+// Score hele søkestrengen mot en vare
+// Søker i Varenavn (vekt 3), Kategori (vekt 2), Varenummer (vekt 1)
+function scoreVare(vare, soekOrd) {
+  var varenavn = normaliser(vare.Varenavn || '');
+  var kategori = normaliser(vare.Kategori || '');
+  var varenr   = normaliser(vare.Title || '');
+  var total = 0;
+  var treffAlle = true;
+
+  for (var i = 0; i < soekOrd.length; i++) {
+    var o = soekOrd[i];
+    var s = Math.max(
+      scoreOrd(varenavn, o) * 3,
+      scoreOrd(kategori, o) * 2,
+      scoreOrd(varenr,   o) * 1
+    );
+    if (s === 0) treffAlle = false;
+    total += s;
+  }
+  if (treffAlle) total += soekOrd.length * 2;
+  if (soekOrd.length > 0 && varenavn.startsWith(soekOrd[0])) total += 3;
+  return total;
 }
 
 function søkProsjekt(type, q) {
   var resId = type === 'fra' ? 'fraProsjektRes' : 'tilProsjektRes';
   var resEl = document.getElementById(resId);
   if (!q || q.length < 1) { resEl.classList.remove('open'); resEl.innerHTML = ''; return; }
+  var qn = normaliser(q);
+  var ord = qn.split(' ').filter(function(o){ return o.length > 0; });
   var treff = alleProsjekter.filter(function(p) {
-    return fuzzyMatch((p.Title||'') + ' ' + (p.Prosjektnummer||''), q);
+    var tekst = normaliser((p.Title||'') + ' ' + (p.Prosjektnummer||''));
+    return ord.some(function(o){ return scoreOrd(tekst, o) > 0; });
   }).slice(0, 8);
   if (!treff.length) {
     resEl.innerHTML = '<div class="search-empty">Ingen prosjekter funnet</div>';
@@ -565,7 +602,7 @@ function søkProsjekt(type, q) {
     return;
   }
   resEl.innerHTML = treff.map(function(p) {
-    return '<div class="proj-item" onclick="velgProsjekt(\'' + type + '\',' + p.ID + ',\'' + (p.Title||'').replace(/'/g,"\\'") + '\',' + (p.Prosjektnummer ? "'" + p.Prosjektnummer + "'" : "''") + ')">' +
+    return '<div class="proj-item" onclick="velgProsjekt(\'' + type + '\',' + p.ID + ',\'' + (p.Title||'').replace(/\'/g,"\\'") + '\',' + (p.Prosjektnummer ? "\'" + p.Prosjektnummer + "\'" : "\'\'") + ')">' +
       '<div class="proj-name">' + p.Title + '</div>' +
       '<div class="proj-nr">' + (p.Prosjektnummer||'') + '</div></div>';
   }).join('');
@@ -590,26 +627,37 @@ function velgProsjekt(type, id, navn, nr) {
 
 function søkVare(q) {
   clearTimeout(vareSearchTimeout);
-  vareSearchTimeout = setTimeout(function() { utførVareSøk(q); }, 150);
+  vareSearchTimeout = setTimeout(function() { utførVareSøk(q); }, 200);
 }
 
 function utførVareSøk(q) {
   var resEl = document.getElementById('vareRes');
   if (!q || q.length < 2) { resEl.classList.remove('open'); resEl.innerHTML = ''; return; }
-  var treff = alleVarer.filter(function(v) {
-    return fuzzyMatch((v.Title||'') + ' ' + (v.Kategori||'') + ' ' + (v.Varenr||''), q);
-  }).slice(0, 10);
+
+  var qn = normaliser(q);
+  var soekOrd = qn.split(' ').filter(function(o){ return o.length > 0; });
+
+  var scoret = [];
+  for (var i = 0; i < alleVarer.length; i++) {
+    var s = scoreVare(alleVarer[i], soekOrd);
+    if (s > 0) scoret.push({ vare: alleVarer[i], score: s });
+  }
+  scoret.sort(function(a, b){ return b.score - a.score; });
+  var treff = scoret.slice(0, 15).map(function(x){ return x.vare; });
+
   if (!treff.length) {
-    resEl.innerHTML = '<div class="search-empty">Ingen varer funnet – prøv et annet søkeord</div>';
+    resEl.innerHTML = '<div class="search-empty">Ingen varer funnet</div>';
     resEl.classList.add('open');
     return;
   }
   resEl.innerHTML = treff.map(function(v) {
     var pst = getPaaslag(v);
     var sp = getSalgspris(v, pst);
+    var visNavn = v.Varenavn || v.Title || '';
+    var visNr   = v.Title || '';
     return '<div class="search-item" onclick="leggTilVare(' + v.ID + ')">' +
-      '<div class="search-item-name">' + (v.Title||'') + '</div>' +
-      '<div class="search-item-meta">' + (v.Kategori||'') + ' · ' + (v.Enhet||'') + '</div>' +
+      '<div class="search-item-name">' + visNavn + '</div>' +
+      '<div class="search-item-meta">' + (v.Kategori||'') + ' · nr: ' + visNr + ' · ' + (v.Enhet||'') + '</div>' +
       '<div class="search-item-price">kr ' + sp.toFixed(2).replace('.',',') + ' / ' + (v.Enhet||'stk') + '</div>' +
       '</div>';
   }).join('');
