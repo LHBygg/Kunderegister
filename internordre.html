@@ -534,10 +534,18 @@ function startOrdre(retning) {
 
 // Normaliser tekst: lowercase, erstatt ae/oe/aa, fjern spesialtegn
 function normaliser(s) {
-  return (s || '').toLowerCase()
-    .replace(/ae/g, 'a').replace(/oe/g, 'o').replace(/aa/g, 'a')
-    .replace(/[^a-z0-9 ]/g, ' ')
-    .replace(/\s+/g, ' ').trim();
+  var t = (s || '').toLowerCase();
+  // Normaliser dimensjonsseparatorer: 48x98, 48X98, 48 x 98, 48*98 -> 48x98
+  t = t.replace(/\s*[xX*]\s*/g, 'x');
+  // Strip ledende nuller etter x-separator og mellomrom (48x098 -> 48x98, 36x048 -> 36x48)
+  t = t.replace(/(x| )0+(\d)/g, '$1$2');
+  t = t.replace(/^0+(\d)/g, '$1');
+  // Norske tegn
+  t = t.replace(/ae/g, 'a').replace(/oe/g, 'o').replace(/aa/g, 'a');
+  // Fjern alt unntatt bokstaver, tall, x og mellomrom
+  t = t.replace(/[^a-z0-9x ]/g, ' ');
+  t = t.replace(/\s+/g, ' ').trim();
+  return t;
 }
 
 // Score ett søkeord mot tekst
