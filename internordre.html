@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>LH Bygg Internordre</title>
-<script src="msal-browser.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -341,26 +340,11 @@ html,body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);
 <div class="toast" id="toast"></div>
 
 <script>
-// ===================== KONFIG =====================
-var SP = 'https://lhbent.sharepoint.com/sites/Industriveien1ASLHBygg';
-var LIST_PRISLISTE    = 'b681d302-9b2f-445d-b976-0910d77251b0';
-var LIST_PAASLAG      = 'f7a06989-5dc3-42d8-8b9e-cb9a29857d5a';
-var LIST_INTERNORDRE  = '4dad5372-2aef-4e28-aa21-d8bcd7ba37df';
-var LIST_LINJER       = '19c3b93c-6202-4c0b-a993-cc8d689d2977';
-var LIST_ANSATTE      = '53e66fbd-db40-44d9-abef-8edd0b60862b';
-var LIST_PROSJEKTER   = '3DB9CF64-778C-48D8-8F32-044AC6EE249C';
-var MSAL_CONFIG = {
-  auth:{
-    clientId:'3b2da258-a2f9-41af-baab-f65265f45732',
-    authority:'https://login.microsoftonline.com/c9d89f66-621a-4a0b-9734-8b98789d9791',
-    redirectUri:'https://lhbygg.github.io/Kunderegister/internordre.html'
-  },
-  cache:{cacheLocation:'localStorage',storeAuthStateInCookie:false}
-};
-var SCOPES = ['https://lhbent.sharepoint.com/AllSites.Write','User.Read'];
+// ===================== KONFIG – WORKER =====================
+var WORKER_URL = 'https://gentle-snowflake-e307.tom-andre.workers.dev';
+var WORKER_KEY = 'LHBygg-Internordre-2026-XK9m';
 
 // ===================== STATE =====================
-var ms, msAcc;
 var innloggetBruker = null;
 var korektPin = null;
 var alleVarer = [];
@@ -380,110 +364,56 @@ var logoUrl = 'data:image/jpeg;base64,' + LOGO_B64;
 document.getElementById('hdrLogo').src = logoUrl;
 document.getElementById('loginLogo').src = logoUrl;
 
-// ===================== MSAL / AUTH =====================
-function initApp() {
-  ms = new msal.PublicClientApplication(MSAL_CONFIG);
-  ms.initialize().then(function() {
-    return ms.handleRedirectPromise();
-  }).then(function(resp) {
-    // Redirect-innlogging fullført
-    if (resp && resp.account) {
-      msAcc = resp.account;
-      lastData();
-      return;
-    }
-    // Sjekk eksisterende konto
-    var accs = ms.getAllAccounts();
-    if (accs.length > 0) {
-      msAcc = accs[0];
-      // Prøv stille token-henting
-      ms.acquireTokenSilent({scopes: SCOPES, account: msAcc}).then(function() {
-        lastData();
-      }).catch(function() {
-        // Stille henting feilet - bruk redirect
-        ms.acquireTokenRedirect({scopes: SCOPES, account: msAcc});
-      });
-    } else {
-      // Ingen konto - redirect til Microsoft-innlogging
-      visScreen('screenLogin');
-      document.getElementById('navnSel').innerHTML = '<option value="">Omdirigerer til innlogging...</option>';
-      setTimeout(function() {
-        ms.loginRedirect({scopes: SCOPES});
-      }, 800);
-    }
-  }).catch(function(e) {
-    toast('Oppstart feilet: ' + (e.message||e), 'e');
+
+function workerGet(path) {
+  return fetch(WORKER_URL + path, {
+    headers: { 'X-Api-Key': WORKER_KEY }
+  }).then(function(r) {
+    if (!r.ok) return r.json().then(function(e){ throw new Error(e.error || r.status); });
+    return r.json();
   });
 }
 
-function getToken() {
-  var req = {scopes: SCOPES, account: msAcc};
-  return ms.acquireTokenSilent(req).then(function(r){return r.accessToken;})
-  .catch(function() {
-    ms.acquireTokenRedirect(req);
-    return new Promise(function(){}); // Vent på redirect
+function workerPost(path, body) {
+  return fetch(WORKER_URL + path, {
+    method: 'POST',
+    headers: { 'X-Api-Key': WORKER_KEY, 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  }).then(function(r) {
+    if (!r.ok) return r.json().then(function(e){ throw new Error(e.error || r.status); });
+    return r.json();
   });
-}
-
-function spGet(url) {
-  return getToken().then(function(tok) {
-    return fetch(url, {headers:{'Authorization':'Bearer '+tok,'Accept':'application/json;odata=verbose'}});
-  }).then(function(r){return r.json();}).then(function(d){return d.d || d;});
-}
-
-function spPost(url, body) {
-  return getToken().then(function(tok) {
-    return fetch(url, {
-      method:'POST',
-      headers:{'Authorization':'Bearer '+tok,'Accept':'application/json;odata=verbose','Content-Type':'application/json;odata=verbose','X-RequestDigest':tok},
-      body: JSON.stringify({'__metadata':{'type':'SP.Data.ListItemEntityTypeFullName'},...body})
-    });
-  }).then(function(r){return r.json();}).then(function(d){return d.d || d;});
 }
 
 // ===================== DATA LOAD =====================
 function lastData() {
-  Promise.all([lastAnsatte(), lastProsjekter(), lastPrisliste(), lastPaaslag()])
-    .then(function() { visPålogging(); })
-    .catch(function(e) { toast('Feil ved lasting av data: ' + e.message, 'e'); });
-}
-
-function lastAnsatte() {
-  return spGet(SP + "/_api/web/lists(guid'" + LIST_ANSATTE + "')/items?$select=ID,Title,AktivBruker,PINKode&$top=200&$orderby=Title")
+  // Vis spinner mens data lastes
+  document.getElementById('navnSel').innerHTML = '<option value="">Laster data...</option>';
+  workerGet('/data')
     .then(function(d) {
-      var items = d.value || [];
-      korektPin = null;
+      // Ansatte
       var sel = document.getElementById('navnSel');
       sel.innerHTML = '<option value="">-- Velg ditt navn --</option>';
-      items.forEach(function(item) {
-        if (item.Title === 'PIN') {
-          korektPin = item.PINKode;
-        } else if (item.AktivBruker !== false) {
-          var opt = document.createElement('option');
-          opt.value = item.Title;
-          opt.textContent = item.Title;
-          sel.appendChild(opt);
-        }
+      (d.ansatte || []).forEach(function(item) {
+        var opt = document.createElement('option');
+        opt.value = item.Title;
+        opt.textContent = item.Title;
+        sel.appendChild(opt);
       });
-      // Husk sist valgt navn
       var husket = localStorage.getItem('io_navn');
       if (husket) sel.value = husket;
-    });
-}
 
-function lastProsjekter() {
-  return spGet(SP + "/_api/web/lists(guid'" + LIST_PROSJEKTER + "')/items?$select=ID,Title,Prosjektnummer,Status&$filter=Status eq 'Aktiv'&$top=200&$orderby=Title")
-    .then(function(d) { alleProsjekter = d.value || []; });
-}
+      // PIN-elementet ligger ikke i ansatte-lista fra Worker,
+      // men PIN-feltet er med i ansatte-listen i SP – Worker sender det med
+      korektPin = d.pin || null;
 
-function lastPrisliste() {
-  return spGet(SP + "/_api/web/lists(guid'" + LIST_PRISLISTE + "')/items?$select=ID,Title,Varenr,Kategori,Innpris,Enhet,PaaslaaOverstyr&$top=5000")
-    .then(function(d) { alleVarer = d.value || []; });
-}
+      alleProsjekter = d.prosjekter || [];
+      alleVarer      = d.prisliste  || [];
+      allePaaslag    = d.paaslag    || [];
 
-function lastPaaslag() {
-  return spGet(SP + "/_api/web/lists(guid'" + LIST_PAASLAG + "')/items?$select=Title,PaaslaaProsentStandard&$top=200")
-    .then(function(d) { allePaaslag = d.value || []; });
+      visPålogging();
+    })
+    .catch(function(e) { toast('Feil ved lasting av data: ' + e.message, 'e'); });
 }
 
 // ===================== PÅLOGGING =====================
@@ -541,10 +471,9 @@ function loggUt() {
 // ===================== HISTORIKK =====================
 function lastHistorikk() {
   if (!innloggetBruker) return;
-  var url = SP + "/_api/web/lists(guid'" + LIST_INTERNORDRE + "')/items?$select=ID,Title,ProsjektNavn,Retning,Dato,Status,TotalSalgspris&$filter=Bestiller eq '" + innloggetBruker.replace(/'/g,"''") + "'&$orderby=Dato desc&$top=30";
   document.getElementById('histListe').innerHTML = '<div class="loader"><div class="spinner"></div>Laster...</div>';
-  spGet(url).then(function(d) {
-    var items = d.value || [];
+  workerGet('/ordrer?bestiller=' + encodeURIComponent(innloggetBruker)).then(function(d) {
+    var items = d.ordrer || [];
     if (!items.length) {
       document.getElementById('histListe').innerHTML = '<div class="empty"><div class="empty-icon">📋</div><div class="empty-text">Ingen ordrer ennå</div></div>';
       return;
@@ -779,26 +708,22 @@ function sendOrdre() {
     TotalSalgspris: Math.round(tot*100)/100
   };
 
-  spPost(SP + "/_api/web/lists(guid'" + LIST_INTERNORDRE + "')/items", body)
+  var linjer = ordreLinjer.map(function(l) {
+    return {
+      Title: l.vare.Title,
+      Varenr: l.vare.Varenr || '',
+      Antall: l.antall,
+      Enhet: l.vare.Enhet || '',
+      Innpris: l.vare.Innpris,
+      PaaslaaProsentBrukt: l.pst,
+      Salgspris: l.sp,
+      Linjepris: Math.round(l.sp * l.antall * 100) / 100
+    };
+  });
+
+  workerPost('/ordre', { ordre: body, linjer: linjer })
     .then(function(resp) {
-      var ordreId = resp.ID || (resp.d && resp.d.ID);
-      var linjePromises = ordreLinjer.map(function(l) {
-        return spPost(SP + "/_api/web/lists(guid'" + LIST_LINJER + "')/items", {
-          Title: l.vare.Title,
-          OrdreID: ordreId,
-          Varenr: l.vare.Varenr || '',
-          Antall: l.antall,
-          Enhet: l.vare.Enhet || '',
-          Innpris: l.vare.Innpris,
-          PaaslaaProsentBrukt: l.pst,
-          Salgspris: l.sp,
-          Linjepris: Math.round(l.sp * l.antall * 100) / 100
-        });
-      });
-      return Promise.all(linjePromises);
-    })
-    .then(function() {
-      sisteOrdreNr = body.Title;
+      sisteOrdreNr = resp.ordreNr || body.Title;
       document.getElementById('confirmNr').textContent = sisteOrdreNr;
       btn.disabled = false;
       btn.innerHTML = 'Send internordre';
@@ -831,10 +756,8 @@ function toast(msg, type) {
 }
 
 // ===================== START =====================
-// MSAL lastes i <head> - initApp kalles når siden er klar
-window.addEventListener('load', function(){ 
-  if(typeof msal !== 'undefined') { initApp(); }
-  else { toast('MSAL ikke lastet – sjekk at msal-browser.min.js ligger i samme mappe', 'e'); }
+window.addEventListener('load', function(){
+  lastData();
 });
 
 // Lukk dropdowns ved klikk utenfor
