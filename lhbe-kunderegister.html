@@ -1130,7 +1130,7 @@ function spDel(url) {
 function loadData() {
   Promise.all([
     spGet(SP + '/_api/web/lists(guid\'' + CL + '\')/items?$select=ID,Title,Kontaktperson,Telefon,Epost,Adresse,Orgnr,Kundetype&$top=500'),
-    spGet(SP + '/_api/web/lists(guid\'' + PL + '\')/items?$select=ID,Title,Kundenavn,Prosjektnummer,Kalkylenummer,Oppstartsdato,Sluttdato,Pris,Status,Prosjektleder,Notat,Kontaktperson,Telefon,Epost,Adresse,Underprosjekt,Hovedprosjektnummer,Hovedprosjektnavn,S_x00f8_knadspliktig,Tiltaksklasse,Sjekkliste&$top=500')
+    spGet(SP + '/_api/web/lists(guid\'' + PL + '\')/items?$select=ID,Title,Kundenavn,Prosjektnummer,Kalkylenummer,Oppstartsdato,Sluttdato,Pris,Status,Prosjektleder,Notat,Kontaktperson,Telefon,Epost,Adresse,Underprosjekt,Hovedprosjektnummer,Hovedprosjektnavn,S_x00f8_knadspliktig,Tiltaksklasse,Sjekkliste&$top=500').catch(function(){ return spGet(SP + '/_api/web/lists(guid\'' + PL + '\')/items?$select=ID,Title,Kundenavn,Prosjektnummer,Kalkylenummer,Oppstartsdato,Sluttdato,Pris,Status,Prosjektleder,Notat,Kontaktperson,Telefon,Epost,Adresse,Underprosjekt,Hovedprosjektnummer,Hovedprosjektnavn,S_x00f8_knadspliktig,Tiltaksklasse&$top=500'); })
   ]).then(function(results) {
     customers = results[0].value || [];
     projects = results[1].value || [];
@@ -1959,10 +1959,10 @@ function toggleCheck(pid, idx) {
     'Sluttdokumentasjon samlet inn'
   ];
   var ckState = [];
-  try { ckState = JSON.parse(p._Sjekkliste || '[]'); } catch(e) { ckState = []; }
+  try { ckState = JSON.parse(p.Sjekkliste || '[]'); } catch(e) { ckState = []; }
   while (ckState.length < checks.length) ckState.push(false);
   ckState[idx] = !ckState[idx];
-  p._Sjekkliste = JSON.stringify(ckState);
+  p.Sjekkliste = JSON.stringify(ckState);
   var ckDone = ckState.filter(Boolean).length;
   // Oppdater UI direkte
   var rows = document.querySelectorAll('.pdm-check-row');
