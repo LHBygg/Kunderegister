@@ -1130,7 +1130,7 @@ function spDel(url) {
 function loadData() {
   Promise.all([
     spGet(SP + '/_api/web/lists(guid\'' + CL + '\')/items?$select=ID,Title,Kontaktperson,Telefon,Epost,Adresse,Orgnr,Kundetype&$top=500'),
-    spGet(SP + '/_api/web/lists(guid\'' + PL + '\')/items?$select=ID,Title,Kundenavn,Prosjektnummer,Kalkylenummer,Oppstartsdato,Sluttdato,Pris,Status,Prosjektleder,Notat,Kontaktperson,Telefon,Adresse,Underprosjekt,Hovedprosjektnummer,Hovedprosjektnavn,S_x00f8_knadspliktig,Tiltaksklasse&$top=500')
+    spGet(SP + '/_api/web/lists(guid\'' + PL + '\')/items?$select=ID,Title,Kundenavn,Prosjektnummer,Kalkylenummer,Oppstartsdato,Sluttdato,Pris,Status,Prosjektleder,Notat,Kontaktperson,Telefon,Epost,Adresse,Underprosjekt,Hovedprosjektnummer,Hovedprosjektnavn,S_x00f8_knadspliktig,Tiltaksklasse,Sjekkliste&$top=500')
   ]).then(function(results) {
     customers = results[0].value || [];
     projects = results[1].value || [];
@@ -1833,7 +1833,7 @@ function openPD(pid) {
     'Sluttdokumentasjon samlet inn'
   ];
   var ckState = [];
-  try { ckState = JSON.parse(p._Sjekkliste || '[]'); } catch(e) { ckState = []; }
+  try { ckState = JSON.parse(p.Sjekkliste || '[]'); } catch(e) { ckState = []; }
   while (ckState.length < checks.length) ckState.push(false);
   var ckDone = ckState.filter(Boolean).length;
 
@@ -3554,16 +3554,23 @@ function renderProjLevListe(projId) {
     var k = levKontakter.find(function(x) { return x.ID == pl.KontaktId; });
     var levNavn = lev ? lev.Title : 'Ukjent';
     var levKat = lev ? lev.Kategori : '';
-    html.push('<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--br);">');
+    var initials = levNavn.split(' ').map(function(w){return w[0];}).join('').substring(0,2).toUpperCase();
+    html.push('<div style="background:var(--bg3);border:1px solid var(--br);border-radius:var(--r);padding:10px 12px;margin-bottom:6px;display:flex;gap:10px;align-items:flex-start;">');
+    html.push('<div style="width:30px;height:30px;border-radius:50%;background:rgba(232,184,75,.15);color:var(--acc);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;flex-shrink:0;margin-top:1px;">' + initials + '</div>');
     html.push('<div style="flex:1;min-width:0;">');
-    html.push('<div style="font-size:13px;font-weight:500;">' + levNavn + (pl.Title ? ' <span style="color:var(--tx3);font-weight:400;">– ' + pl.Title + '</span>' : '') + '</div>');
-    html.push('<div style="font-size:11px;color:var(--tx3);">');
-    if (levKat) html.push('<span style="background:var(--bg3);border:1px solid var(--br);border-radius:20px;padding:1px 6px;">' + levKat + '</span> ');
+    html.push('<div style="font-size:13px;font-weight:500;">' + levNavn + '</div>');
+    if (levKat) html.push('<span style="display:inline-block;font-size:10px;background:var(--bg4);border:1px solid var(--br);border-radius:20px;padding:1px 8px;margin-top:3px;">' + levKat + '</span>');
+    if (pl.Title) html.push('<div style="font-size:11px;color:var(--tx3);margin-top:3px;">' + pl.Title + '</div>');
     if (k) {
+      html.push('<div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:4px;">');
+      html.push('<div style="display:inline-flex;align-items:center;gap:5px;font-size:11px;background:var(--bg4);border:1px solid var(--br);border-radius:20px;padding:2px 8px;">');
       html.push(k.Title);
-      if (k.Telefon) html.push(' &nbsp;·&nbsp; <a href="tel:' + k.Telefon + '" style="color:var(--blu);text-decoration:none;">' + k.Telefon + '</a>');
+      if (k.Rolle) html.push(' <span style="color:var(--tx3);">· ' + k.Rolle + '</span>');
+      if (k.Telefon) html.push(' · <a href="tel:' + k.Telefon + '" style="color:var(--blu);text-decoration:none;">' + k.Telefon + '</a>');
+      if (k.Epost) html.push(' · <a href="mailto:' + k.Epost + '" style="color:var(--blu);text-decoration:none;">' + k.Epost + '</a>');
+      html.push('</div></div>');
     }
-    html.push('</div></div>');
+    html.push('</div>');
     html.push('<button class="btn sm danger" onclick="slettProjLev(' + pl.ID + ',' + projId + ')">Slett</button>');
     html.push('</div>');
   });
