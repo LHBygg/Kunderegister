@@ -1759,8 +1759,8 @@ function openPD(pid) {
     var av = avF.indexOf(f) > -1;
     var l = !av || lck;
     var cls = 'fbtn' + (l ? ' lck' : '');
-    var onclick = l ? '' : 'openF(' + pid + ',' + "'" + f + "'" + ')';
-    fgHtml.push('<button class="' + cls + '" id="fb_' + f + '" onclick="' + onclick + '"><span class="fi">&#128193;</span>' + f + '</button>');
+    var onclickAttr = l ? '' : ('openF(' + pid + ',' + String.fromCharCode(39) + f + String.fromCharCode(39) + ')');
+    fgHtml.push('<button class="' + cls + '" id="fb_' + f + '" onclick="' + onclickAttr + '"><span class="fi">&#128193;</span>' + f + '</button>');
   });
   fgHtml.push('</div>');
 
