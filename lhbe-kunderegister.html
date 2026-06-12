@@ -941,6 +941,7 @@ var ueKontakter = [];
 var LEVL = 'f32d8a04-25cc-4f68-a5d5-1ead5c5ff82b';
 var LEVKL = '30434dbc-a93e-43a4-aa5e-2f7a89d7e7dd';
 var PLEVL = '91a10cdc-2629-4f80-ae9a-95b05978e44b';
+var NL = '55e4ff82-3d85-480e-a97e-23921b1c8edf';
 var LEV_KATEGORIER = ['Byggvarer','Betong','Stål/Armering','Transport','Verktøy/maskin','Elektro','VVS-materiell','Annet'];
 var levList = [];
 var levKontakter = [];
@@ -1987,7 +1988,7 @@ function renderNotater(pid) {
   if (window._pdmNotater && window._pdmNotater[pid]) {
     visNotater(pid); return;
   }
-  spGet(SP + '/_api/web/lists/getbytitle(\'ProsjektNotater\')/items?$filter=ProsjektID eq \'' + pid + '\'&$orderby=Dato desc&$top=50')
+  spGet(SP + '/_api/web/lists(guid\'' + NL + '\')/items?$filter=ProsjektID eq \'' + pid + '\'&$orderby=Dato desc&$top=50')
     .then(function(d) {
       if (!window._pdmNotater) window._pdmNotater = {};
       window._pdmNotater[pid] = (d.value || []).map(function(n) {
@@ -2019,7 +2020,7 @@ function lagreNotat(pid) {
   var dato = new Date();
   var datoStr = dato.getFullYear() + '-' + String(dato.getMonth()+1).padStart(2,'0') + '-' + String(dato.getDate()).padStart(2,'0') + 'T' + String(dato.getHours()).padStart(2,'0') + ':' + String(dato.getMinutes()).padStart(2,'0') + ':00Z';
   var body = { Title: String(pid), ProsjektID: String(pid), Tekst: tekst, Dato: datoStr, Bruker: bruker };
-  spPost(SP + '/_api/web/lists/getbytitle(\'ProsjektNotater\')/items', body)
+  spPost(SP + '/_api/web/lists(guid\'' + NL + '\')/items', body)
     .then(function(d) {
       if (!window._pdmNotater) window._pdmNotater = {};
       if (!window._pdmNotater[pid]) window._pdmNotater[pid] = [];
