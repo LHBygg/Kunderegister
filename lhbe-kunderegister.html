@@ -105,24 +105,37 @@ tr.erow td{padding:0;background:var(--bg2);border-bottom:1px solid var(--br2);}
 .pdmsub{font-size:12px;color:var(--tx2);white-space:nowrap;flex-shrink:0;}
 .pdmclose{display:none;}
 .pdmbody{flex:1;overflow:hidden;display:flex;}
-.pdm-sidebar{width:210px;flex-shrink:0;border-right:1px solid var(--br);background:var(--bg2);overflow-y:auto;padding:14px 10px;}
-.pdm-sideinfo{padding:0 4px;}
-.pdm-sideinfo-row{display:flex;flex-direction:column;gap:2px;margin-bottom:10px;}
-.pdm-sideinfo-lbl{font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--tx3);font-weight:500;}
-.pdm-sideinfo-val{font-size:13px;font-weight:500;}
-.pdm-sideinfo-val.acc{color:var(--acc);font-family:'DM Mono',monospace;}
-.pdm-sideinfo-val.mono{font-family:'DM Mono',monospace;}
 .pdm-main{flex:1;overflow-y:auto;padding:20px 22px;}
-.pdm-grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:14px;}
+.pdm-grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:14px;}
 .pdm-grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;}
 .pdm-card{background:var(--bg2);border:1px solid var(--br);border-radius:var(--rl);padding:13px 14px;}
 .pdm-card-lbl{font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--tx3);font-weight:500;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.pdm-card-lbl .pdm-card-act{font-size:11px;font-weight:500;color:var(--tx2);background:var(--bg3);border:1px solid var(--br2);border-radius:5px;padding:3px 8px;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap;}
+.pdm-card-lbl .pdm-card-act:hover{background:var(--bg4);color:var(--tx);}
 .pdm-info-row{display:flex;align-items:flex-start;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--br);font-size:12px;gap:8px;}
 .pdm-info-row:last-child{border-bottom:none;padding-bottom:0;}
 .pdm-info-key{color:var(--tx2);flex-shrink:0;}
 .pdm-info-val{font-weight:500;text-align:right;word-break:break-word;}
 .pdm-info-val.acc{color:var(--acc);font-family:'DM Mono',monospace;}
 .pdm-info-val.mono{font-family:'DM Mono',monospace;}
+.pdm-info-val.grn{color:var(--grn);}
+.pdm-check-row{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--br);font-size:12px;cursor:pointer;transition:background .1s;}
+.pdm-check-row:last-child{border-bottom:none;padding-bottom:0;}
+.pdm-check-row:hover{background:var(--bg3);margin:0 -14px;padding:6px 14px;}
+.pdm-cb{width:15px;height:15px;border-radius:3px;border:1.5px solid var(--br2);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .15s;}
+.pdm-cb.on{background:var(--grn);border-color:var(--grn);}
+.pdm-cb-lbl{flex:1;color:var(--tx2);}
+.pdm-cb-lbl.on{color:var(--tx3);text-decoration:line-through;}
+.pdm-progbar{height:3px;background:var(--bg4);border-radius:2px;margin-bottom:10px;overflow:hidden;}
+.pdm-progfill{height:100%;background:var(--grn);border-radius:2px;transition:width .3s;}
+.pdm-note-item{display:flex;gap:8px;padding:6px 0;border-bottom:1px solid var(--br);font-size:12px;}
+.pdm-note-item:last-child{border-bottom:none;padding-bottom:0;}
+.pdm-note-dot{width:6px;height:6px;border-radius:50%;background:var(--acc);margin-top:4px;flex-shrink:0;}
+.pdm-note-body{flex:1;}
+.pdm-note-text{color:var(--tx);line-height:1.4;}
+.pdm-note-meta{font-size:10px;color:var(--tx3);margin-top:2px;font-family:'DM Mono',monospace;}
+.pdm-note-input{width:100%;margin-top:10px;padding:8px 10px;background:var(--bg3);border:1px dashed var(--br2);border-radius:var(--r);color:var(--tx3);font-size:12px;font-family:'DM Sans',sans-serif;outline:none;transition:border-color .15s;resize:none;}
+.pdm-note-input:focus{border-color:var(--acc);color:var(--tx);}
 .pdsec{margin-bottom:22px;}
 .pdsect{font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--tx3);font-weight:500;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--br);}
 .igrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
@@ -314,9 +327,8 @@ tr.erow td{padding:0;background:var(--bg2);border-bottom:1px solid var(--br2);}
   .pca{padding:9px 8px;font-size:13px;}
 
   /* Prosjektpanel – fullskjerm mobil */
-  .pdm-grid3{grid-template-columns:1fr;}
+  .pdm-grid4{grid-template-columns:1fr 1fr;}
   .pdm-grid2{grid-template-columns:1fr;}
-  .pdm-sidebar{display:none;}
   .pdmsub{display:none;}
   .pdmhdr{gap:8px;padding:0 12px;}
   .pdmtitle{font-size:14px;}
@@ -672,7 +684,6 @@ tr.erow td{padding:0;background:var(--bg2);border-bottom:1px solid var(--br2);}
       <div style="display:flex;gap:7px;margin-left:auto;" id="pdmHdrActs"></div>
     </div>
     <div class="pdmbody">
-      <div class="pdm-sidebar" id="pdmSidebar"></div>
       <div class="pdm-main" id="pdmB"></div>
     </div>
   </div>
@@ -1735,7 +1746,7 @@ function openPD(pid) {
 
   // Header
   document.getElementById('pdmT').textContent = p.Title || '-';
-  document.getElementById('pdmS').textContent = (p.Kundenavn || '') + (p.Prosjektnummer ? ' · ' + p.Prosjektnummer : '');
+  document.getElementById('pdmS').textContent = (p.Kundenavn || '') + (p.Prosjektnummer ? ' \u00b7 ' + p.Prosjektnummer : '');
 
   // Handlingsknapper i header
   var hdrActs = [];
@@ -1743,39 +1754,17 @@ function openPD(pid) {
   if (s === 'Aktiv' && p.Prosjektnummer) hdrActs.push('<button class="btn sm" onclick="openTimerPdfMov(' + p.ID + ')">&#128202; Timer PDF</button>');
   if (s === 'Under kalkyle') {
     if (p.Prosjektnummer && p.Kalkylenummer) hdrActs.push('<button class="btn sm" onclick="setSt(' + p.ID + ',\'Aktiv\');closePD()">Sett Aktiv</button>');
-    else hdrActs.push('<button class="btn sm" style="opacity:.4;cursor:not-allowed;" disabled title="Fyll inn Prosjektnummer og Kalkylenummer forst">Sett Aktiv</button>');
+    else hdrActs.push('<button class="btn sm" style="opacity:.4;cursor:not-allowed;" disabled>Sett Aktiv</button>');
   }
   if (s === 'Aktiv') hdrActs.push('<button class="btn sm" onclick="setSt(' + p.ID + ',\'Avsluttet\');closePD()">Sett Avsluttet</button>');
   hdrActs.push('<button class="btn sm" onclick="openEditP(' + p.ID + ')">&#9998; Rediger</button>');
   document.getElementById('pdmHdrActs').innerHTML = hdrActs.join('');
 
-  // Sidebar
-  var tkBadge = (p['S_x00f8_knadspliktig'] && p.Tiltaksklasse) ? ' <span style="font-size:10px;font-weight:600;padding:1px 5px;border-radius:3px;background:rgba(59,130,246,.18);color:var(--blu);font-family:monospace;">TK' + p.Tiltaksklasse + '</span>' : '';
-  var sideHtml = [];
-  sideHtml.push('<div style="font-size:11px;font-weight:600;color:var(--tx3);text-transform:uppercase;letter-spacing:.5px;padding:2px 8px;margin-bottom:4px;">Status</div>');
-  sideHtml.push('<div style="padding:4px 8px;margin-bottom:12px;"><span class="sbdg ' + sc + '">' + s + '</span>' + tkBadge + '</div>');
-  var sideFields = [
-    ['Kunde', p.Kundenavn || '-'],
-    ['Prosjektnr.', p.Prosjektnummer || '-'],
-    ['Kalkylenr.', p.Kalkylenummer || '-'],
-    ['Kontraktsum', fmtCur(p.Pris)],
-    ['Oppstart', fmtDate(p.Oppstartsdato) || '-'],
-    ['Sluttdato', fmtDate(p.Sluttdato) || '-'],
-    ['Prosjektleder', p.Prosjektleder || '-'],
-  ];
-  sideFields.forEach(function(row) {
-    var valClass = (row[0] === 'Kontraktsum') ? 'pdm-sideinfo-val acc' : (row[0] === 'Prosjektnr.' || row[0] === 'Kalkylenr.') ? 'pdm-sideinfo-val mono' : 'pdm-sideinfo-val';
-    sideHtml.push('<div class="pdm-sideinfo-row"><div class="pdm-sideinfo-lbl">' + row[0] + '</div><div class="' + valClass + '">' + row[1] + '</div></div>');
-  });
-  if (p.Adresse) sideHtml.push('<div class="pdm-sideinfo-row"><div class="pdm-sideinfo-lbl">Adresse</div><div class="pdm-sideinfo-val" style="font-size:11px;">' + p.Adresse + '</div></div>');
-  if (p.Kontaktperson) sideHtml.push('<div class="pdm-sideinfo-row"><div class="pdm-sideinfo-lbl">Kontakt</div><div class="pdm-sideinfo-val" style="font-size:11px;">' + p.Kontaktperson + (p.Telefon ? ' · <a href="tel:' + p.Telefon + '" style="color:var(--grn)">' + p.Telefon + '</a>' : '') + '</div></div>');
-  document.getElementById('pdmSidebar').innerHTML = '<div class="pdm-sideinfo">' + sideHtml.join('') + '</div>';
-
   // Mappeliste
   var allF = ['HMS', 'FDV', 'Kontrakt', 'Fremdrift', 'Faktura', 'Kalkyler_Beskrivelser_Tegninger', 'Korrespondanse'];
   var avF = s === 'Under kalkyle' ? ['Kalkyler_Beskrivelser_Tegninger', 'Korrespondanse'] : allF;
   var lck = s === 'Avsluttet';
-  var fgHtml = ['<div class="fgrid">'];
+  var fgHtml = ['<div class="fgrid" style="grid-template-columns:repeat(auto-fill,minmax(90px,1fr));">'];
   allF.forEach(function(f) {
     var av = avF.indexOf(f) > -1;
     var l = !av || lck;
@@ -1785,67 +1774,136 @@ function openPD(pid) {
   });
   fgHtml.push('</div>');
 
-  // Rad 1: Detaljer | UE | Leverandorer
-  var bodyHtml = [];
-  bodyHtml.push('<div class="pdm-grid3">');
+  var b = [];
 
-  // Kol 1: Detaljer
-  bodyHtml.push('<div class="pdm-card">');
-  bodyHtml.push('<div class="pdm-card-lbl">Adresse &amp; kontakt</div>');
-  var detRows = [];
-  if (p.Adresse) detRows.push(['Byggeplassadresse', p.Adresse]);
-  if (p.Kontaktperson) detRows.push(['Kontaktperson', p.Kontaktperson]);
-  if (p.Telefon) detRows.push(['Telefon', '<a href="tel:' + p.Telefon + '" style="color:var(--grn)">' + p.Telefon + '</a>']);
-  if (p.Epost) detRows.push(['E-post', '<a href="mailto:' + p.Epost + '" style="color:var(--blu)">' + p.Epost + '</a>']);
-  if (p.Notat) detRows.push(['Notat', '<span style="color:var(--tx2)">' + p.Notat + '</span>']);
-  if (detRows.length) {
-    detRows.forEach(function(r) { bodyHtml.push('<div class="pdm-info-row"><span class="pdm-info-key">' + r[0] + '</span><span class="pdm-info-val" style="font-size:11px;max-width:60%;text-align:right;word-break:break-word;">' + r[1] + '</span></div>'); });
-  } else {
-    bodyHtml.push('<div style="font-size:12px;color:var(--tx3)">Ingen kontaktinfo registrert.</div>');
-  }
-  bodyHtml.push('</div>');
+  // === RAD 1: Prosjektinfo | Kontakt & adresse | UE | Leverandorer ===
+  b.push('<div class="pdm-grid4">');
 
-  // Kol 2: UE
-  bodyHtml.push('<div class="pdm-card">');
-  bodyHtml.push('<div class="pdm-card-lbl">Underentreprenører <button class="btn sm" onclick="openProjUEMov(' + p.ID + ')" style="font-size:11px;padding:3px 8px;">+ Legg til</button></div>');
-  bodyHtml.push('<div id="projUEListe_' + p.ID + '"><div class="sdk-load"><div class="sdk-spin"></div>Laster...</div></div>');
-  bodyHtml.push('</div>');
+  // Kol 1: Prosjektinfo
+  var tkBadge = (p['S_x00f8_knadspliktig'] && p.Tiltaksklasse) ? ' <span style="font-size:10px;font-weight:600;padding:1px 5px;border-radius:3px;background:rgba(59,130,246,.18);color:var(--blu);font-family:monospace;margin-left:4px;">TK' + p.Tiltaksklasse + '</span>' : '';
+  b.push('<div class="pdm-card">');
+  b.push('<div class="pdm-card-lbl">Prosjektinfo</div>');
+  b.push('<div class="pdm-info-row"><span class="pdm-info-key">Status</span><span class="pdm-info-val"><span class="sbdg ' + sc + '" style="margin:0;">' + s + '</span>' + tkBadge + '</span></div>');
+  b.push('<div class="pdm-info-row"><span class="pdm-info-key">Prosjektnr.</span><span class="pdm-info-val mono">' + (p.Prosjektnummer || '-') + '</span></div>');
+  b.push('<div class="pdm-info-row"><span class="pdm-info-key">Kalkylenr.</span><span class="pdm-info-val mono">' + (p.Kalkylenummer || '-') + '</span></div>');
+  b.push('<div class="pdm-info-row"><span class="pdm-info-key">Kontraktsum</span><span class="pdm-info-val acc">' + fmtCur(p.Pris) + '</span></div>');
+  b.push('<div class="pdm-info-row"><span class="pdm-info-key">Oppstart</span><span class="pdm-info-val">' + (fmtDate(p.Oppstartsdato) || '-') + '</span></div>');
+  b.push('<div class="pdm-info-row"><span class="pdm-info-key">Sluttdato</span><span class="pdm-info-val">' + (fmtDate(p.Sluttdato) || '-') + '</span></div>');
+  b.push('<div class="pdm-info-row"><span class="pdm-info-key">Prosjektleder</span><span class="pdm-info-val">' + (p.Prosjektleder || '-') + '</span></div>');
+  b.push('</div>');
 
-  // Kol 3: Leverandorer
-  bodyHtml.push('<div class="pdm-card">');
-  bodyHtml.push('<div class="pdm-card-lbl">Leverandører <button class="btn sm" onclick="openProjLevMov(' + p.ID + ')" style="font-size:11px;padding:3px 8px;">+ Legg til</button></div>');
-  bodyHtml.push('<div id="projLevListe_' + p.ID + '"><div class="sdk-load"><div class="sdk-spin"></div>Laster...</div></div>');
-  bodyHtml.push('</div>');
-  bodyHtml.push('</div>');
+  // Kol 2: Kontakt & adresse
+  b.push('<div class="pdm-card">');
+  b.push('<div class="pdm-card-lbl">Kontakt &amp; adresse</div>');
+  if (p.Kontaktperson) b.push('<div class="pdm-info-row"><span class="pdm-info-key">Kontaktperson</span><span class="pdm-info-val">' + p.Kontaktperson + '</span></div>');
+  if (p.Telefon) b.push('<div class="pdm-info-row"><span class="pdm-info-key">Telefon</span><span class="pdm-info-val grn"><a href="tel:' + p.Telefon + '" style="color:var(--grn);text-decoration:none;">' + p.Telefon + '</a></span></div>');
+  if (p.Epost) b.push('<div class="pdm-info-row"><span class="pdm-info-key">E-post</span><span class="pdm-info-val" style="font-size:11px;"><a href="mailto:' + p.Epost + '" style="color:var(--blu);text-decoration:none;">' + p.Epost + '</a></span></div>');
+  if (p.Adresse) b.push('<div class="pdm-info-row"><span class="pdm-info-key">Adresse</span><span class="pdm-info-val" style="font-size:11px;">' + p.Adresse + '</span></div>');
+  if (p.Notat) b.push('<div class="pdm-info-row"><span class="pdm-info-key">Notat</span><span class="pdm-info-val" style="font-size:11px;color:var(--tx2);">' + p.Notat + '</span></div>');
+  if (!p.Kontaktperson && !p.Telefon && !p.Adresse) b.push('<div style="font-size:12px;color:var(--tx3);">Ingen kontaktinfo registrert.</div>');
+  b.push('</div>');
 
-  // Rad 2: Mapper
-  bodyHtml.push('<div class="pdm-card" style="margin-bottom:14px;">');
-  bodyHtml.push('<div class="pdm-card-lbl">Mapper');
-  if (s === 'Under kalkyle') bodyHtml.push(' <span style="font-size:10px;font-weight:400;letter-spacing:0;text-transform:none;color:var(--tx3);">(Kalkyle: kun Kalkyler/Korrespondanse tilgjengelig)</span>');
-  bodyHtml.push('</div>');
-  bodyHtml.push(fgHtml.join(''));
-  bodyHtml.push('<div id="fpanel"></div>');
-  bodyHtml.push('</div>');
+  // Kol 3: UE
+  b.push('<div class="pdm-card">');
+  b.push('<div class="pdm-card-lbl">Underentrepren\u00f8rer <button class="pdm-card-act" onclick="openProjUEMov(' + p.ID + ')">+ Legg til</button></div>');
+  b.push('<div id="projUEListe_' + p.ID + '"><div class="sdk-load"><div class="sdk-spin"></div>Laster...</div></div>');
+  b.push('</div>');
 
-  // Rad 3: SmartDok
+  // Kol 4: Leverandorer
+  b.push('<div class="pdm-card">');
+  b.push('<div class="pdm-card-lbl">Leverand\u00f8rer <button class="pdm-card-act" onclick="openProjLevMov(' + p.ID + ')">+ Legg til</button></div>');
+  b.push('<div id="projLevListe_' + p.ID + '"><div class="sdk-load"><div class="sdk-spin"></div>Laster...</div></div>');
+  b.push('</div>');
+  b.push('</div>');
+
+  // === RAD 2: Sjekkliste | Notater ===
+  var checks = [
+    'Kontrakt signert og arkivert',
+    'Prosjektmappe opprettet (SharePoint)',
+    'Prosjekt opprettet i SmartDok',
+    'SHA-plan utarbeidet og signert',
+    'Arbeidstegninger mottatt',
+    'Tegninger distribuert til formann',
+    'Verneombud utpekt',
+    'HMS-tavle satt opp',
+    'Riggplan godkjent',
+    'Sluttbefaring gjennomf\u00f8rt',
+    'FDV-dokumentasjon levert',
+    'Sluttdokumentasjon samlet inn'
+  ];
+  var ckState = [];
+  try { ckState = JSON.parse(p._Sjekkliste || '[]'); } catch(e) { ckState = []; }
+  while (ckState.length < checks.length) ckState.push(false);
+  var ckDone = ckState.filter(Boolean).length;
+
+  b.push('<div class="pdm-grid2">');
+
+  // Sjekkliste
+  b.push('<div class="pdm-card">');
+  b.push('<div class="pdm-card-lbl">Sjekkliste <span style="font-weight:400;letter-spacing:0;text-transform:none;font-size:11px;color:var(--tx3);">' + ckDone + ' / ' + checks.length + '</span></div>');
+  b.push('<div class="pdm-progbar"><div class="pdm-progfill" id="ckProg" style="width:' + Math.round(ckDone/checks.length*100) + '%"></div></div>');
+  checks.forEach(function(lbl, i) {
+    var on = ckState[i] ? ' on' : '';
+    b.push('<div class="pdm-check-row" onclick="toggleCheck(' + p.ID + ',' + i + ')">');
+    b.push('<div class="pdm-cb' + on + '">' + (ckState[i] ? '&#10003;' : '') + '</div>');
+    b.push('<span class="pdm-cb-lbl' + on + '">' + lbl + '</span>');
+    b.push('</div>');
+  });
+  b.push('</div>');
+
+  // Notater
+  b.push('<div class="pdm-card">');
+  b.push('<div class="pdm-card-lbl">Notater</div>');
+  b.push('<div id="pdmNotater_' + p.ID + '"><div class="sdk-load"><div class="sdk-spin"></div>Laster...</div></div>');
+  b.push('<textarea class="pdm-note-input" id="pdmNoteInput" rows="2" placeholder="Skriv notat og trykk Enter..."></textarea>');
+  b.push('</div>');
+  b.push('</div>');
+
+  // === RAD 3: Mapper | SmartDok ===
+  b.push('<div class="pdm-grid2">');
+
+  // Mapper
+  b.push('<div class="pdm-card">');
+  b.push('<div class="pdm-card-lbl">Mapper');
+  if (s === 'Under kalkyle') b.push(' <span style="font-weight:400;letter-spacing:0;text-transform:none;font-size:10px;color:var(--tx3);">(Kun Kalkyler/Korrespondanse)</span>');
+  b.push('</div>');
+  b.push(fgHtml.join(''));
+  b.push('<div id="fpanel"></div>');
+  b.push('</div>');
+
+  // SmartDok
+  b.push('<div class="pdm-card">');
   if (s === 'Aktiv' && p.Prosjektnummer) {
-    bodyHtml.push('<div class="pdm-card" style="margin-bottom:14px;">');
-    bodyHtml.push('<div class="pdm-card-lbl">Ressursplanlegger – SmartDok</div>');
-    bodyHtml.push('<div class="sdk-box">');
-    bodyHtml.push('<div class="sdk-hdr"><div class="sdk-title"><div class="sdk-dot"></div>SmartDok</div><span class="sdk-time" id="sdkTime">henter...</span></div>');
-    bodyHtml.push('<div id="sdkBody"><div class="sdk-load"><div class="sdk-spin"></div>Kobler til SmartDok...</div></div>');
-    bodyHtml.push('</div></div>');
-  } else if (s === 'Under kalkyle') {
-    bodyHtml.push('<div class="pdm-card" style="margin-bottom:14px;">');
-    bodyHtml.push('<div class="pdm-card-lbl">Ressursplanlegger – SmartDok</div>');
-    bodyHtml.push('<div style="font-size:12px;color:var(--tx3)">Vises kun på aktive prosjekter med prosjektnummer.</div>');
-    bodyHtml.push('</div>');
+    b.push('<div class="pdm-card-lbl">Ressursplanlegger \u2013 SmartDok</div>');
+    b.push('<div class="sdk-box">');
+    b.push('<div class="sdk-hdr"><div class="sdk-title"><div class="sdk-dot"></div>SmartDok</div><span class="sdk-time" id="sdkTime">henter...</span></div>');
+    b.push('<div id="sdkBody"><div class="sdk-load"><div class="sdk-spin"></div>Kobler til SmartDok...</div></div>');
+    b.push('</div>');
+  } else {
+    b.push('<div class="pdm-card-lbl">Ressursplanlegger \u2013 SmartDok</div>');
+    b.push('<div style="font-size:12px;color:var(--tx3);">Vises kun p\u00e5 aktive prosjekter med prosjektnummer.</div>');
+  }
+  b.push('</div>');
+  b.push('</div>');
+
+  document.getElementById('pdmB').innerHTML = b.join('');
+  document.getElementById('pdov').classList.add('on');
+
+  // Sett opp notatfelt Enter-handler
+  var noteInput = document.getElementById('pdmNoteInput');
+  if (noteInput) {
+    noteInput.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        lagreNotat(p.ID);
+      }
+    });
   }
 
-  document.getElementById('pdmB').innerHTML = bodyHtml.join('');
-  document.getElementById('pdov').classList.add('on');
   renderProjektUE(p.ID);
   renderProjLevListe(p.ID);
+  renderNotater(p.ID);
+
   if (s === 'Aktiv' && p.Prosjektnummer) {
     sdkWeekOffset = 0;
     sdkCurrProjId = '';
@@ -1881,6 +1939,100 @@ function openPD(pid) {
 }
 
 function closePD() { document.getElementById('pdov').classList.remove('on'); activePID = null; activePath = ''; sdkCurrUnderProjId = ''; sdkCurrUnderNavn = ''; sdkCurrSubProjId = ''; }
+
+function toggleCheck(pid, idx) {
+  var p = projects.filter(function(x) { return x.ID === pid; })[0];
+  if (!p) return;
+  var checks = [
+    'Kontrakt signert og arkivert',
+    'Prosjektmappe opprettet (SharePoint)',
+    'Prosjekt opprettet i SmartDok',
+    'SHA-plan utarbeidet og signert',
+    'Arbeidstegninger mottatt',
+    'Tegninger distribuert til formann',
+    'Verneombud utpekt',
+    'HMS-tavle satt opp',
+    'Riggplan godkjent',
+    'Sluttbefaring gjennomført',
+    'FDV-dokumentasjon levert',
+    'Sluttdokumentasjon samlet inn'
+  ];
+  var ckState = [];
+  try { ckState = JSON.parse(p._Sjekkliste || '[]'); } catch(e) { ckState = []; }
+  while (ckState.length < checks.length) ckState.push(false);
+  ckState[idx] = !ckState[idx];
+  p._Sjekkliste = JSON.stringify(ckState);
+  var ckDone = ckState.filter(Boolean).length;
+  // Oppdater UI direkte
+  var rows = document.querySelectorAll('.pdm-check-row');
+  if (rows[idx]) {
+    var cb = rows[idx].querySelector('.pdm-cb');
+    var lbl = rows[idx].querySelector('.pdm-cb-lbl');
+    if (ckState[idx]) { cb.classList.add('on'); cb.innerHTML = '&#10003;'; lbl.classList.add('on'); }
+    else { cb.classList.remove('on'); cb.innerHTML = ''; lbl.classList.remove('on'); }
+  }
+  var prog = document.getElementById('ckProg');
+  if (prog) prog.style.width = Math.round(ckDone/checks.length*100) + '%';
+  var lbl = document.querySelector('.pdm-card-lbl span[style*="text-transform:none"]');
+  if (lbl) lbl.textContent = ckDone + ' / ' + checks.length;
+  // Lagre til SharePoint
+  var body = { Sjekkliste: JSON.stringify(ckState) };
+  spPatch(SP + '/_api/web/lists(guid\'' + PL + '\')/items(' + pid + ')', body)
+    .catch(function() { toast('Kunne ikke lagre sjekkliste', 'e'); });
+}
+
+function renderNotater(pid) {
+  var el = document.getElementById('pdmNotater_' + pid);
+  if (!el) return;
+  if (window._pdmNotater && window._pdmNotater[pid]) {
+    visNotater(pid); return;
+  }
+  spGet(SP + '/_api/web/lists/getbytitle(\'ProsjektNotater\')/items?$filter=ProsjektID eq \'' + pid + '\'&$orderby=Dato desc&$top=50')
+    .then(function(d) {
+      if (!window._pdmNotater) window._pdmNotater = {};
+      window._pdmNotater[pid] = (d.value || []).map(function(n) {
+        return { Tekst: n.Tekst || '', Dato: n.Dato || '', Bruker: n.Bruker || '' };
+      });
+      visNotater(pid);
+    })
+    .catch(function() { visNotater(pid); });
+}
+
+function visNotater(pid) {
+  var el = document.getElementById('pdmNotater_' + pid);
+  if (!el) return;
+  var notater = (window._pdmNotater || {})[pid] || [];
+  if (!notater.length) { el.innerHTML = '<div style="font-size:12px;color:var(--tx3);padding:4px 0;">Ingen notater ennå.</div>'; return; }
+  el.innerHTML = notater.map(function(n) {
+    return '<div class="pdm-note-item"><div class="pdm-note-dot"></div><div class="pdm-note-body"><div class="pdm-note-text">' + (n.Tekst || '') + '</div><div class="pdm-note-meta">' + fmtDate(n.Dato) + ' · ' + (n.Bruker || '') + '</div></div></div>';
+  }).join('');
+}
+
+function lagreNotat(pid) {
+  var inp = document.getElementById('pdmNoteInput');
+  if (!inp) return;
+  var tekst = (inp.value || '').trim();
+  if (!tekst) return;
+  inp.value = '';
+  inp.placeholder = 'Lagrer...';
+  var bruker = document.getElementById('uName') ? (document.getElementById('uName').textContent || 'Ukjent') : 'Ukjent';
+  var dato = new Date();
+  var datoStr = dato.getFullYear() + '-' + String(dato.getMonth()+1).padStart(2,'0') + '-' + String(dato.getDate()).padStart(2,'0') + 'T' + String(dato.getHours()).padStart(2,'0') + ':' + String(dato.getMinutes()).padStart(2,'0') + ':00Z';
+  var body = { Title: String(pid), ProsjektID: String(pid), Tekst: tekst, Dato: datoStr, Bruker: bruker };
+  spPost(SP + '/_api/web/lists/getbytitle(\'ProsjektNotater\')/items', body)
+    .then(function(d) {
+      if (!window._pdmNotater) window._pdmNotater = {};
+      if (!window._pdmNotater[pid]) window._pdmNotater[pid] = [];
+      window._pdmNotater[pid].unshift({ Tekst: tekst, Dato: datoStr, Bruker: bruker });
+      renderNotater(pid);
+      inp.placeholder = 'Skriv notat og trykk Enter...';
+      toast('Notat lagret', 's');
+    })
+    .catch(function() {
+      inp.placeholder = 'Skriv notat og trykk Enter...';
+      toast('Kunne ikke lagre notat', 'e');
+    });
+}
 
 function openF(pid, mappenavn) {
   var fb = document.getElementById('fb_' + mappenavn);
