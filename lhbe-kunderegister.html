@@ -1721,10 +1721,10 @@ function openPD(pid) {
   hdrActs.push('<button class="btn sm" onclick="pdfProsjekt(' + p.ID + ')">&#128438; PDF</button>');
   if (s === 'Aktiv' && p.Prosjektnummer) hdrActs.push('<button class="btn sm" onclick="openTimerPdfMov(' + p.ID + ')">&#128202; Timer PDF</button>');
   if (s === 'Under kalkyle') {
-    if (p.Prosjektnummer && p.Kalkylenummer) hdrActs.push('<button class="btn sm" onclick="setSt(' + p.ID + ','Aktiv');closePD()">Sett Aktiv</button>');
+    if (p.Prosjektnummer && p.Kalkylenummer) hdrActs.push('<button class="btn sm" onclick="setSt(' + p.ID + ',\'Aktiv\');closePD()">Sett Aktiv</button>');
     else hdrActs.push('<button class="btn sm" style="opacity:.4;cursor:not-allowed;" disabled title="Fyll inn Prosjektnummer og Kalkylenummer forst">Sett Aktiv</button>');
   }
-  if (s === 'Aktiv') hdrActs.push('<button class="btn sm" onclick="setSt(' + p.ID + ','Avsluttet');closePD()">Sett Avsluttet</button>');
+  if (s === 'Aktiv') hdrActs.push('<button class="btn sm" onclick="setSt(' + p.ID + ',\'Avsluttet\');closePD()">Sett Avsluttet</button>');
   hdrActs.push('<button class="btn sm" onclick="openEditP(' + p.ID + ')">&#9998; Rediger</button>');
   document.getElementById('pdmHdrActs').innerHTML = hdrActs.join('');
 
