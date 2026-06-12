@@ -1759,7 +1759,7 @@ function openPD(pid) {
     var av = avF.indexOf(f) > -1;
     var l = !av || lck;
     var cls = 'fbtn' + (l ? ' lck' : '');
-    var onclick = l ? '' : 'openF(' + pid + ','' + f + '')';
+    var onclick = l ? '' : 'openF(' + pid + ',' + "'" + f + "'" + ')';
     fgHtml.push('<button class="' + cls + '" id="fb_' + f + '" onclick="' + onclick + '"><span class="fi">&#128193;</span>' + f + '</button>');
   });
   fgHtml.push('</div>');
