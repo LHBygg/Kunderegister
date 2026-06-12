@@ -817,6 +817,7 @@ tr.erow td{padding:0;background:var(--bg2);border-bottom:1px solid var(--br2);}
         <div class="fg"><label class="fl">Kontaktperson</label><input class="fi2" id="pKontakt" placeholder="Navn pa kontaktperson"></div>
         <div class="fg"><label class="fl">Telefon</label><input class="fi2" id="pTelefon" placeholder="+47 xxx xx xxx"></div>
       </div>
+      <div class="fg"><label class="fl">E-post (kontaktperson)</label><input class="fi2" id="pEpost" placeholder="epost@firma.no"></div>
       <div class="fg"><label class="fl">Adresse (byggeplass)</label><input class="fi2" id="pAdresse" placeholder="Byggeplassadresse"></div>
       <div class="fg"><label class="fl">Notat</label><textarea class="fi2" id="pNotat" rows="3" placeholder="Tilleggsopplysninger..."></textarea></div>
       <div style="border-top:1px solid var(--br);margin-top:14px;padding-top:14px;">
@@ -1130,7 +1131,7 @@ function spDel(url) {
 function loadData() {
   Promise.all([
     spGet(SP + '/_api/web/lists(guid\'' + CL + '\')/items?$select=ID,Title,Kontaktperson,Telefon,Epost,Adresse,Orgnr,Kundetype&$top=500'),
-    spGet(SP + '/_api/web/lists(guid\'' + PL + '\')/items?$select=ID,Title,Kundenavn,Prosjektnummer,Kalkylenummer,Oppstartsdato,Sluttdato,Pris,Status,Prosjektleder,Notat,Kontaktperson,Telefon,Adresse,Underprosjekt,Hovedprosjektnummer,Hovedprosjektnavn,S_x00f8_knadspliktig,Tiltaksklasse,Sjekkliste&$top=500').catch(function(){ return spGet(SP + '/_api/web/lists(guid\'' + PL + '\')/items?$select=ID,Title,Kundenavn,Prosjektnummer,Kalkylenummer,Oppstartsdato,Sluttdato,Pris,Status,Prosjektleder,Notat,Kontaktperson,Telefon,Adresse,Underprosjekt,Hovedprosjektnummer,Hovedprosjektnavn,S_x00f8_knadspliktig,Tiltaksklasse&$top=500'); })
+    spGet(SP + '/_api/web/lists(guid\'' + PL + '\')/items?$select=ID,Title,Kundenavn,Prosjektnummer,Kalkylenummer,Oppstartsdato,Sluttdato,Pris,Status,Prosjektleder,Notat,Kontaktperson,Telefon,Epost,Adresse,Underprosjekt,Hovedprosjektnummer,Hovedprosjektnavn,S_x00f8_knadspliktig,Tiltaksklasse,Sjekkliste&$top=500').catch(function(){ return spGet(SP + '/_api/web/lists(guid\'' + PL + '\')/items?$select=ID,Title,Kundenavn,Prosjektnummer,Kalkylenummer,Oppstartsdato,Sluttdato,Pris,Status,Prosjektleder,Notat,Kontaktperson,Telefon,Epost,Adresse,Underprosjekt,Hovedprosjektnummer,Hovedprosjektnavn,S_x00f8_knadspliktig,Tiltaksklasse&$top=500'); })
   ]).then(function(results) {
     customers = results[0].value || [];
     projects = results[1].value || [];
@@ -1798,10 +1799,11 @@ function openPD(pid) {
   b.push('<div class="pdm-card-lbl">Kontakt &amp; adresse</div>');
   if (p.Kontaktperson) b.push('<div class="pdm-info-row"><span class="pdm-info-key">Kontaktperson</span><span class="pdm-info-val">' + p.Kontaktperson + '</span></div>');
   if (p.Telefon) b.push('<div class="pdm-info-row"><span class="pdm-info-key">Telefon</span><span class="pdm-info-val grn"><a href="tel:' + p.Telefon + '" style="color:var(--grn);text-decoration:none;">' + p.Telefon + '</a></span></div>');
+  if (p.Epost) b.push('<div class="pdm-info-row"><span class="pdm-info-key">E-post</span><span class="pdm-info-val" style="font-size:11px;"><a href="mailto:' + p.Epost + '" style="color:var(--blu);text-decoration:none;">' + p.Epost + '</a></span></div>');
 
   if (p.Adresse) b.push('<div class="pdm-info-row"><span class="pdm-info-key">Adresse</span><span class="pdm-info-val" style="font-size:11px;">' + p.Adresse + '</span></div>');
   if (p.Notat) b.push('<div class="pdm-info-row"><span class="pdm-info-key">Notat</span><span class="pdm-info-val" style="font-size:11px;color:var(--tx2);">' + p.Notat + '</span></div>');
-  if (!p.Kontaktperson && !p.Telefon && !p.Adresse) b.push('<div style="font-size:12px;color:var(--tx3);">Ingen kontaktinfo registrert.</div>');
+  if (!p.Kontaktperson && !p.Telefon && !p.Epost && !p.Adresse) b.push('<div style="font-size:12px;color:var(--tx3);">Ingen kontaktinfo registrert.</div>');
   b.push('</div>');
 
   // Kol 3: UE
@@ -2281,7 +2283,7 @@ function openNP(kn) {
   document.getElementById('pmT').textContent = 'Nytt prosjekt';
   document.getElementById('pId').value = '';
   document.getElementById('pKunde').value = kn;
-  ['pNavn','pNr','pPris','pDato','pSluttdato','pNotat','pKontakt','pTelefon','pAdresse'].forEach(function(x) { document.getElementById(x).value = ''; });
+  ['pNavn','pNr','pPris','pDato','pSluttdato','pNotat','pKontakt','pTelefon','pEpost','pAdresse'].forEach(function(x) { document.getElementById(x).value = ''; });
   document.getElementById('pKalk').value = getNextKalkylenr();
   document.getElementById('pStat').value = 'Under kalkyle';
   document.getElementById('pLeder').value = '';
@@ -2320,6 +2322,7 @@ function openEditP(id) {
   document.getElementById('pLeder').value = p.Prosjektleder || '';
   document.getElementById('pNotat').value = p.Notat || '';
   document.getElementById('pKontakt').value = p.Kontaktperson || '';
+  document.getElementById('pEpost').value = p.Epost || '';
   document.getElementById('pTelefon').value = p.Telefon || '';
   document.getElementById('pAdresse').value = p.Adresse || '';
   document.getElementById('pNrWarn').style.display = 'none';
@@ -2388,6 +2391,7 @@ function saveProj() {
     Prosjektleder: document.getElementById('pLeder').value,
     Notat: document.getElementById('pNotat').value,
     Kontaktperson: document.getElementById('pKontakt').value,
+    Epost: document.getElementById('pEpost').value,
     Telefon: document.getElementById('pTelefon').value,
     Adresse: document.getElementById('pAdresse').value,
     S_x00f8_knadspliktig: document.getElementById('pSoknadspliktig').checked,
