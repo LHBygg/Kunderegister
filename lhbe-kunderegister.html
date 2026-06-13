@@ -457,15 +457,15 @@ tr.erow td{padding:0;background:var(--bg2);border-bottom:1px solid var(--br2);}
 </div>
 
 <div class="tbar">
+  <div class="srch">
+    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    <input type="text" id="srchIn" placeholder="Søk kunde, prosjekt...">
+  </div>
   <div class="ftabs" id="viewTabs">
     <button class="ftab on" id="viewKunder" onclick="setView('kunder',this)">&#128119; Kunder</button>
     <button class="ftab" id="viewProsjekter" onclick="setView('prosjekter',this)">&#128196; Prosjekter</button>
     <button class="ftab" id="viewUE" onclick="setView('ue',this)">&#128295; UE-register</button>
     <button class="ftab" id="viewLev" onclick="setView('lev',this)">&#128666; Leverandører</button>
-  </div>
-  <div class="srch">
-    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-    <input type="text" id="srchIn" placeholder="Sok kunde, kontaktperson...">
   </div>
   <div class="ftabs" id="filterTabs">
     <button class="ftab on" data-filter="alle">Alle</button>
@@ -1299,7 +1299,10 @@ function setView(v, el) {
     var alleFane = document.querySelector('#filterTabs .ftab[data-filter="alle"]');
     if (alleFane) alleFane.classList.add('on');
   }
-  document.getElementById('filterTabs').style.display = regView ? 'none' : '';
+  // filterTabs og søk alltid synlig - bare skjul Alle/Kalkyle/Aktive/Avsluttet for ue/lev
+  document.querySelectorAll('#filterTabs .ftab:not([data-filter="mannskap"])').forEach(function(t) {
+    t.style.display = regView ? 'none' : '';
+  });
   document.getElementById('newCustBtn').style.display = regView ? 'none' : '';
   if (v === 'prosjekter') {
     document.querySelector('.tw').style.display = 'none';
