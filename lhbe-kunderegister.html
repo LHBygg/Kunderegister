@@ -852,6 +852,12 @@ tr.erow td{padding:0;background:var(--bg2);border-bottom:1px solid var(--br2);}
         </div>
       </div>
       <div style="font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--tx3);font-weight:500;margin:14px 0 10px;padding-top:10px;border-top:1px solid var(--br)">Kontaktinfo for dette prosjektet</div>
+      <div id="pSammeKundeWrap" style="display:none;margin-bottom:10px;">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;padding:8px 10px;background:var(--bg3);border-radius:var(--r);border:1px solid var(--br2);">
+          <input type="checkbox" id="pSammeKunde" onchange="toggleSammeKunde()" style="width:15px;height:15px;cursor:pointer;accent-color:var(--acc);">
+          Samme kontaktperson som kunde
+        </label>
+      </div>
       <div class="fg2">
         <div class="fg"><label class="fl">Kontaktperson</label><input class="fi2" id="pKontakt" placeholder="Navn pa kontaktperson"></div>
         <div class="fg"><label class="fl">Telefon</label><input class="fi2" id="pTelefon" placeholder="+47 xxx xx xxx"></div>
@@ -2801,11 +2807,57 @@ function getFulltProsjektnr() {
   return nr;
 }
 
+function toggleSammeKunde() {
+  var cb = document.getElementById('pSammeKunde');
+  var kn = document.getElementById('pKunde').value;
+  var kunde = customers.filter(function(x) { return x.Title === kn; })[0];
+  var fields = ['pKontakt','pTelefon','pEpost'];
+  if (cb.checked && kunde) {
+    document.getElementById('pKontakt').value = kunde.Kontaktperson || '';
+    document.getElementById('pTelefon').value = kunde.Telefon || '';
+    document.getElementById('pEpost').value = kunde.Epost || '';
+    fields.forEach(function(f) {
+      var el = document.getElementById(f);
+      el.readOnly = true;
+      el.style.opacity = '0.6';
+      el.style.cursor = 'not-allowed';
+    });
+  } else {
+    fields.forEach(function(f) {
+      var el = document.getElementById(f);
+      el.readOnly = false;
+      el.style.opacity = '';
+      el.style.cursor = '';
+    });
+  }
+}
+
 function openNP(kn) {
   document.getElementById('pmT').textContent = 'Nytt prosjekt';
   document.getElementById('pId').value = '';
   document.getElementById('pKunde').value = kn;
   ['pNavn','pNr','pPris','pDato','pSluttdato','pNotat','pKontakt','pTelefon','pEpost','pAdresse'].forEach(function(x) { document.getElementById(x).value = ''; });
+  // Nullstill readonly-tilstand på kontaktfelt
+  ['pKontakt','pTelefon','pEpost'].forEach(function(f) {
+    var el = document.getElementById(f);
+    el.readOnly = false; el.style.opacity = ''; el.style.cursor = '';
+  });
+  // Vis "Samme som kunde" hvis kunden har kontaktinfo, og huk av automatisk
+  var kunde = customers.filter(function(x) { return x.Title === kn; })[0];
+  var harKontakt = kunde && (kunde.Kontaktperson || kunde.Telefon || kunde.Epost);
+  var wrap = document.getElementById('pSammeKundeWrap');
+  var cb = document.getElementById('pSammeKunde');
+  wrap.style.display = harKontakt ? '' : 'none';
+  cb.checked = !!harKontakt;
+  if (harKontakt) {
+    document.getElementById('pKontakt').value = kunde.Kontaktperson || '';
+    document.getElementById('pTelefon').value = kunde.Telefon || '';
+    document.getElementById('pEpost').value = kunde.Epost || '';
+    ['pKontakt','pTelefon','pEpost'].forEach(function(f) {
+      var el = document.getElementById(f);
+      el.readOnly = true; el.style.opacity = '0.6'; el.style.cursor = 'not-allowed';
+    });
+  }
   document.getElementById('pKalk').value = getNextKalkylenr();
   document.getElementById('pStat').value = 'Under kalkyle';
   document.getElementById('pLeder').value = '';
@@ -2858,10 +2910,16 @@ function openEditP(id) {
     var tkR = document.querySelector('input[name="pTiltaksklasse"][value="' + p.Tiltaksklasse + '"]');
     if (tkR) tkR.checked = true;
   }
-  // Skjul type-valg ved redigering
+  // Skjul type-valg og samme-som-kunde ved redigering
   document.getElementById('pTypeWrap').style.display = 'none';
   document.getElementById('pHovedWrap').style.display = 'none';
   document.getElementById('pNrPrefix').style.display = 'none';
+  document.getElementById('pSammeKundeWrap').style.display = 'none';
+  document.getElementById('pSammeKunde').checked = false;
+  ['pKontakt','pTelefon','pEpost'].forEach(function(f) {
+    var el = document.getElementById(f);
+    el.readOnly = false; el.style.opacity = ''; el.style.cursor = '';
+  });
   openMov('projMov');
 }
 
