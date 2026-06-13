@@ -982,6 +982,7 @@ var LEVL = 'f32d8a04-25cc-4f68-a5d5-1ead5c5ff82b';
 var LEVKL = '30434dbc-a93e-43a4-aa5e-2f7a89d7e7dd';
 var PLEVL = '91a10cdc-2629-4f80-ae9a-95b05978e44b';
 var NL = '55e4ff82-3d85-480e-a97e-23921b1c8edf';
+var SETTINGS_KEY = 'lhbe_standard_layout'; // SP-liste-tittel for lagring
 var LEV_KATEGORIER = ['Byggvarer','Betong','Stål/Armering','Transport','Verktøy/maskin','Elektro','VVS-materiell','Annet'];
 var levList = [];
 var levKontakter = [];
@@ -2093,31 +2094,92 @@ function saveLayout() {
   var grid = document.getElementById('pdmLayoutGrid');
   if (!grid) return;
   var layout = [];
-  grid.querySelectorAll('.pdm-lcard').forEach(function(card, idx) {
+  grid.querySelectorAll('.pdm-lcard').forEach(function(card) {
     layout.push({
       id: card.dataset.id,
       x: parseFloat(card.style.left) || 0,
       y: parseFloat(card.style.top) || 0,
       w: card.offsetWidth,
-      h: card.offsetHeight,
-      order: idx
+      h: card.offsetHeight
     });
   });
   try { localStorage.setItem('lhbe_pdm_layout', JSON.stringify(layout)); } catch(e) {}
 }
 
-function resetLayout() {
-  try { localStorage.removeItem('lhbe_pdm_layout'); } catch(e) {}
-  _initLayoutGrid();
-  // Re-init resize handles etter relayout
+function saveAsDefault() {
   var grid = document.getElementById('pdmLayoutGrid');
-  if (grid) {
-    grid.querySelectorAll('.pdm-lcard').forEach(function(card) {
-      card._lcInit = false;
-      _initCardInteraction(card);
-      _updateBadge(card);
+  if (!grid) return;
+  var layout = [];
+  grid.querySelectorAll('.pdm-lcard').forEach(function(card) {
+    layout.push({ id: card.dataset.id, x: parseFloat(card.style.left)||0, y: parseFloat(card.style.top)||0, w: card.offsetWidth, h: card.offsetHeight });
+  });
+  var btn = document.getElementById('pdmSaveDefaultBtn');
+  if (btn) { btn.innerHTML = '&#9733; Lagrer...'; btn.disabled = true; }
+  var body = { Title: SETTINGS_KEY, Verdi: JSON.stringify(layout) };
+  spGet(SP + '/_api/web/lists(guid\'e2a0aef3-fa9b-41ce-b5db-7307495183cc\')/items?$filter=Title eq \'' + SETTINGS_KEY + '\'&$top=1')
+    .then(function(d) {
+      var ex = d.value && d.value[0];
+      if (ex) return spPatch(SP + '/_api/web/lists(guid\'e2a0aef3-fa9b-41ce-b5db-7307495183cc\')/items(' + ex.Id + ')', body);
+      return spPost(SP + '/_api/web/lists(guid\'e2a0aef3-fa9b-41ce-b5db-7307495183cc\')/items', body);
+    })
+    .then(function() {
+      if (btn) { btn.innerHTML = '&#9733; Lagret!'; btn.disabled = false; }
+      toast('Standardlayout lagret for alle brukere', 's');
+      setTimeout(function() { if (btn) btn.innerHTML = '&#9733; Lagre som standard'; }, 2500);
+    })
+    .catch(function() {
+      if (btn) { btn.innerHTML = '&#9733; Lagre som standard'; btn.disabled = false; }
+      toast('Opprett BrukerInnstillinger-liste i SharePoint først', 'e');
     });
-  }
+}
+
+function resetLayout() {
+  spGet(SP + '/_api/web/lists(guid\'e2a0aef3-fa9b-41ce-b5db-7307495183cc\')/items?$filter=Title eq \'' + SETTINGS_KEY + '\'&$top=1')
+    .then(function(d) {
+      var ex = d.value && d.value[0];
+      if (ex && ex.Verdi) {
+        try {
+          var spLayout = JSON.parse(ex.Verdi);
+          localStorage.setItem('lhbe_pdm_layout', ex.Verdi);
+          _applyLayoutData(spLayout);
+          return;
+        } catch(e) {}
+      }
+      localStorage.removeItem('lhbe_pdm_layout');
+      _initLayoutGrid();
+      _reinitCards();
+    })
+    .catch(function() {
+      try { localStorage.removeItem('lhbe_pdm_layout'); } catch(e) {}
+      _initLayoutGrid();
+      _reinitCards();
+    });
+}
+
+function _applyLayoutData(layout) {
+  var grid = document.getElementById('pdmLayoutGrid');
+  if (!grid) return;
+  var maxBottom = 0;
+  grid.querySelectorAll('.pdm-lcard').forEach(function(card) {
+    var lc = layout.filter(function(l){ return l.id === card.dataset.id; })[0];
+    if (lc) {
+      card.style.left = lc.x + 'px'; card.style.top = lc.y + 'px';
+      card.style.width = lc.w + 'px'; card.style.height = lc.h + 'px';
+      var b = lc.y + lc.h; if (b > maxBottom) maxBottom = b;
+    }
+  });
+  grid.style.minHeight = (maxBottom + 20) + 'px';
+  _reinitCards();
+}
+
+function _reinitCards() {
+  var grid = document.getElementById('pdmLayoutGrid');
+  if (!grid) return;
+  grid.querySelectorAll('.pdm-lcard').forEach(function(card) {
+    card._lcInit = false;
+    _initCardInteraction(card);
+    _updateBadge(card);
+  });
 }
 
 // Init drag og resize på alle kort
@@ -2343,12 +2405,24 @@ function toggleLayoutEdit() {
       var resetBtn = document.createElement('button');
       resetBtn.id = 'pdmResetBtn';
       resetBtn.className = 'pdm-layout-btn';
-      resetBtn.style.cssText = 'color:var(--tx2);';
       resetBtn.innerHTML = '&#8635; Nullstill';
       resetBtn.onclick = resetLayout;
       btn.parentNode.insertBefore(resetBtn, btn.nextSibling);
     } else {
       document.getElementById('pdmResetBtn').style.display = '';
+    }
+    // Lagre som standard - kun for prosjektleder/admin
+    if (!document.getElementById('pdmSaveDefaultBtn')) {
+      var saveDefBtn = document.createElement('button');
+      saveDefBtn.id = 'pdmSaveDefaultBtn';
+      saveDefBtn.className = 'pdm-layout-btn';
+      saveDefBtn.style.cssText = 'background:rgba(59,130,246,.1);border-color:var(--blu);color:var(--blu);';
+      saveDefBtn.innerHTML = '&#9733; Lagre som standard';
+      saveDefBtn.title = 'Lagrer din layout som standard for alle';
+      saveDefBtn.onclick = saveAsDefault;
+      btn.parentNode.insertBefore(saveDefBtn, btn.nextSibling);
+    } else {
+      document.getElementById('pdmSaveDefaultBtn').style.display = '';
     }
     gridEl.querySelectorAll('.pdm-lcard').forEach(function(card) {
       _initCardInteraction(card);
@@ -2360,6 +2434,8 @@ function toggleLayoutEdit() {
     btn.innerHTML = '&#9881; Tilpass';
     var rb = document.getElementById('pdmResetBtn');
     if (rb) rb.style.display = 'none';
+    var sdb = document.getElementById('pdmSaveDefaultBtn');
+    if (sdb) sdb.style.display = 'none';
     _hideSnapPreview();
     saveLayout();
   }
