@@ -1951,6 +1951,11 @@ function openPD(pid) {
     sdkHtml = '<div style="font-size:12px;color:var(--tx3);">Vises kun på aktive prosjekter med prosjektnummer.</div>';
   }
   b.push(cardWrap('smartdok', 'Ressursplanlegger – SmartDok', sdkHtml, null));
+  // Marker SmartDok-kortet som no-scroll etter rendering
+  setTimeout(function() {
+    var sdkCard = document.querySelector('.pdm-lcard[data-id="smartdok"] .pdm-lcard-inner');
+    if (sdkCard) sdkCard.style.overflow = 'hidden';
+  }, 50);
 
   b.push('</div>'); // lukk pdm-layout-grid
 
@@ -2258,15 +2263,21 @@ function _initLayoutGrid() {
   var x3 = x2 + col2 + gap;
   var x4 = x3 + col3 + gap;
 
+  // Rad 1 høyde
+  var h1a = 290, h1b = avail * 0.39, h2 = 190, h3 = avail * 0.37;
+  var y2 = h1a + gap;
+  var y3 = h1b + gap;
+  var y4 = y3 + h2 + gap;
+
   var defaults = [
-    {id:'prosjektinfo', x:x1, y:0,   w:col1, h:280},
-    {id:'kontakt',      x:x1, y:288, w:col1, h:260},
-    {id:'sjekkliste',   x:x2, y:0,   w:col2, h:556},
-    {id:'notater',      x:x3, y:0,   w:col3, h:556},
-    {id:'mapper',       x:x2, y:564, w:col2+gap+col3, h:180},
-    {id:'ue',           x:x4, y:0,   w:col4, h:280},
-    {id:'lev',          x:x4, y:288, w:col4, h:270},
-    {id:'smartdok',     x:x4, y:566, w:col4, h:500}
+    {id:'prosjektinfo', x:x1, y:0,  w:col1, h:h1a},
+    {id:'kontakt',      x:x1, y:y2, w:col1, h:Math.round(h1b - h1a - gap)},
+    {id:'sjekkliste',   x:x2, y:0,  w:col2, h:Math.round(h1b)},
+    {id:'notater',      x:x3, y:0,  w:col3, h:Math.round(h1b)},
+    {id:'mapper',       x:x2, y:y3, w:col2+gap+col3, h:h2},
+    {id:'ue',           x:x4, y:0,  w:col4, h:h1a},
+    {id:'lev',          x:x4, y:y2, w:col4, h:Math.round(h1b - h1a - gap)},
+    {id:'smartdok',     x:x4, y:y3, w:col4, h:Math.round(h3)}
   ];
 
   var maxBottom = 0;
