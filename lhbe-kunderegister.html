@@ -1153,9 +1153,11 @@ function spPost(url, body) {
 }
 
 function spDelete(url) {
-  return fetch(url, {
-    method: 'DELETE',
-    headers: { 'Authorization': 'Bearer ' + ms.accessToken, 'Accept': 'application/json;odata=nometadata', 'X-HTTP-Method': 'DELETE', 'IF-MATCH': '*' }
+  return getToken().then(function(t) {
+    return fetch(url, {
+      method: 'DELETE',
+      headers: { 'Authorization': 'Bearer ' + t, 'Accept': 'application/json;odata=nometadata', 'X-HTTP-Method': 'DELETE', 'IF-MATCH': '*' }
+    });
   }).then(function(r) { if (!r.ok && r.status !== 204) throw new Error(r.status); return r; });
 }
 function spPatch(url, body) {
@@ -1811,11 +1813,7 @@ function openPD(pid) {
   var hdrActs = [];
   hdrActs.push('<button class="btn sm" onclick="pdfProsjekt(' + p.ID + ')">&#128438; PDF</button>');
   if (s === 'Aktiv' && p.Prosjektnummer) hdrActs.push('<button class="btn sm" onclick="openTimerPdfMov(' + p.ID + ')">&#128202; Timer PDF</button>');
-  if (s === 'Under kalkyle') {
-    if (p.Prosjektnummer && p.Kalkylenummer) hdrActs.push('<button class="btn sm" onclick="setSt(' + p.ID + ',\'Aktiv\');closePD()">Sett Aktiv</button>');
-    else hdrActs.push('<button class="btn sm" style="opacity:.4;cursor:not-allowed;" disabled>Sett Aktiv</button>');
-  }
-  if (s === 'Aktiv') hdrActs.push('<button class="btn sm" onclick="setSt(' + p.ID + ',\'Avsluttet\');closePD()">Sett Avsluttet</button>');
+  // Status endres via Rediger-knappen
   hdrActs.push('<button class="btn sm" onclick="openEditP(' + p.ID + ')">&#9998; Rediger</button>');
   document.getElementById('pdmHdrActs').innerHTML = hdrActs.join('');
 
@@ -2410,14 +2408,13 @@ function visNotater(pid) {
   if (!notater.length) { el.innerHTML = '<div style="font-size:12px;color:var(--tx3);padding:4px 0;">Ingen notater ennå.</div>'; return; }
   el.innerHTML = notater.map(function(n, idx) {
     var redigerIcon = '<button onclick="redigerNotat(' + pid + ',' + idx + ')" style="background:none;border:none;cursor:pointer;padding:2px 5px;color:var(--tx3);font-size:11px;border-radius:4px;line-height:1;" title="Rediger">&#9998;</button>';
-    var slettIcon = '<button onclick="slettNotat(' + pid + ',' + idx + ')" style="background:none;border:none;cursor:pointer;padding:2px 5px;color:var(--tx3);font-size:11px;border-radius:4px;line-height:1;" title="Slett">&#10005;</button>';
     return '<div class="pdm-note-item" id="noteItem_' + pid + '_' + idx + '">' +
       '<div class="pdm-note-dot"></div>' +
       '<div class="pdm-note-body">' +
         '<div class="pdm-note-text" id="noteTxt_' + pid + '_' + idx + '">' + (n.Tekst || '') + '</div>' +
         '<div class="pdm-note-meta">' + fmtDate(n.Dato) + ' · ' + (n.Bruker || '') + '</div>' +
       '</div>' +
-      '<div style="display:flex;gap:2px;align-items:center;flex-shrink:0;">' + redigerIcon + slettIcon + '</div>' +
+      '<div style="display:flex;gap:2px;align-items:center;flex-shrink:0;">' + redigerIcon + '</div>' +
     '</div>';
   }).join('');
 }
@@ -2433,6 +2430,7 @@ function redigerNotat(pid, idx) {
     '<div style="display:flex;gap:6px;margin-top:5px;">' +
       '<button class="btn sm" onclick="lagreRedigertNotat(' + pid + ',' + idx + ')">Lagre</button>' +
       '<button class="btn sm" onclick="visNotater(' + pid + ')">Avbryt</button>' +
+      '<button class="btn sm danger" style="margin-left:auto;" onclick="slettNotat(' + pid + ',' + idx + ')">Slett</button>' +
     '</div>';
 }
 
@@ -2483,7 +2481,7 @@ function lagreNotat(pid) {
     .then(function(d) {
       if (!window._pdmNotater) window._pdmNotater = {};
       if (!window._pdmNotater[pid]) window._pdmNotater[pid] = [];
-      var nyttId = (d && d.Id) ? d.Id : null;
+      var nyttId = (d && d.Id) ? d.Id : (d && d.d && d.d.Id) ? d.d.Id : null;
       window._pdmNotater[pid].unshift({ Id: nyttId, Tekst: tekst, Dato: datoStr, Bruker: bruker });
       renderNotater(pid);
       inp.placeholder = 'Skriv notat og trykk Enter...';
