@@ -137,6 +137,48 @@ tr.erow td{padding:0;background:var(--bg2);border-bottom:1px solid var(--br2);}
 .pdm-note-input{width:100%;margin-top:10px;padding:8px 10px;background:var(--bg3);border:1px dashed var(--br2);border-radius:var(--r);color:var(--tx3);font-size:12px;font-family:'DM Sans',sans-serif;outline:none;transition:border-color .15s;resize:none;}
 .pdm-note-input:focus{border-color:var(--acc);color:var(--tx);}
 .pdsec{margin-bottom:22px;}
+
+/* === LAYOUT EDITOR === */
+.pdm-layout-grid{display:grid;grid-template-columns:repeat(12,1fr);grid-auto-rows:auto;gap:12px;padding:20px 22px;min-height:100%;}
+.pdm-lcard{background:var(--bg2);border:1px solid var(--br);border-radius:var(--rl);padding:13px 14px;position:relative;overflow:hidden;min-height:80px;transition:box-shadow .15s;}
+.pdm-lcard[data-cols="3"]{grid-column:span 3;}
+.pdm-lcard[data-cols="4"]{grid-column:span 4;}
+.pdm-lcard[data-cols="5"]{grid-column:span 5;}
+.pdm-lcard[data-cols="6"]{grid-column:span 6;}
+.pdm-lcard[data-cols="7"]{grid-column:span 7;}
+.pdm-lcard[data-cols="8"]{grid-column:span 8;}
+.pdm-lcard[data-cols="9"]{grid-column:span 9;}
+.pdm-lcard[data-cols="12"]{grid-column:span 12;}
+.pdm-lcard[data-rows="1"]{grid-row:span 1;}
+.pdm-lcard[data-rows="2"]{grid-row:span 2;}
+.pdm-lcard[data-rows="3"]{grid-row:span 3;}
+.pdm-lcard[data-rows="4"]{grid-row:span 4;}
+
+/* Drag handle - vises kun i redigeringsmodus */
+.pdm-drag-handle{display:none;position:absolute;top:0;left:0;right:32px;height:36px;cursor:grab;align-items:center;padding:0 10px;gap:6px;z-index:2;}
+.pdm-drag-handle::before{content:'⠿';font-size:16px;color:var(--tx3);letter-spacing:2px;}
+.pdm-drag-handle:active{cursor:grabbing;}
+
+/* Resize handle - vises kun i redigeringsmodus */
+.pdm-resize-handle{display:none;position:absolute;bottom:0;right:0;width:20px;height:20px;cursor:se-resize;z-index:3;}
+.pdm-resize-handle::after{content:'';position:absolute;bottom:3px;right:3px;width:10px;height:10px;border-right:2px solid var(--tx3);border-bottom:2px solid var(--tx3);border-radius:1px;}
+
+/* Redigeringsmodus aktiv */
+.pdm-edit-mode .pdm-lcard{box-shadow:0 0 0 2px var(--acc);cursor:default;}
+.pdm-edit-mode .pdm-lcard:hover{box-shadow:0 0 0 2px var(--blu);}
+.pdm-edit-mode .pdm-drag-handle{display:flex;}
+.pdm-edit-mode .pdm-resize-handle{display:block;}
+.pdm-edit-mode .pdm-lcard.dragging{opacity:.4;box-shadow:0 0 0 2px var(--acc);}
+.pdm-edit-mode .pdm-lcard.drag-over{box-shadow:0 0 0 3px var(--grn);}
+
+/* Tilpass-knapp i header */
+.pdm-layout-btn{display:flex;align-items:center;gap:5px;padding:5px 10px;background:var(--bg3);border:1px solid var(--br2);border-radius:var(--r);font-size:12px;color:var(--tx2);cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s;flex-shrink:0;}
+.pdm-layout-btn:hover{background:var(--bg4);color:var(--tx);}
+.pdm-layout-btn.active{background:rgba(232,184,75,.15);border-color:var(--acc);color:var(--acc);}
+
+/* Resize-størrelse-indikator */
+.pdm-size-badge{display:none;position:absolute;top:6px;right:6px;font-size:10px;background:var(--acc);color:#000;padding:2px 6px;border-radius:4px;font-family:'DM Mono',monospace;font-weight:600;z-index:4;}
+.pdm-edit-mode .pdm-size-badge{display:block;}
 .pdsect{font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--tx3);font-weight:500;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--br);}
 .igrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
 .iitem{background:var(--bg3);border-radius:var(--r);padding:10px 12px;}
@@ -328,6 +370,8 @@ tr.erow td{padding:0;background:var(--bg2);border-bottom:1px solid var(--br2);}
 
   /* Prosjektpanel – fullskjerm mobil */
   .pdm-grid4{grid-template-columns:1fr 1fr;}
+  .pdm-layout-grid{grid-template-columns:repeat(4,1fr);}
+  .pdm-lcard[data-cols]{grid-column:span 4 !important;}
   .pdm-grid2{grid-template-columns:1fr;}
   .pdmsub{display:none;}
   .pdmhdr{gap:8px;padding:0 12px;}
@@ -1762,6 +1806,20 @@ function openPD(pid) {
   hdrActs.push('<button class="btn sm" onclick="openEditP(' + p.ID + ')">&#9998; Rediger</button>');
   document.getElementById('pdmHdrActs').innerHTML = hdrActs.join('');
 
+  // Tilpass layout-knapp
+  var existingLayoutBtn = document.getElementById('pdmLayoutBtn');
+  if (!existingLayoutBtn) {
+    var layoutBtn = document.createElement('button');
+    layoutBtn.id = 'pdmLayoutBtn';
+    layoutBtn.className = 'pdm-layout-btn';
+    layoutBtn.innerHTML = '&#9881; Tilpass';
+    layoutBtn.onclick = toggleLayoutEdit;
+    document.getElementById('pdmHdrActs').parentNode.insertBefore(layoutBtn, document.getElementById('pdmHdrActs'));
+  } else {
+    existingLayoutBtn.className = 'pdm-layout-btn';
+    existingLayoutBtn.innerHTML = '&#9881; Tilpass';
+  }
+
   // Mappeliste
   var allF = ['HMS', 'FDV', 'Kontrakt', 'Fremdrift', 'Faktura', 'Kalkyler_Beskrivelser_Tegninger', 'Korrespondanse'];
   var avF = s === 'Under kalkyle' ? ['Kalkyler_Beskrivelser_Tegninger', 'Korrespondanse'] : allF;
@@ -1778,52 +1836,76 @@ function openPD(pid) {
 
   var b = [];
 
-  // === RAD 1: Prosjektinfo | Kontakt & adresse | UE | Leverandorer ===
-  b.push('<div class="pdm-grid4">');
+  // Hent lagret layout
+  var defaultLayout = [
+    {id:'prosjektinfo', cols:3, rows:1},
+    {id:'kontakt',      cols:3, rows:1},
+    {id:'ue',           cols:3, rows:1},
+    {id:'lev',          cols:3, rows:1},
+    {id:'sjekkliste',   cols:6, rows:2},
+    {id:'notater',      cols:6, rows:2},
+    {id:'mapper',       cols:6, rows:1},
+    {id:'smartdok',     cols:6, rows:2}
+  ];
+  var savedLayout = [];
+  try { savedLayout = JSON.parse(localStorage.getItem('lhbe_pdm_layout') || '[]'); } catch(e){}
+  var layout = defaultLayout.map(function(def) {
+    var saved = savedLayout.filter(function(s){return s.id===def.id;})[0];
+    return saved ? {id:def.id, cols:saved.cols||def.cols, rows:saved.rows||def.rows, order:saved.order!==undefined?saved.order:defaultLayout.indexOf(def)} : {id:def.id, cols:def.cols, rows:def.rows, order:defaultLayout.indexOf(def)};
+  });
+  layout.sort(function(a,b){return a.order-b.order;});
+  window._pdmLayout = layout;
 
-  // Kol 1: Prosjektinfo
+  b.push('<div class="pdm-layout-grid" id="pdmLayoutGrid">');
+
+  // Hjelpefunksjon for kortwrapper
+  function cardWrap(id, title, innerHtml, extraAct) {
+    var lc = layout.filter(function(x){return x.id===id;})[0] || {cols:3,rows:1};
+    var act = extraAct ? ' <button class="pdm-card-act" ' + extraAct + '>' : '';
+    var actClose = extraAct ? '</button>' : '';
+    return '<div class="pdm-lcard" data-id="' + id + '" data-cols="' + lc.cols + '" data-rows="' + lc.rows + '">' +
+      '<div class="pdm-drag-handle" title="Dra for å flytte"></div>' +
+      '<div class="pdm-resize-handle" title="Dra for å endre størrelse"></div>' +
+      '<div class="pdm-size-badge" id="sz_' + id + '">' + lc.cols + '/12</div>' +
+      '<div class="pdm-card-lbl">' + title + (extraAct ? act + (extraAct.indexOf('Legg til')>-1?'+ Legg til':'') + actClose : '') + '</div>' +
+      innerHtml + '</div>';
+  }
+
+  // Prosjektinfo-kort
   var tkBadge = (p['S_x00f8_knadspliktig'] && p.Tiltaksklasse) ? ' <span style="font-size:10px;font-weight:600;padding:1px 5px;border-radius:3px;background:rgba(59,130,246,.18);color:var(--blu);font-family:monospace;margin-left:4px;">TK' + p.Tiltaksklasse + '</span>' : '';
-  b.push('<div class="pdm-card">');
-  b.push('<div class="pdm-card-lbl">Prosjektinfo</div>');
-  b.push('<div class="pdm-info-row"><span class="pdm-info-key">Status</span><span class="pdm-info-val"><span class="sbdg ' + sc + '" style="margin:0;">' + s + '</span>' + tkBadge + '</span></div>');
-  b.push('<div class="pdm-info-row"><span class="pdm-info-key">Prosjektnr.</span><span class="pdm-info-val mono">' + (p.Prosjektnummer || '-') + '</span></div>');
-  b.push('<div class="pdm-info-row"><span class="pdm-info-key">Kalkylenr.</span><span class="pdm-info-val mono">' + (p.Kalkylenummer || '-') + '</span></div>');
-  b.push('<div class="pdm-info-row"><span class="pdm-info-key">Kontraktsum</span><span class="pdm-info-val acc">' + fmtCur(p.Pris) + '</span></div>');
-  b.push('<div class="pdm-info-row"><span class="pdm-info-key">Oppstart</span><span class="pdm-info-val">' + (fmtDate(p.Oppstartsdato) || '-') + '</span></div>');
-  b.push('<div class="pdm-info-row"><span class="pdm-info-key">Sluttdato</span><span class="pdm-info-val">' + (fmtDate(p.Sluttdato) || '-') + '</span></div>');
-  b.push('<div class="pdm-info-row"><span class="pdm-info-key">Prosjektleder</span><span class="pdm-info-val">' + (p.Prosjektleder || '-') + '</span></div>');
-  b.push('</div>');
+  var piHtml = '';
+  piHtml += '<div class="pdm-info-row"><span class="pdm-info-key">Status</span><span class="pdm-info-val"><span class="sbdg ' + sc + '" style="margin:0;">' + s + '</span>' + tkBadge + '</span></div>';
+  piHtml += '<div class="pdm-info-row"><span class="pdm-info-key">Prosjektnr.</span><span class="pdm-info-val mono">' + (p.Prosjektnummer || '-') + '</span></div>';
+  piHtml += '<div class="pdm-info-row"><span class="pdm-info-key">Kalkylenr.</span><span class="pdm-info-val mono">' + (p.Kalkylenummer || '-') + '</span></div>';
+  piHtml += '<div class="pdm-info-row"><span class="pdm-info-key">Kontraktsum</span><span class="pdm-info-val acc">' + fmtCur(p.Pris) + '</span></div>';
+  piHtml += '<div class="pdm-info-row"><span class="pdm-info-key">Oppstart</span><span class="pdm-info-val">' + (fmtDate(p.Oppstartsdato) || '-') + '</span></div>';
+  piHtml += '<div class="pdm-info-row"><span class="pdm-info-key">Sluttdato</span><span class="pdm-info-val">' + (fmtDate(p.Sluttdato) || '-') + '</span></div>';
+  piHtml += '<div class="pdm-info-row"><span class="pdm-info-key">Prosjektleder</span><span class="pdm-info-val">' + (p.Prosjektleder || '-') + '</span></div>';
+  b.push(cardWrap('prosjektinfo', 'Prosjektinfo', piHtml, null));
 
-  // Kol 2: Kontakt & adresse
-  // Hent kunde for fallback-epost
+  // Kontakt & adresse-kort
   var pKunde = customers.filter(function(x) { return x.Title === p.Kundenavn; })[0];
   var visEpost = p.Epost || (pKunde ? pKunde.Epost : '');
   var visTlf = p.Telefon || (pKunde ? pKunde.Telefon : '');
   var visKont = p.Kontaktperson || (pKunde ? pKunde.Kontaktperson : '');
-  b.push('<div class="pdm-card">');
-  b.push('<div class="pdm-card-lbl">Kontakt &amp; adresse</div>');
-  if (visKont) b.push('<div class="pdm-info-row"><span class="pdm-info-key">Kontaktperson</span><span class="pdm-info-val">' + visKont + '</span></div>');
-  if (visTlf) b.push('<div class="pdm-info-row"><span class="pdm-info-key">Telefon</span><span class="pdm-info-val grn"><a href="tel:' + visTlf + '" style="color:var(--grn);text-decoration:none;">' + visTlf + '</a></span></div>');
-  if (visEpost) b.push('<div class="pdm-info-row"><span class="pdm-info-key">E-post</span><span class="pdm-info-val" style="font-size:11px;"><a href="mailto:' + visEpost + '" style="color:var(--blu);text-decoration:none;">' + visEpost + '</a></span></div>');
-  if (p.Adresse) b.push('<div class="pdm-info-row"><span class="pdm-info-key">Adresse</span><span class="pdm-info-val" style="font-size:11px;">' + p.Adresse + '</span></div>');
-  if (p.Notat) b.push('<div class="pdm-info-row"><span class="pdm-info-key">Notat</span><span class="pdm-info-val" style="font-size:11px;color:var(--tx2);">' + p.Notat + '</span></div>');
-  if (!visKont && !visTlf && !visEpost && !p.Adresse) b.push('<div style="font-size:12px;color:var(--tx3);">Ingen kontaktinfo registrert.</div>');
-  b.push('</div>');
+  var kaHtml = '';
+  if (visKont) kaHtml += '<div class="pdm-info-row"><span class="pdm-info-key">Kontaktperson</span><span class="pdm-info-val">' + visKont + '</span></div>';
+  if (visTlf) kaHtml += '<div class="pdm-info-row"><span class="pdm-info-key">Telefon</span><span class="pdm-info-val grn"><a href="tel:' + visTlf + '" style="color:var(--grn);text-decoration:none;">' + visTlf + '</a></span></div>';
+  if (visEpost) kaHtml += '<div class="pdm-info-row"><span class="pdm-info-key">E-post</span><span class="pdm-info-val" style="font-size:11px;"><a href="mailto:' + visEpost + '" style="color:var(--blu);text-decoration:none;">' + visEpost + '</a></span></div>';
+  if (p.Adresse) kaHtml += '<div class="pdm-info-row"><span class="pdm-info-key">Adresse</span><span class="pdm-info-val" style="font-size:11px;">' + p.Adresse + '</span></div>';
+  if (p.Notat) kaHtml += '<div class="pdm-info-row"><span class="pdm-info-key">Notat</span><span class="pdm-info-val" style="font-size:11px;color:var(--tx2);">' + p.Notat + '</span></div>';
+  if (!kaHtml) kaHtml = '<div style="font-size:12px;color:var(--tx3);">Ingen kontaktinfo registrert.</div>';
+  b.push(cardWrap('kontakt', 'Kontakt &amp; adresse', kaHtml, null));
 
-  // Kol 3: UE
-  b.push('<div class="pdm-card">');
-  b.push('<div class="pdm-card-lbl">Underentrepren\u00f8rer <button class="pdm-card-act" onclick="openProjUEMov(' + p.ID + ')">+ Legg til</button></div>');
-  b.push('<div id="projUEListe_' + p.ID + '"><div class="sdk-load"><div class="sdk-spin"></div>Laster...</div></div>');
-  b.push('</div>');
+  // UE-kort
+  var ueHtml = '<div id="projUEListe_' + p.ID + '"><div class="sdk-load"><div class="sdk-spin"></div>Laster...</div></div>';
+  b.push(cardWrap('ue', 'Underentreprenører', ueHtml, 'onclick="openProjUEMov(' + p.ID + ')"'));
 
-  // Kol 4: Leverandorer
-  b.push('<div class="pdm-card">');
-  b.push('<div class="pdm-card-lbl">Leverand\u00f8rer <button class="pdm-card-act" onclick="openProjLevMov(' + p.ID + ')">+ Legg til</button></div>');
-  b.push('<div id="projLevListe_' + p.ID + '"><div class="sdk-load"><div class="sdk-spin"></div>Laster...</div></div>');
-  b.push('</div>');
-  b.push('</div>');
+  // Leverandor-kort
+  var levHtml = '<div id="projLevListe_' + p.ID + '"><div class="sdk-load"><div class="sdk-spin"></div>Laster...</div></div>';
+  b.push(cardWrap('lev', 'Leverandører', levHtml, 'onclick="openProjLevMov(' + p.ID + ')"'));
 
-  // === RAD 2: Sjekkliste | Notater ===
+  // === Sjekkliste | Notater ===
   var checks = [
     'Kontrakt signert og arkivert',
     'Prosjektmappe opprettet (SharePoint)',
@@ -1834,7 +1916,7 @@ function openPD(pid) {
     'Verneombud utpekt',
     'HMS-tavle satt opp',
     'Riggplan godkjent',
-    'Sluttbefaring gjennomf\u00f8rt',
+    'Sluttbefaring gjennomført',
     'FDV-dokumentasjon levert',
     'Sluttdokumentasjon samlet inn'
   ];
@@ -1843,55 +1925,36 @@ function openPD(pid) {
   while (ckState.length < checks.length) ckState.push(false);
   var ckDone = ckState.filter(Boolean).length;
 
-  b.push('<div class="pdm-grid2">');
-
-  // Sjekkliste
-  b.push('<div class="pdm-card">');
-  b.push('<div class="pdm-card-lbl">Sjekkliste <span style="font-weight:400;letter-spacing:0;text-transform:none;font-size:11px;color:var(--tx3);">' + ckDone + ' / ' + checks.length + '</span></div>');
-  b.push('<div class="pdm-progbar"><div class="pdm-progfill" id="ckProg" style="width:' + Math.round(ckDone/checks.length*100) + '%"></div></div>');
+  // Sjekkliste-kort
+  var ckHtml = '<div class="pdm-progbar"><div class="pdm-progfill" id="ckProg" style="width:' + Math.round(ckDone/checks.length*100) + '%"></div></div>';
   checks.forEach(function(lbl, i) {
     var on = ckState[i] ? ' on' : '';
-    b.push('<div class="pdm-check-row" onclick="toggleCheck(' + p.ID + ',' + i + ')">');
-    b.push('<div class="pdm-cb' + on + '">' + (ckState[i] ? '&#10003;' : '') + '</div>');
-    b.push('<span class="pdm-cb-lbl' + on + '">' + lbl + '</span>');
-    b.push('</div>');
+    ckHtml += '<div class="pdm-check-row" onclick="toggleCheck(' + p.ID + ',' + i + ')">';
+    ckHtml += '<div class="pdm-cb' + on + '">' + (ckState[i] ? '&#10003;' : '') + '</div>';
+    ckHtml += '<span class="pdm-cb-lbl' + on + '">' + lbl + '</span></div>';
   });
-  b.push('</div>');
+  b.push(cardWrap('sjekkliste', 'Sjekkliste <span style="font-weight:400;letter-spacing:0;text-transform:none;font-size:11px;color:var(--tx3);">' + ckDone + ' / ' + checks.length + '</span>', ckHtml, null));
 
-  // Notater
-  b.push('<div class="pdm-card">');
-  b.push('<div class="pdm-card-lbl">Notater</div>');
-  b.push('<div id="pdmNotater_' + p.ID + '"><div class="sdk-load"><div class="sdk-spin"></div>Laster...</div></div>');
-  b.push('<textarea class="pdm-note-input" id="pdmNoteInput" rows="2" placeholder="Skriv notat og trykk Enter..."></textarea>');
-  b.push('</div>');
-  b.push('</div>');
+  // Notater-kort
+  var notHtml = '<div id="pdmNotater_' + p.ID + '"><div class="sdk-load"><div class="sdk-spin"></div>Laster...</div></div>';
+  notHtml += '<textarea class="pdm-note-input" id="pdmNoteInput" rows="2" placeholder="Skriv notat og trykk Enter..."></textarea>';
+  b.push(cardWrap('notater', 'Notater', notHtml, null));
 
-  // === RAD 3: Mapper | SmartDok ===
-  b.push('<div class="pdm-grid2">');
+  // Mapper-kort
+  var mapLbl = 'Mapper' + (s === 'Under kalkyle' ? ' <span style="font-weight:400;letter-spacing:0;text-transform:none;font-size:10px;color:var(--tx3);">(Kun Kalkyler/Korrespondanse)</span>' : '');
+  var mapHtml = fgHtml.join('') + '<div id="fpanel"></div>';
+  b.push(cardWrap('mapper', mapLbl, mapHtml, null));
 
-  // Mapper
-  b.push('<div class="pdm-card">');
-  b.push('<div class="pdm-card-lbl">Mapper');
-  if (s === 'Under kalkyle') b.push(' <span style="font-weight:400;letter-spacing:0;text-transform:none;font-size:10px;color:var(--tx3);">(Kun Kalkyler/Korrespondanse)</span>');
-  b.push('</div>');
-  b.push(fgHtml.join(''));
-  b.push('<div id="fpanel"></div>');
-  b.push('</div>');
-
-  // SmartDok
-  b.push('<div class="pdm-card">');
+  // SmartDok-kort
+  var sdkHtml = '';
   if (s === 'Aktiv' && p.Prosjektnummer) {
-    b.push('<div class="pdm-card-lbl">Ressursplanlegger \u2013 SmartDok</div>');
-    b.push('<div class="sdk-box">');
-    b.push('<div class="sdk-hdr"><div class="sdk-title"><div class="sdk-dot"></div>SmartDok</div><span class="sdk-time" id="sdkTime">henter...</span></div>');
-    b.push('<div id="sdkBody"><div class="sdk-load"><div class="sdk-spin"></div>Kobler til SmartDok...</div></div>');
-    b.push('</div>');
+    sdkHtml = '<div class="sdk-box"><div class="sdk-hdr"><div class="sdk-title"><div class="sdk-dot"></div>SmartDok</div><span class="sdk-time" id="sdkTime">henter...</span></div><div id="sdkBody"><div class="sdk-load"><div class="sdk-spin"></div>Kobler til SmartDok...</div></div></div>';
   } else {
-    b.push('<div class="pdm-card-lbl">Ressursplanlegger \u2013 SmartDok</div>');
-    b.push('<div style="font-size:12px;color:var(--tx3);">Vises kun p\u00e5 aktive prosjekter med prosjektnummer.</div>');
+    sdkHtml = '<div style="font-size:12px;color:var(--tx3);">Vises kun på aktive prosjekter med prosjektnummer.</div>';
   }
-  b.push('</div>');
-  b.push('</div>');
+  b.push(cardWrap('smartdok', 'Ressursplanlegger – SmartDok', sdkHtml, null));
+
+  b.push('</div>'); // lukk pdm-layout-grid
 
   document.getElementById('pdmB').innerHTML = b.join('');
   document.getElementById('pdov').classList.add('on');
@@ -1945,7 +2008,153 @@ function openPD(pid) {
   }
 }
 
-function closePD() { document.getElementById('pdov').classList.remove('on'); activePID = null; activePath = ''; sdkCurrUnderProjId = ''; sdkCurrUnderNavn = ''; sdkCurrSubProjId = ''; }
+
+/* ===== LAYOUT EDITOR ===== */
+var _layoutEditActive = false;
+var _dragSrc = null;
+var _resizeSrc = null;
+var _resizeStartX, _resizeStartY, _resizeStartCols, _resizeStartRows, _resizeCellW, _resizeCellH;
+
+function toggleLayoutEdit() {
+  _layoutEditActive = !_layoutEditActive;
+  var grid = document.getElementById('pdmLayoutGrid');
+  var btn = document.getElementById('pdmLayoutBtn');
+  if (!grid || !btn) return;
+  if (_layoutEditActive) {
+    grid.classList.add('pdm-edit-mode');
+    btn.className = 'pdm-layout-btn active';
+    btn.innerHTML = '&#10003; Ferdig';
+    initDragDrop();
+    initResize();
+  } else {
+    grid.classList.remove('pdm-edit-mode');
+    btn.className = 'pdm-layout-btn';
+    btn.innerHTML = '&#9881; Tilpass';
+    saveLayout();
+  }
+}
+
+function saveLayout() {
+  var grid = document.getElementById('pdmLayoutGrid');
+  if (!grid) return;
+  var cards = grid.querySelectorAll('.pdm-lcard');
+  var layout = [];
+  cards.forEach(function(card, idx) {
+    layout.push({
+      id: card.dataset.id,
+      cols: parseInt(card.dataset.cols) || 3,
+      rows: parseInt(card.dataset.rows) || 1,
+      order: idx
+    });
+  });
+  try { localStorage.setItem('lhbe_pdm_layout', JSON.stringify(layout)); } catch(e){}
+}
+
+function initDragDrop() {
+  var grid = document.getElementById('pdmLayoutGrid');
+  if (!grid) return;
+  var cards = grid.querySelectorAll('.pdm-lcard');
+  cards.forEach(function(card) {
+    var handle = card.querySelector('.pdm-drag-handle');
+    if (!handle) return;
+    handle.addEventListener('mousedown', function(e) {
+      if (_resizeSrc) return;
+      e.preventDefault();
+      _dragSrc = card;
+      card.classList.add('dragging');
+      var onMove = function(ev) {
+        var els = document.elementsFromPoint(ev.clientX, ev.clientY);
+        var target = null;
+        for (var i = 0; i < els.length; i++) {
+          if (els[i].classList.contains('pdm-lcard') && els[i] !== _dragSrc) {
+            target = els[i]; break;
+          }
+        }
+        grid.querySelectorAll('.pdm-lcard').forEach(function(c){ c.classList.remove('drag-over'); });
+        if (target) target.classList.add('drag-over');
+      };
+      var onUp = function(ev) {
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup', onUp);
+        card.classList.remove('dragging');
+        var els = document.elementsFromPoint(ev.clientX, ev.clientY);
+        var target = null;
+        for (var i = 0; i < els.length; i++) {
+          if (els[i].classList.contains('pdm-lcard') && els[i] !== _dragSrc) {
+            target = els[i]; break;
+          }
+        }
+        grid.querySelectorAll('.pdm-lcard').forEach(function(c){ c.classList.remove('drag-over'); });
+        if (target && _dragSrc) {
+          // Bytt plass mellom dragSrc og target
+          var srcNext = _dragSrc.nextSibling;
+          var tgtNext = target.nextSibling;
+          if (tgtNext === _dragSrc) {
+            grid.insertBefore(_dragSrc, target);
+          } else if (srcNext === target) {
+            grid.insertBefore(target, _dragSrc);
+          } else {
+            grid.insertBefore(_dragSrc, tgtNext);
+            grid.insertBefore(target, srcNext);
+          }
+        }
+        _dragSrc = null;
+      };
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup', onUp);
+    });
+  });
+}
+
+function initResize() {
+  var grid = document.getElementById('pdmLayoutGrid');
+  if (!grid) return;
+  var cards = grid.querySelectorAll('.pdm-lcard');
+  cards.forEach(function(card) {
+    var handle = card.querySelector('.pdm-resize-handle');
+    if (!handle) return;
+    handle.addEventListener('mousedown', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      _resizeSrc = card;
+      _resizeStartX = e.clientX;
+      _resizeStartY = e.clientY;
+      _resizeStartCols = parseInt(card.dataset.cols) || 3;
+      _resizeStartRows = parseInt(card.dataset.rows) || 1;
+      // Regn ut cellestørrelse fra grid
+      var gridRect = grid.getBoundingClientRect();
+      _resizeCellW = (gridRect.width - 11 * 12) / 12; // 12 kolonner, 11 gap
+      _resizeCellH = 200; // Omtrentlig radhøyde
+      var onMove = function(ev) {
+        var dx = ev.clientX - _resizeStartX;
+        var dy = ev.clientY - _resizeStartY;
+        var newCols = Math.max(3, Math.min(12, Math.round(_resizeStartCols + dx / _resizeCellW)));
+        var newRows = Math.max(1, Math.min(4, Math.round(_resizeStartRows + dy / _resizeCellH)));
+        card.dataset.cols = newCols;
+        card.dataset.rows = newRows;
+        var badge = card.querySelector('.pdm-size-badge');
+        if (badge) badge.textContent = newCols + '/12' + (newRows > 1 ? ' ×' + newRows : '');
+      };
+      var onUp = function() {
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup', onUp);
+        _resizeSrc = null;
+      };
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup', onUp);
+    });
+  });
+}
+/* ===== SLUTT LAYOUT EDITOR ===== */
+function closePD() {
+  if (_layoutEditActive) {
+    _layoutEditActive = false;
+    saveLayout();
+  }
+  document.getElementById('pdov').classList.remove('on');
+  activePID = null; activePath = '';
+  sdkCurrUnderProjId = ''; sdkCurrUnderNavn = ''; sdkCurrSubProjId = '';
+}
 
 function toggleCheck(pid, idx) {
   var p = projects.filter(function(x) { return x.ID === pid; })[0];
