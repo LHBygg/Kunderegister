@@ -2211,6 +2211,97 @@ function _reinitCards() {
   });
 }
 
+function _initCardInteraction(card) {
+  if (card._lcInit) return;
+  card._lcInit = true;
+  var grid = document.getElementById('pdmLayoutGrid');
+
+  // DRAG
+  var dragHandle = card.querySelector('.pdm-drag-handle');
+  if (dragHandle) {
+    dragHandle.addEventListener('mousedown', function(e) {
+      e.preventDefault();
+      var startX = e.clientX, startY = e.clientY;
+      var startLeft = parseFloat(card.style.left) || 0;
+      var startTop = parseFloat(card.style.top) || 0;
+      var gridW = grid.offsetWidth, gridH = grid.scrollHeight;
+      card.classList.add('lc-dragging');
+      var onMove = function(ev) {
+        var nx = startLeft + ev.clientX - startX;
+        var ny = startTop + ev.clientY - startY;
+        var rects = _getOtherRects(card);
+        var targets = _buildSnapTargets(rects, gridW, gridH);
+        var cW = card.offsetWidth, cH = card.offsetHeight;
+        var sxL = _snap(nx, targets.xs, _snapDist);
+        var sxR = _snap(nx+cW, targets.xs, _snapDist);
+        var snX = nx;
+        if (Math.abs(sxL-nx) <= _snapDist) snX = sxL;
+        else if (Math.abs(sxR-(nx+cW)) <= _snapDist) snX = sxR-cW;
+        var syT = _snap(ny, targets.ys, _snapDist);
+        var syB = _snap(ny+cH, targets.ys, _snapDist);
+        var snY = ny;
+        if (Math.abs(syT-ny) <= _snapDist) snY = syT;
+        else if (Math.abs(syB-(ny+cH)) <= _snapDist) snY = syB-cH;
+        snX = Math.max(0, snX); snY = Math.max(0, snY);
+        _showSnapPreview(snX, snY, cW, cH);
+        card.style.left = snX+'px'; card.style.top = snY+'px';
+        var needed = snY+cH+20;
+        if (needed > grid.offsetHeight) grid.style.minHeight = needed+'px';
+      };
+      var onUp = function() {
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup', onUp);
+        card.classList.remove('lc-dragging');
+        _hideSnapPreview();
+      };
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup', onUp);
+    });
+  }
+
+  // RESIZE
+  function _initResize(handle, mode) {
+    if (!handle) return;
+    handle.addEventListener('mousedown', function(e) {
+      e.preventDefault(); e.stopPropagation();
+      var startX=e.clientX, startY=e.clientY;
+      var startW=card.offsetWidth, startH=card.offsetHeight;
+      var startL=parseFloat(card.style.left)||0, startT=parseFloat(card.style.top)||0;
+      var gridW=grid.offsetWidth, gridH=grid.scrollHeight;
+      var onMove = function(ev) {
+        var dx=ev.clientX-startX, dy=ev.clientY-startY;
+        var rects=_getOtherRects(card);
+        var targets=_buildSnapTargets(rects,gridW,gridH);
+        var minW=160, minH=120;
+        if (mode==='se'||mode==='e') {
+          var nw=Math.max(minW,startW+dx);
+          var snapR=_snap(startL+nw,targets.xs,_snapDist);
+          if (Math.abs(snapR-(startL+nw))<=_snapDist) nw=snapR-startL;
+          card.style.width=Math.max(minW,nw)+'px';
+        }
+        if (mode==='se'||mode==='s') {
+          var nh=Math.max(minH,startH+dy);
+          var snapB=_snap(startT+nh,targets.ys,_snapDist);
+          if (Math.abs(snapB-(startT+nh))<=_snapDist) nh=snapB-startT;
+          card.style.height=Math.max(minH,nh)+'px';
+          var needed=startT+card.offsetHeight+20;
+          if (needed>grid.offsetHeight) grid.style.minHeight=needed+'px';
+        }
+        _updateBadge(card);
+      };
+      var onUp = function() {
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup', onUp);
+      };
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup', onUp);
+    });
+  }
+  _initResize(card.querySelector('.pdm-resize-se'), 'se');
+  _initResize(card.querySelector('.pdm-resize-e'),  'e');
+  _initResize(card.querySelector('.pdm-resize-s'),  's');
+}
+
 function _initLayoutGrid() {
   var grid = document.getElementById('pdmLayoutGrid');
   if (!grid) return;
