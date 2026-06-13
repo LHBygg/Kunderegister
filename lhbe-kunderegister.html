@@ -2811,11 +2811,12 @@ function toggleSammeKunde() {
   var cb = document.getElementById('pSammeKunde');
   var kn = document.getElementById('pKunde').value;
   var kunde = customers.filter(function(x) { return x.Title === kn; })[0];
-  var fields = ['pKontakt','pTelefon','pEpost'];
+  var fields = ['pKontakt','pTelefon','pEpost','pAdresse'];
   if (cb.checked && kunde) {
     document.getElementById('pKontakt').value = kunde.Kontaktperson || '';
     document.getElementById('pTelefon').value = kunde.Telefon || '';
     document.getElementById('pEpost').value = kunde.Epost || '';
+    document.getElementById('pAdresse').value = kunde.Adresse || '';
     fields.forEach(function(f) {
       var el = document.getElementById(f);
       el.readOnly = true;
@@ -2838,13 +2839,13 @@ function openNP(kn) {
   document.getElementById('pKunde').value = kn;
   ['pNavn','pNr','pPris','pDato','pSluttdato','pNotat','pKontakt','pTelefon','pEpost','pAdresse'].forEach(function(x) { document.getElementById(x).value = ''; });
   // Nullstill readonly-tilstand på kontaktfelt
-  ['pKontakt','pTelefon','pEpost'].forEach(function(f) {
+  ['pKontakt','pTelefon','pEpost','pAdresse'].forEach(function(f) {
     var el = document.getElementById(f);
     el.readOnly = false; el.style.opacity = ''; el.style.cursor = '';
   });
   // Vis "Samme som kunde" hvis kunden har kontaktinfo, og huk av automatisk
   var kunde = customers.filter(function(x) { return x.Title === kn; })[0];
-  var harKontakt = kunde && (kunde.Kontaktperson || kunde.Telefon || kunde.Epost);
+  var harKontakt = kunde && (kunde.Kontaktperson || kunde.Telefon || kunde.Epost || kunde.Adresse);
   var wrap = document.getElementById('pSammeKundeWrap');
   var cb = document.getElementById('pSammeKunde');
   wrap.style.display = harKontakt ? '' : 'none';
@@ -2853,7 +2854,8 @@ function openNP(kn) {
     document.getElementById('pKontakt').value = kunde.Kontaktperson || '';
     document.getElementById('pTelefon').value = kunde.Telefon || '';
     document.getElementById('pEpost').value = kunde.Epost || '';
-    ['pKontakt','pTelefon','pEpost'].forEach(function(f) {
+    document.getElementById('pAdresse').value = kunde.Adresse || '';
+    ['pKontakt','pTelefon','pEpost','pAdresse'].forEach(function(f) {
       var el = document.getElementById(f);
       el.readOnly = true; el.style.opacity = '0.6'; el.style.cursor = 'not-allowed';
     });
@@ -2916,7 +2918,7 @@ function openEditP(id) {
   document.getElementById('pNrPrefix').style.display = 'none';
   document.getElementById('pSammeKundeWrap').style.display = 'none';
   document.getElementById('pSammeKunde').checked = false;
-  ['pKontakt','pTelefon','pEpost'].forEach(function(f) {
+  ['pKontakt','pTelefon','pEpost','pAdresse'].forEach(function(f) {
     var el = document.getElementById(f);
     el.readOnly = false; el.style.opacity = ''; el.style.cursor = '';
   });
