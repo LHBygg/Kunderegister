@@ -2105,50 +2105,44 @@ function _updateBadge(card) {
 }
 
 // Lagre layout
-function _gridAvail() {
-  var grid = document.getElementById('pdmLayoutGrid');
-  return grid ? Math.max(grid.offsetWidth - 44, 400) : 1000;
-}
-
-function _pxToRel(layout) {
-  // Konverter absolutte piksler til prosenter av gridbredde
-  var avail = _gridAvail();
-  return layout.map(function(lc) {
-    return { id: lc.id, xp: lc.x / avail, yp: lc.y, wp: lc.w / avail, h: lc.h };
-  });
-}
-
-function _relToPx(layout) {
-  // Konverter prosenter tilbake til piksler basert på aktuell gridbredde
-  var avail = _gridAvail();
-  return layout.map(function(lc) {
-    return { id: lc.id, x: Math.round(lc.xp * avail), y: lc.yp, w: Math.round(lc.wp * avail), h: lc.h };
-  });
-}
-
 function saveLayout() {
   var grid = document.getElementById('pdmLayoutGrid');
   if (!grid) return;
+  var avail = Math.max(grid.offsetWidth - 44, 400);
   var layout = [];
   grid.querySelectorAll('.pdm-lcard').forEach(function(card) {
-    layout.push({ id: card.dataset.id, x: parseFloat(card.style.left)||0, y: parseFloat(card.style.top)||0, w: card.offsetWidth, h: card.offsetHeight });
+    layout.push({
+      id: card.dataset.id,
+      xp: (parseFloat(card.style.left)||0) / avail,
+      yp: parseFloat(card.style.top)||0,
+      wp: card.offsetWidth / avail,
+      h:  card.offsetHeight
+    });
   });
-  // Lagre som prosenter
-  var rel = _pxToRel(layout);
-  try { localStorage.setItem('lhbe_pdm_layout', JSON.stringify(rel)); } catch(e) {}
+  try { localStorage.setItem('lhbe_pdm_layout', JSON.stringify(layout)); } catch(e) {}
+}
+
+function _layoutToPx(layout) {
+  var avail = Math.max((document.getElementById('pdmLayoutGrid') || {offsetWidth:1000}).offsetWidth - 44, 400);
+  return layout.map(function(lc) {
+    // Støtter både gammelt format (x,w) og nytt (xp,wp)
+    var x = lc.xp !== undefined ? Math.round(lc.xp * avail) : lc.x;
+    var w = lc.wp !== undefined ? Math.round(lc.wp * avail) : lc.w;
+    return { id: lc.id, x: x, y: lc.yp !== undefined ? lc.yp : lc.y, w: w, h: lc.h };
+  });
 }
 
 function saveAsDefault() {
   var grid = document.getElementById('pdmLayoutGrid');
   if (!grid) return;
+  var avail = Math.max(grid.offsetWidth - 44, 400);
   var layout = [];
   grid.querySelectorAll('.pdm-lcard').forEach(function(card) {
-    layout.push({ id: card.dataset.id, x: parseFloat(card.style.left)||0, y: parseFloat(card.style.top)||0, w: card.offsetWidth, h: card.offsetHeight });
+    layout.push({ id: card.dataset.id, xp: (parseFloat(card.style.left)||0)/avail, yp: parseFloat(card.style.top)||0, wp: card.offsetWidth/avail, h: card.offsetHeight });
   });
-  var rel = _pxToRel(layout);
   var btn = document.getElementById('pdmSaveDefaultBtn');
   if (btn) { btn.innerHTML = '&#9733; Lagrer...'; btn.disabled = true; }
-  var body = { Title: SETTINGS_KEY, Verdi: JSON.stringify(rel) };
+  var body = { Title: SETTINGS_KEY, Verdi: JSON.stringify(layout) };
   spGet(SP + '/_api/web/lists(guid\'e2a0aef3-fa9b-41ce-b5db-7307495183cc\')/items?$filter=Title eq \'' + SETTINGS_KEY + '\'&$top=1')
     .then(function(d) {
       var ex = d.value && d.value[0];
@@ -2172,9 +2166,10 @@ function resetLayout() {
       var ex = d.value && d.value[0];
       if (ex && ex.Verdi) {
         try {
-          var rel = JSON.parse(ex.Verdi);
-          localStorage.setItem('lhbe_pdm_layout', ex.Verdi);
-          _applyLayoutData(_relToPx(rel));
+          var raw = JSON.parse(ex.Verdi);
+          var px = _layoutToPx(raw);
+          localStorage.setItem('lhbe_pdm_layout', JSON.stringify(raw));
+          _applyLayoutData(px);
           return;
         } catch(e) {}
       }
@@ -2192,9 +2187,10 @@ function resetLayout() {
 function _applyLayoutData(layout) {
   var grid = document.getElementById('pdmLayoutGrid');
   if (!grid) return;
+  var px = _layoutToPx(layout);
   var maxBottom = 0;
   grid.querySelectorAll('.pdm-lcard').forEach(function(card) {
-    var lc = layout.filter(function(l){ return l.id === card.dataset.id; })[0];
+    var lc = px.filter(function(l){ return l.id === card.dataset.id; })[0];
     if (lc) {
       card.style.left = lc.x + 'px'; card.style.top = lc.y + 'px';
       card.style.width = lc.w + 'px'; card.style.height = lc.h + 'px';
@@ -2215,53 +2211,37 @@ function _reinitCards() {
   });
 }
 
-// Initialiser posisjonering for alle kort
 function _initLayoutGrid() {
   var grid = document.getElementById('pdmLayoutGrid');
   if (!grid) return;
-  var pad = 44;
-  var gap = 8;
-  var avail = grid.offsetWidth - pad;
+  var pad = 44, gap = 8;
+  var avail = Math.max(grid.offsetWidth - pad, 400);
   var cards = grid.querySelectorAll('.pdm-lcard');
 
-  // Hent lagret layout (prosentbasert)
   var saved = [];
   try { saved = JSON.parse(localStorage.getItem('lhbe_pdm_layout') || '[]'); } catch(e) {}
+  if (saved.length) saved = _layoutToPx(saved);
 
-  // Konverter lagret prosentlayout til piksler
-  if (saved.length && saved[0].xp !== undefined) {
-    saved = _relToPx(saved);
-  } else if (saved.length && saved[0].w > 0) {
-    // Gammel pikselbasert layout - konverter og lagre på nytt
-    var rel = _pxToRel(saved);
-    try { localStorage.setItem('lhbe_pdm_layout', JSON.stringify(rel)); } catch(e) {}
-    saved = _relToPx(rel);
-  }
-
-  // Standard layout som prosenter av avail
-  var p1 = 0.17, p2 = 0.265, p3 = 0.265;
-  var p4 = 1 - p1 - p2 - p3 - (gap * 3 / avail);
-  var w1 = Math.round(avail * p1);
-  var w2 = Math.round(avail * p2);
-  var w3 = Math.round(avail * p3);
-  var w4 = avail - w1 - w2 - w3 - gap * 3;
-  var xA = 0, xB = w1+gap, xC = xB+w2+gap, xD = xC+w3+gap;
-  var w_mapper = Math.round(w4 * 0.62);
-  var w_col3 = Math.floor((w4 - w_mapper - gap * 2) / 3);
-  var xE = xD + w_mapper + gap;
-
-  var h_pi = 271, h_ka = 254, h_mid = 525, h_map = h_mid, h_bunn = 695;
-  var y2 = h_pi + gap, y_bunn = h_map + gap;
+  // Standard layout i prosenter av avail
+  var w1 = Math.round(avail * 0.17);
+  var w2 = Math.round(avail * 0.265);
+  var w3 = Math.round(avail * 0.265);
+  var w4r = avail - w1 - w2 - w3 - gap * 3;
+  var xA=0, xB=w1+gap, xC=xB+w2+gap, xD=xC+w3+gap;
+  var wMap = Math.round(w4r * 0.62);
+  var wCol = Math.floor((w4r - wMap - gap*2) / 3);
+  var h_pi=271, h_ka=254, h_mid=525, h_bunn=695;
+  var y2=h_pi+gap, yB=h_mid+gap;
 
   var defaults = [
-    {id:'prosjektinfo', x:xA,         y:0,      w:w1,      h:h_pi},
-    {id:'kontakt',      x:xA,         y:y2,     w:w1,      h:h_ka},
-    {id:'notater',      x:xB,         y:0,      w:w2,      h:h_mid},
-    {id:'sjekkliste',   x:xC,         y:0,      w:w3,      h:h_mid},
-    {id:'mapper',       x:xD,         y:0,      w:w_mapper,h:h_map},
-    {id:'smartdok',     x:xD,         y:y_bunn, w:w_col3,  h:h_bunn},
-    {id:'ue',           x:xD+w_col3+gap, y:y_bunn, w:w_col3, h:h_bunn},
-    {id:'lev',          x:xD+2*(w_col3+gap), y:y_bunn, w:w_col3, h:h_bunn}
+    {id:'prosjektinfo', x:xA,              y:0,   w:w1,   h:h_pi},
+    {id:'kontakt',      x:xA,              y:y2,  w:w1,   h:h_ka},
+    {id:'notater',      x:xB,              y:0,   w:w2,   h:h_mid},
+    {id:'sjekkliste',   x:xC,              y:0,   w:w3,   h:h_mid},
+    {id:'mapper',       x:xD,              y:0,   w:wMap, h:h_mid},
+    {id:'smartdok',     x:xD,              y:yB,  w:wCol, h:h_bunn},
+    {id:'ue',           x:xD+wCol+gap,     y:yB,  w:wCol, h:h_bunn},
+    {id:'lev',          x:xD+2*(wCol+gap), y:yB,  w:wCol, h:h_bunn}
   ];
 
   var maxBottom = 0;
@@ -2269,18 +2249,13 @@ function _initLayoutGrid() {
     var id = card.dataset.id;
     var sv = saved.filter(function(s){return s.id===id;})[0];
     var def = defaults.filter(function(d){return d.id===id;})[0] || {x:0,y:0,w:w2,h:220};
-    var x = sv ? sv.x : def.x;
-    var y = sv ? sv.y : def.y;
-    var w = sv ? sv.w : def.w;
-    var h = sv ? sv.h : def.h;
-    card.style.left = x + 'px'; card.style.top = y + 'px';
-    card.style.width = w + 'px'; card.style.height = h + 'px';
-    var bottom = y + h;
-    if (bottom > maxBottom) maxBottom = bottom;
+    var x=sv?sv.x:def.x, y=sv?sv.y:def.y, w=sv?sv.w:def.w, h=sv?sv.h:def.h;
+    card.style.left=x+'px'; card.style.top=y+'px';
+    card.style.width=w+'px'; card.style.height=h+'px';
+    var b=y+h; if(b>maxBottom) maxBottom=b;
   });
   grid.style.minHeight = (maxBottom + 20) + 'px';
 }
-
 
 function toggleLayoutEdit() {
   _layoutEditActive = !_layoutEditActive;
