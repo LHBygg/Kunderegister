@@ -1152,6 +1152,12 @@ function spPost(url, body) {
   });
 }
 
+function spDelete(url) {
+  return fetch(url, {
+    method: 'DELETE',
+    headers: { 'Authorization': 'Bearer ' + ms.accessToken, 'Accept': 'application/json;odata=nometadata', 'X-HTTP-Method': 'DELETE', 'IF-MATCH': '*' }
+  }).then(function(r) { if (!r.ok && r.status !== 204) throw new Error(r.status); return r; });
+}
 function spPatch(url, body) {
   return getToken().then(function(t) {
     return fetch(url, { method: 'PATCH', headers: { Authorization: 'Bearer ' + t, Accept: 'application/json;odata=nometadata', 'Content-Type': 'application/json', 'If-Match': '*' }, body: JSON.stringify(body) });
@@ -2502,7 +2508,7 @@ function renderNotater(pid) {
     .then(function(d) {
       if (!window._pdmNotater) window._pdmNotater = {};
       window._pdmNotater[pid] = (d.value || []).map(function(n) {
-        return { Tekst: n.Tekst || '', Dato: n.Dato || '', Bruker: n.Bruker || '' };
+        return { Id: n.Id, Tekst: n.Tekst || '', Dato: n.Dato || '', Bruker: n.Bruker || '' };
       });
       visNotater(pid);
     })
@@ -2514,9 +2520,64 @@ function visNotater(pid) {
   if (!el) return;
   var notater = (window._pdmNotater || {})[pid] || [];
   if (!notater.length) { el.innerHTML = '<div style="font-size:12px;color:var(--tx3);padding:4px 0;">Ingen notater ennå.</div>'; return; }
-  el.innerHTML = notater.map(function(n) {
-    return '<div class="pdm-note-item"><div class="pdm-note-dot"></div><div class="pdm-note-body"><div class="pdm-note-text">' + (n.Tekst || '') + '</div><div class="pdm-note-meta">' + fmtDate(n.Dato) + ' · ' + (n.Bruker || '') + '</div></div></div>';
+  el.innerHTML = notater.map(function(n, idx) {
+    var redigerIcon = '<button onclick="redigerNotat(' + pid + ',' + idx + ')" style="background:none;border:none;cursor:pointer;padding:2px 5px;color:var(--tx3);font-size:11px;border-radius:4px;line-height:1;" title="Rediger">&#9998;</button>';
+    var slettIcon = '<button onclick="slettNotat(' + pid + ',' + idx + ')" style="background:none;border:none;cursor:pointer;padding:2px 5px;color:var(--tx3);font-size:11px;border-radius:4px;line-height:1;" title="Slett">&#10005;</button>';
+    return '<div class="pdm-note-item" id="noteItem_' + pid + '_' + idx + '">' +
+      '<div class="pdm-note-dot"></div>' +
+      '<div class="pdm-note-body">' +
+        '<div class="pdm-note-text" id="noteTxt_' + pid + '_' + idx + '">' + (n.Tekst || '') + '</div>' +
+        '<div class="pdm-note-meta">' + fmtDate(n.Dato) + ' · ' + (n.Bruker || '') + '</div>' +
+      '</div>' +
+      '<div style="display:flex;gap:2px;align-items:center;flex-shrink:0;">' + redigerIcon + slettIcon + '</div>' +
+    '</div>';
   }).join('');
+}
+
+function redigerNotat(pid, idx) {
+  var notater = (window._pdmNotater || {})[pid] || [];
+  var n = notater[idx];
+  if (!n) return;
+  var el = document.getElementById('noteTxt_' + pid + '_' + idx);
+  if (!el) return;
+  var gammelTekst = n.Tekst || '';
+  el.innerHTML = '<textarea style="width:100%;padding:5px 7px;background:var(--bg3);border:1px solid var(--acc);border-radius:5px;color:var(--tx);font-size:12px;font-family:inherit;resize:none;outline:none;" rows="2" id="noteEdit_' + pid + '_' + idx + '">' + gammelTekst + '</textarea>' +
+    '<div style="display:flex;gap:6px;margin-top:5px;">' +
+      '<button class="btn sm" onclick="lagreRedigertNotat(' + pid + ',' + idx + ')">Lagre</button>' +
+      '<button class="btn sm" onclick="visNotater(' + pid + ')">Avbryt</button>' +
+    '</div>';
+}
+
+function lagreRedigertNotat(pid, idx) {
+  var inp = document.getElementById('noteEdit_' + pid + '_' + idx);
+  if (!inp) return;
+  var nyTekst = inp.value.trim();
+  if (!nyTekst) return;
+  var notater = (window._pdmNotater || {})[pid] || [];
+  var n = notater[idx];
+  if (!n || !n.Id) { toast('Mangler ID for notat', 'e'); return; }
+  var body = { Tekst: nyTekst };
+  spPatch(SP + '/_api/web/lists(guid\'' + NL + '\')/items(' + n.Id + ')', body)
+    .then(function() {
+      notater[idx].Tekst = nyTekst;
+      visNotater(pid);
+      toast('Notat oppdatert', 's');
+    })
+    .catch(function() { toast('Kunne ikke oppdatere notat', 'e'); });
+}
+
+function slettNotat(pid, idx) {
+  var notater = (window._pdmNotater || {})[pid] || [];
+  var n = notater[idx];
+  if (!n || !n.Id) { toast('Mangler ID for notat', 'e'); return; }
+  if (!confirm('Slette dette notatet?')) return;
+  spDelete(SP + '/_api/web/lists(guid\'' + NL + '\')/items(' + n.Id + ')')
+    .then(function() {
+      notater.splice(idx, 1);
+      visNotater(pid);
+      toast('Notat slettet', 's');
+    })
+    .catch(function() { toast('Kunne ikke slette notat', 'e'); });
 }
 
 function lagreNotat(pid) {
@@ -2534,7 +2595,8 @@ function lagreNotat(pid) {
     .then(function(d) {
       if (!window._pdmNotater) window._pdmNotater = {};
       if (!window._pdmNotater[pid]) window._pdmNotater[pid] = [];
-      window._pdmNotater[pid].unshift({ Tekst: tekst, Dato: datoStr, Bruker: bruker });
+      var nyttId = (d && d.Id) ? d.Id : null;
+      window._pdmNotater[pid].unshift({ Id: nyttId, Tekst: tekst, Dato: datoStr, Bruker: bruker });
       renderNotater(pid);
       inp.placeholder = 'Skriv notat og trykk Enter...';
       toast('Notat lagret', 's');
@@ -4072,7 +4134,7 @@ function renderProjLevListe(projId) {
     html.push('<div style="flex:1;min-width:0;">');
     html.push('<div style="font-size:13px;font-weight:500;">' + levNavn + '</div>');
     if (levKat) html.push('<span style="display:inline-block;font-size:10px;background:var(--bg4);border:1px solid var(--br);border-radius:20px;padding:1px 8px;margin-top:3px;">' + levKat + '</span>');
-    if (pl.Title && pl.Title !== levKat) html.push('<div style="font-size:11px;color:var(--tx3);margin-top:3px;">' + pl.Title + '</div>');
+    // pl.Title ikke vist - inneholder automatisk generert verdi
     if (k) {
       html.push('<div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:4px;">');
       html.push('<div style="display:inline-flex;align-items:center;gap:5px;font-size:11px;background:var(--bg4);border:1px solid var(--br);border-radius:20px;padding:2px 8px;">');
