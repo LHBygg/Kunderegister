@@ -1795,15 +1795,19 @@ function openPD(pid) {
   b.push('</div>');
 
   // Kol 2: Kontakt & adresse
+  // Hent kunde for fallback-epost
+  var pKunde = customers.filter(function(x) { return x.Title === p.Kundenavn; })[0];
+  var visEpost = p.Epost || (pKunde ? pKunde.Epost : '');
+  var visTlf = p.Telefon || (pKunde ? pKunde.Telefon : '');
+  var visKont = p.Kontaktperson || (pKunde ? pKunde.Kontaktperson : '');
   b.push('<div class="pdm-card">');
   b.push('<div class="pdm-card-lbl">Kontakt &amp; adresse</div>');
-  if (p.Kontaktperson) b.push('<div class="pdm-info-row"><span class="pdm-info-key">Kontaktperson</span><span class="pdm-info-val">' + p.Kontaktperson + '</span></div>');
-  if (p.Telefon) b.push('<div class="pdm-info-row"><span class="pdm-info-key">Telefon</span><span class="pdm-info-val grn"><a href="tel:' + p.Telefon + '" style="color:var(--grn);text-decoration:none;">' + p.Telefon + '</a></span></div>');
-  if (p.Epost) b.push('<div class="pdm-info-row"><span class="pdm-info-key">E-post</span><span class="pdm-info-val" style="font-size:11px;"><a href="mailto:' + p.Epost + '" style="color:var(--blu);text-decoration:none;">' + p.Epost + '</a></span></div>');
-
+  if (visKont) b.push('<div class="pdm-info-row"><span class="pdm-info-key">Kontaktperson</span><span class="pdm-info-val">' + visKont + '</span></div>');
+  if (visTlf) b.push('<div class="pdm-info-row"><span class="pdm-info-key">Telefon</span><span class="pdm-info-val grn"><a href="tel:' + visTlf + '" style="color:var(--grn);text-decoration:none;">' + visTlf + '</a></span></div>');
+  if (visEpost) b.push('<div class="pdm-info-row"><span class="pdm-info-key">E-post</span><span class="pdm-info-val" style="font-size:11px;"><a href="mailto:' + visEpost + '" style="color:var(--blu);text-decoration:none;">' + visEpost + '</a></span></div>');
   if (p.Adresse) b.push('<div class="pdm-info-row"><span class="pdm-info-key">Adresse</span><span class="pdm-info-val" style="font-size:11px;">' + p.Adresse + '</span></div>');
   if (p.Notat) b.push('<div class="pdm-info-row"><span class="pdm-info-key">Notat</span><span class="pdm-info-val" style="font-size:11px;color:var(--tx2);">' + p.Notat + '</span></div>');
-  if (!p.Kontaktperson && !p.Telefon && !p.Epost && !p.Adresse) b.push('<div style="font-size:12px;color:var(--tx3);">Ingen kontaktinfo registrert.</div>');
+  if (!visKont && !visTlf && !visEpost && !p.Adresse) b.push('<div style="font-size:12px;color:var(--tx3);">Ingen kontaktinfo registrert.</div>');
   b.push('</div>');
 
   // Kol 3: UE
