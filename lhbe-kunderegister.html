@@ -2238,39 +2238,47 @@ function _initCardInteraction(card) {
 function _initLayoutGrid() {
   var grid = document.getElementById('pdmLayoutGrid');
   if (!grid) return;
-  var gridW = grid.offsetWidth;
-  var gap = 12;
+  var pad = 44; // 22px padding på hver side
+  var gap = 8;
+  var avail = grid.offsetWidth - pad; // tilgjengelig bredde innenfor padding
   var cards = grid.querySelectorAll('.pdm-lcard');
 
   // Hent lagret layout
   var saved = [];
   try { saved = JSON.parse(localStorage.getItem('lhbe_pdm_layout') || '[]'); } catch(e) {}
 
-  // Standard layout: 4 kolonner rad 1, 2 kolonner rad 2, 2 kolonner rad 3
+  // Standard layout - prosenter av avail
+  // Venstre: 17%, Midten: 26%+26%=52%, Høyre: 27% (med gap mellom)
+  var col1 = Math.round(avail * 0.17);
+  var col2 = Math.round(avail * 0.265);
+  var col3 = Math.round(avail * 0.265);
+  var col4 = Math.round(avail - col1 - col2 - col3 - gap * 3);
+  var x1 = 0;
+  var x2 = col1 + gap;
+  var x3 = x2 + col2 + gap;
+  var x4 = x3 + col3 + gap;
+
   var defaults = [
-    {id:'prosjektinfo', x:0,     y:0,   w:0.18, h:280},
-    {id:'kontakt',      x:0,     y:292, w:0.18, h:260},
-    {id:'sjekkliste',   x:0.185, y:0,   w:0.27, h:560},
-    {id:'notater',      x:0.46,  y:0,   w:0.27, h:560},
-    {id:'mapper',       x:0.185, y:572, w:0.54, h:180},
-    {id:'ue',           x:0.745, y:0,   w:0.255,h:280},
-    {id:'lev',          x:0.745, y:292, w:0.255,h:270},
-    {id:'smartdok',     x:0.745, y:572, w:0.255,h:500}
+    {id:'prosjektinfo', x:x1, y:0,   w:col1, h:280},
+    {id:'kontakt',      x:x1, y:288, w:col1, h:260},
+    {id:'sjekkliste',   x:x2, y:0,   w:col2, h:556},
+    {id:'notater',      x:x3, y:0,   w:col3, h:556},
+    {id:'mapper',       x:x2, y:564, w:col2+gap+col3, h:180},
+    {id:'ue',           x:x4, y:0,   w:col4, h:280},
+    {id:'lev',          x:x4, y:288, w:col4, h:270},
+    {id:'smartdok',     x:x4, y:566, w:col4, h:500}
   ];
 
   var maxBottom = 0;
   cards.forEach(function(card) {
     var id = card.dataset.id;
     var sv = saved.filter(function(s){return s.id===id;})[0];
-    var def = defaults.filter(function(d){return d.id===id;})[0] || {x:0,y:0,w:0.25,h:220};
+    var def = defaults.filter(function(d){return d.id===id;})[0] || {x:0,y:0,w:col2,h:220};
     var x, y, w, h;
     if (sv && sv.w > 0) {
       x = sv.x; y = sv.y; w = sv.w; h = sv.h;
     } else {
-      x = Math.round(def.x * (gridW - gap));
-      y = def.y;
-      w = Math.round(def.w * gridW - gap);
-      h = def.h;
+      x = def.x; y = def.y; w = def.w; h = def.h;
     }
     card.style.left   = x + 'px';
     card.style.top    = y + 'px';
