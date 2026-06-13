@@ -2263,21 +2263,48 @@ function _initLayoutGrid() {
   var x3 = x2 + col2 + gap;
   var x4 = x3 + col3 + gap;
 
-  // Rad 1 høyde
-  var h1a = 290, h1b = avail * 0.39, h2 = 190, h3 = avail * 0.37;
-  var y2 = h1a + gap;
-  var y3 = h1b + gap;
-  var y4 = y3 + h2 + gap;
+  // Eksakte størrelser skalert fra skjermbildet (base 1540px skjermbredde)
+  // Skjermbildet viser: venstre=317, midten=322, mapper=949, bunn=639/637/637
+  // Vi skalerer disse relativt til faktisk avail-bredde
+  var scale = avail / 1540;
+  var w1 = Math.round(317 * scale);   // venstre kolonne
+  var w2 = Math.round(322 * scale);   // notater/sjekkliste
+  var w3 = Math.round(949 * scale);   // mapper + resterende
+  var w4 = Math.round(639 * scale);   // SmartDok/UE/Lev bunn
+  // Juster w3 og w4 slik at alt går opp
+  var w3_actual = avail - w1 - w2 - w2 - gap * 3; // mapper + høyre
+  var w4_actual = Math.round(w3_actual / 3) - gap;
+  var w_mapper = w3_actual - 2 * (w4_actual + gap);
+
+  var xA = 0;
+  var xB = w1 + gap;
+  var xC = xB + w2 + gap;
+  var xD = xC + w2 + gap;  // høyre kolonne start (mapper+SDK/UE/Lev)
+  var xE = xD + w_mapper + gap; // SDK/UE/Lev x
+
+  // Rader
+  var h_pi = 271, h_ka = 254;   // prosjektinfo, kontakt
+  var h_mid = 525;               // notater/sjekkliste høyde
+  var h_map = Math.round(h_mid * 0.52); // mapper ca halvparten av mid-høyde
+  var h_bunn = 695;              // bunn-kortene
+
+  var y_rad1 = 0;
+  var y_rad2 = h_mid + gap;      // bunn-rad under midten
+
+  // Mapper og høyre søyle starter på rad1
+  // SDK/UE/Lev starter under mapper
+  var h_map_actual = h_mid;      // mapper samme høyde som notater/sjekkliste
+  var y_bunn = h_map_actual + gap;
 
   var defaults = [
-    {id:'prosjektinfo', x:x1, y:0,  w:col1, h:h1a},
-    {id:'kontakt',      x:x1, y:y2, w:col1, h:Math.round(h1b - h1a - gap)},
-    {id:'sjekkliste',   x:x2, y:0,  w:col2, h:Math.round(h1b)},
-    {id:'notater',      x:x3, y:0,  w:col3, h:Math.round(h1b)},
-    {id:'mapper',       x:x2, y:y3, w:col2+gap+col3, h:h2},
-    {id:'ue',           x:x4, y:0,  w:col4, h:h1a},
-    {id:'lev',          x:x4, y:y2, w:col4, h:Math.round(h1b - h1a - gap)},
-    {id:'smartdok',     x:x4, y:y3, w:col4, h:Math.round(h3)}
+    {id:'prosjektinfo', x:xA, y:0,       w:w1,           h:h_pi},
+    {id:'kontakt',      x:xA, y:h_pi+gap,w:w1,           h:h_ka},
+    {id:'notater',      x:xB, y:0,       w:w2,           h:h_mid},
+    {id:'sjekkliste',   x:xC, y:0,       w:w2,           h:h_mid},
+    {id:'mapper',       x:xD, y:0,       w:w_mapper,     h:h_map_actual},
+    {id:'smartdok',     x:xD, y:y_bunn,  w:w4_actual,    h:h_bunn},
+    {id:'ue',           x:xD+w4_actual+gap, y:y_bunn, w:w4_actual, h:h_bunn},
+    {id:'lev',          x:xD+2*(w4_actual+gap), y:y_bunn, w:w4_actual, h:h_bunn}
   ];
 
   var maxBottom = 0;
