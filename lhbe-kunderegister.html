@@ -1267,12 +1267,22 @@ function setFilter(f, el) {
 var mvOffset = 0; // antall 4-ukers perioder fremover/bakover
 
 function openMannskap(el) {
+  activeView = 'mannskap';
   document.querySelectorAll('#filterTabs .ftab').forEach(function(t) { t.classList.remove('on'); });
+  document.querySelectorAll('#viewTabs .ftab').forEach(function(t) { t.classList.remove('on'); });
   if (el) el.classList.add('on');
   activeFilter = 'mannskap';
-  document.querySelector('.tw').style.display = 'none';
-  document.getElementById('projView').style.display = 'none';
-  document.querySelector('.stats').style.display = 'none';
+  // Skjul ALT annet
+  ['tw', 'stats'].forEach(function(cls) {
+    var el2 = document.querySelector('.' + cls);
+    if (el2) el2.style.display = 'none';
+  });
+  ['projView','ueView','levView'].forEach(function(id) {
+    var el2 = document.getElementById(id);
+    if (el2) el2.style.display = 'none';
+  });
+  document.getElementById('filterTabs').style.display = 'none';
+  document.getElementById('newCustBtn').style.display = 'none';
   document.getElementById('mannskapView').style.display = '';
   mvWeekOffset = 0;
   loadMannskap();
@@ -1299,10 +1309,8 @@ function setView(v, el) {
     var alleFane = document.querySelector('#filterTabs .ftab[data-filter="alle"]');
     if (alleFane) alleFane.classList.add('on');
   }
-  // filterTabs og søk alltid synlig - bare skjul Alle/Kalkyle/Aktive/Avsluttet for ue/lev
-  document.querySelectorAll('#filterTabs .ftab:not([data-filter="mannskap"])').forEach(function(t) {
-    t.style.display = regView ? 'none' : '';
-  });
+  // Skjul filterTabs helt på ue/lev (inkl. Mannskap)
+  document.getElementById('filterTabs').style.display = regView ? 'none' : '';
   document.getElementById('newCustBtn').style.display = regView ? 'none' : '';
   if (v === 'prosjekter') {
     document.querySelector('.tw').style.display = 'none';
