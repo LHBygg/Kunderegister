@@ -105,7 +105,7 @@ tr.erow td{padding:0;background:var(--bg2);border-bottom:1px solid var(--br2);}
 .pdmsub{font-size:12px;color:var(--tx2);white-space:nowrap;flex-shrink:0;}
 .pdmclose{display:none;}
 .pdmbody{flex:1;overflow:hidden;display:flex;}
-.pdm-main{flex:1;overflow-y:auto;padding:20px 22px;}
+.pdm-main{flex:1;overflow-y:auto;padding:0;}
 .pdm-grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:14px;}
 .pdm-grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;}
 .pdm-card{background:var(--bg2);border:1px solid var(--br);border-radius:var(--rl);padding:13px 14px;}
@@ -138,27 +138,33 @@ tr.erow td{padding:0;background:var(--bg2);border-bottom:1px solid var(--br2);}
 .pdm-note-input:focus{border-color:var(--acc);color:var(--tx);}
 .pdsec{margin-bottom:22px;}
 
-/* === LAYOUT EDITOR (Muuri) === */
-.pdm-layout-grid{position:relative;padding:20px 22px;}
-.pdm-lcard{position:absolute;box-sizing:border-box;padding:2px;}
-.pdm-lcard-inner{background:var(--bg2);border:1px solid var(--br);border-radius:var(--rl);padding:13px 14px;height:100%;overflow-y:auto;position:relative;box-sizing:border-box;}
+/* === LAYOUT EDITOR === */
+.pdm-layout-grid{position:relative;width:100%;box-sizing:border-box;padding:20px 22px;}
+.pdm-lcard{position:absolute;box-sizing:border-box;padding:4px;}
+.pdm-lcard-inner{background:var(--bg2);border:1px solid var(--br);border-radius:var(--rl);padding:13px 14px;width:100%;height:100%;overflow-y:auto;position:relative;box-sizing:border-box;}
 
 /* Drag handle */
-.pdm-drag-handle{display:none;position:absolute;top:0;left:0;right:28px;height:32px;cursor:grab;z-index:10;align-items:center;padding:0 10px;}
-.pdm-drag-handle::before{content:'⠿';font-size:15px;color:var(--tx3);letter-spacing:2px;}
+.pdm-drag-handle{display:none;position:absolute;top:4px;left:4px;right:28px;height:28px;cursor:grab;z-index:10;align-items:center;padding:0 8px;border-radius:6px 6px 0 0;}
+.pdm-drag-handle::before{content:'⠿⠿';font-size:13px;color:var(--tx3);letter-spacing:3px;}
 .pdm-drag-handle:active{cursor:grabbing;}
+.pdm-drag-handle:hover::before{color:var(--tx2);}
 
-/* Resize handle */
-.pdm-resize-handle{display:none;position:absolute;bottom:4px;right:4px;width:18px;height:18px;cursor:se-resize;z-index:10;}
-.pdm-resize-handle::after{content:'';position:absolute;bottom:2px;right:2px;width:9px;height:9px;border-right:2px solid var(--tx3);border-bottom:2px solid var(--tx3);border-radius:1px;}
+/* Resize handle - hjørner */
+.pdm-resize-se{display:none;position:absolute;bottom:4px;right:4px;width:16px;height:16px;cursor:se-resize;z-index:10;}
+.pdm-resize-se::after{content:'';position:absolute;bottom:2px;right:2px;width:8px;height:8px;border-right:2px solid var(--acc);border-bottom:2px solid var(--acc);border-radius:1px;}
+.pdm-resize-e{display:none;position:absolute;top:50%;right:4px;transform:translateY(-50%);width:8px;height:40px;cursor:e-resize;z-index:10;background:transparent;}
+.pdm-resize-e::after{content:'';position:absolute;top:50%;right:1px;transform:translateY(-50%);width:3px;height:24px;background:var(--acc);border-radius:2px;opacity:.5;}
+.pdm-resize-s{display:none;position:absolute;bottom:4px;left:50%;transform:translateX(-50%);height:8px;width:40px;cursor:s-resize;z-index:10;}
+.pdm-resize-s::after{content:'';position:absolute;bottom:1px;left:50%;transform:translateX(-50%);height:3px;width:24px;background:var(--acc);border-radius:2px;opacity:.5;}
 
 /* Redigeringsmodus */
-.pdm-edit-mode .pdm-lcard-inner{box-shadow:0 0 0 2px var(--acc);transition:box-shadow .15s;}
+.pdm-edit-mode .pdm-lcard-inner{box-shadow:0 0 0 1.5px var(--acc);transition:box-shadow .1s;}
 .pdm-edit-mode .pdm-lcard-inner:hover{box-shadow:0 0 0 2px var(--blu);}
 .pdm-edit-mode .pdm-drag-handle{display:flex;}
-.pdm-edit-mode .pdm-resize-handle{display:block;}
-.pdm-edit-mode .pdm-lcard.muuri-item-dragging .pdm-lcard-inner{opacity:.5;box-shadow:0 8px 24px rgba(0,0,0,.25);}
-.pdm-edit-mode .pdm-lcard.muuri-item-releasing .pdm-lcard-inner{transition:none;}
+.pdm-edit-mode .pdm-resize-se,.pdm-edit-mode .pdm-resize-e,.pdm-edit-mode .pdm-resize-s{display:block;}
+.pdm-edit-mode .pdm-lcard.lc-dragging{z-index:100;}
+.pdm-edit-mode .pdm-lcard.lc-dragging .pdm-lcard-inner{box-shadow:0 8px 24px rgba(0,0,0,.2);opacity:.85;}
+.pdm-snap-preview{position:absolute;background:rgba(232,184,75,.12);border:2px dashed var(--acc);border-radius:var(--rl);pointer-events:none;z-index:50;transition:all .1s;box-sizing:border-box;}
 
 /* Tilpass-knapp */
 .pdm-layout-btn{display:flex;align-items:center;gap:5px;padding:5px 10px;background:var(--bg3);border:1px solid var(--br2);border-radius:var(--r);font-size:12px;color:var(--tx2);cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s;flex-shrink:0;}
@@ -166,7 +172,7 @@ tr.erow td{padding:0;background:var(--bg2);border-bottom:1px solid var(--br2);}
 .pdm-layout-btn.active{background:rgba(232,184,75,.15);border-color:var(--acc);color:var(--acc);}
 
 /* Størrelsesindikator */
-.pdm-size-badge{display:none;position:absolute;top:5px;right:5px;font-size:10px;background:var(--acc);color:#000;padding:2px 6px;border-radius:4px;font-family:'DM Mono',monospace;font-weight:600;z-index:11;pointer-events:none;}
+.pdm-size-badge{display:none;position:absolute;bottom:8px;left:50%;transform:translateX(-50%);font-size:10px;background:rgba(0,0,0,.55);color:#fff;padding:2px 7px;border-radius:10px;font-family:'DM Mono',monospace;font-weight:500;z-index:11;pointer-events:none;white-space:nowrap;}
 .pdm-edit-mode .pdm-size-badge{display:block;}
 .pdsect{font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--tx3);font-weight:500;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--br);}
 .igrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
@@ -423,7 +429,6 @@ tr.erow td{padding:0;background:var(--bg2);border-bottom:1px solid var(--br2);}
   .sp{width:100vw !important;}
 }
 </style>
-<script src="https://cdn.jsdelivr.net/npm/muuri@0.9.5/dist/muuri.min.js"></script>
 </head>
 <body>
 
@@ -1850,13 +1855,15 @@ function openPD(pid) {
 
   // Hjelpefunksjon for kortwrapper
   function cardWrap(id, title, innerHtml, extraAct) {
-    var lc = layout.filter(function(x){return x.id===id;})[0] || {cols:3,rows:1};
+    var lc = layout.filter(function(x){return x.id===id;})[0] || {cols:3,rows:1,x:0,y:0,w:300,h:220};
     var actBtn = extraAct ? '<button class="pdm-card-act" ' + extraAct + '>+ Legg til</button>' : '';
     return '<div class="pdm-lcard" data-id="' + id + '" data-cols="' + lc.cols + '" data-rows="' + lc.rows + '">' +
       '<div class="pdm-lcard-inner">' +
       '<div class="pdm-drag-handle" title="Dra for å flytte"></div>' +
-      '<div class="pdm-resize-handle" title="Dra for å endre størrelse"></div>' +
-      '<div class="pdm-size-badge" id="sz_' + id + '">' + lc.cols + '/12</div>' +
+      '<div class="pdm-resize-se" title="Endre størrelse"></div>' +
+      '<div class="pdm-resize-e" title="Endre bredde"></div>' +
+      '<div class="pdm-resize-s" title="Endre høyde"></div>' +
+      '<div class="pdm-size-badge" id="sz_' + id + '"></div>' +
       '<div class="pdm-card-lbl">' + title + actBtn + '</div>' +
       innerHtml +
       '</div></div>';
@@ -1948,6 +1955,8 @@ function openPD(pid) {
   b.push('</div>'); // lukk pdm-layout-grid
 
   document.getElementById('pdmB').innerHTML = b.join('');
+  // Init absolutt posisjonering
+  setTimeout(function() { _initLayoutGrid(); }, 0);
   document.getElementById('pdov').classList.add('on');
 
   // Sett opp notatfelt Enter-handler
@@ -2001,31 +2010,262 @@ function openPD(pid) {
 
 
 
-/* ===== LAYOUT EDITOR (Muuri) ===== */
-var _layoutEditActive = false;
-var _muuriGrid = null;
-var _resizeSrc = null;
-var _COLS = 12;
-var _GAP = 12;
 
-function _getGridColW() {
+/* ===== LAYOUT EDITOR ===== */
+var _layoutEditActive = false;
+var _snapDist = 18; // px avstand for magnetisk snap
+
+// Hjelp: hent alle kortposisjon-rects (ekskl. aktivt kort)
+function _getOtherRects(excludeEl) {
   var grid = document.getElementById('pdmLayoutGrid');
-  if (!grid) return 80;
-  return Math.floor((grid.offsetWidth - (_COLS - 1) * _GAP) / _COLS);
+  if (!grid) return [];
+  var rects = [];
+  grid.querySelectorAll('.pdm-lcard').forEach(function(c) {
+    if (c === excludeEl) return;
+    rects.push({
+      el: c,
+      x: parseFloat(c.style.left) || 0,
+      y: parseFloat(c.style.top) || 0,
+      w: c.offsetWidth,
+      h: c.offsetHeight
+    });
+  });
+  return rects;
 }
 
-function _applyCardSizes() {
+// Snap en verdi mot en liste av mål med gitt toleranse
+function _snap(val, targets, tol) {
+  var best = val, bestD = tol + 1;
+  targets.forEach(function(t) {
+    var d = Math.abs(val - t);
+    if (d < bestD) { bestD = d; best = t; }
+  });
+  return best;
+}
+
+// Bygg snap-mål fra andre kort (kanter og midtpunkter)
+function _buildSnapTargets(rects, gridW, gridH) {
+  var xs = [0, gridW];
+  var ys = [0, gridH];
+  rects.forEach(function(r) {
+    xs.push(r.x, r.x + r.w, r.x + r.w / 2);
+    ys.push(r.y, r.y + r.h, r.y + r.h / 2);
+  });
+  return { xs: xs, ys: ys };
+}
+
+// Vis snap-preview
+function _showSnapPreview(x, y, w, h) {
+  var grid = document.getElementById('pdmLayoutGrid');
+  var prev = document.getElementById('pdmSnapPrev');
+  if (!prev) {
+    prev = document.createElement('div');
+    prev.id = 'pdmSnapPrev';
+    prev.className = 'pdm-snap-preview';
+    grid.appendChild(prev);
+  }
+  prev.style.left = x + 'px';
+  prev.style.top = y + 'px';
+  prev.style.width = w + 'px';
+  prev.style.height = h + 'px';
+  prev.style.display = 'block';
+}
+
+function _hideSnapPreview() {
+  var prev = document.getElementById('pdmSnapPrev');
+  if (prev) prev.style.display = 'none';
+}
+
+// Oppdater størrelsesbadge
+function _updateBadge(card) {
+  var badge = card.querySelector('.pdm-size-badge');
+  if (!badge) return;
+  badge.textContent = Math.round(card.offsetWidth) + 'x' + Math.round(card.offsetHeight);
+}
+
+// Lagre layout
+function saveLayout() {
   var grid = document.getElementById('pdmLayoutGrid');
   if (!grid) return;
-  var colW = _getGridColW();
-  grid.querySelectorAll('.pdm-lcard').forEach(function(card) {
-    var cols = Math.max(3, Math.min(12, parseInt(card.dataset.cols) || 3));
-    var rows = Math.max(1, Math.min(6, parseInt(card.dataset.rows) || 1));
-    var rowH = 220;
-    card.style.width = (cols * colW + (cols - 1) * _GAP) + 'px';
-    card.style.height = (rows * rowH + (rows - 1) * _GAP) + 'px';
+  var layout = [];
+  grid.querySelectorAll('.pdm-lcard').forEach(function(card, idx) {
+    layout.push({
+      id: card.dataset.id,
+      x: parseFloat(card.style.left) || 0,
+      y: parseFloat(card.style.top) || 0,
+      w: card.offsetWidth,
+      h: card.offsetHeight,
+      order: idx
+    });
   });
-  if (_muuriGrid) _muuriGrid.refreshItems().layout();
+  try { localStorage.setItem('lhbe_pdm_layout', JSON.stringify(layout)); } catch(e) {}
+}
+
+// Init drag og resize på alle kort
+function _initCardInteraction(card) {
+  if (card._lcInit) return;
+  card._lcInit = true;
+
+  var grid = document.getElementById('pdmLayoutGrid');
+
+  // DRAG
+  var dragHandle = card.querySelector('.pdm-drag-handle');
+  if (dragHandle) {
+    dragHandle.addEventListener('mousedown', function(e) {
+      e.preventDefault();
+      var startX = e.clientX, startY = e.clientY;
+      var startLeft = parseFloat(card.style.left) || 0;
+      var startTop = parseFloat(card.style.top) || 0;
+      var gridRect = grid.getBoundingClientRect();
+      var gridW = grid.offsetWidth;
+      var gridH = grid.scrollHeight;
+      card.classList.add('lc-dragging');
+
+      var onMove = function(ev) {
+        var dx = ev.clientX - startX;
+        var dy = ev.clientY - startY;
+        var nx = startLeft + dx;
+        var ny = startTop + dy;
+
+        // Snap mot andre korts kanter
+        var rects = _getOtherRects(card);
+        var targets = _buildSnapTargets(rects, gridW, gridH);
+        var cardW = card.offsetWidth, cardH = card.offsetHeight;
+
+        // Snap venstre kant, høyre kant og midtpunkt X
+        var snapXLeft  = _snap(nx, targets.xs, _snapDist);
+        var snapXRight = _snap(nx + cardW, targets.xs, _snapDist);
+        var snappedX = nx;
+        if (Math.abs(snapXLeft - nx) <= _snapDist) snappedX = snapXLeft;
+        else if (Math.abs(snapXRight - (nx + cardW)) <= _snapDist) snappedX = snapXRight - cardW;
+
+        // Snap topp og bunn Y
+        var snapYTop    = _snap(ny, targets.ys, _snapDist);
+        var snapYBottom = _snap(ny + cardH, targets.ys, _snapDist);
+        var snappedY = ny;
+        if (Math.abs(snapYTop - ny) <= _snapDist) snappedY = snapYTop;
+        else if (Math.abs(snapYBottom - (ny + cardH)) <= _snapDist) snappedY = snapYBottom - cardH;
+
+        // Clamp innenfor grid
+        snappedX = Math.max(0, snappedX);
+        snappedY = Math.max(0, snappedY);
+
+        _showSnapPreview(snappedX, snappedY, cardW, cardH);
+        card.style.left = snappedX + 'px';
+        card.style.top  = snappedY + 'px';
+        // Utvid grid-høyde hvis nødvendig
+        var needed = snappedY + cardH + 20;
+        if (needed > grid.offsetHeight) grid.style.minHeight = needed + 'px';
+      };
+
+      var onUp = function() {
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup', onUp);
+        card.classList.remove('lc-dragging');
+        _hideSnapPreview();
+      };
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup', onUp);
+    });
+  }
+
+  // RESIZE SE (hjørne)
+  function _initResize(handle, mode) {
+    if (!handle) return;
+    handle.addEventListener('mousedown', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      var startX = e.clientX, startY = e.clientY;
+      var startW = card.offsetWidth, startH = card.offsetHeight;
+      var startLeft = parseFloat(card.style.left) || 0;
+      var startTop  = parseFloat(card.style.top) || 0;
+      var gridW = grid.offsetWidth;
+      var gridH = grid.scrollHeight;
+
+      var onMove = function(ev) {
+        var dx = ev.clientX - startX;
+        var dy = ev.clientY - startY;
+        var rects = _getOtherRects(card);
+        var targets = _buildSnapTargets(rects, gridW, gridH);
+        var minW = 160, minH = 120;
+
+        if (mode === 'se' || mode === 'e') {
+          var nw = Math.max(minW, startW + dx);
+          var snapRight = _snap(startLeft + nw, targets.xs, _snapDist);
+          if (Math.abs(snapRight - (startLeft + nw)) <= _snapDist) nw = snapRight - startLeft;
+          card.style.width = Math.max(minW, nw) + 'px';
+        }
+        if (mode === 'se' || mode === 's') {
+          var nh = Math.max(minH, startH + dy);
+          var snapBottom = _snap(startTop + nh, targets.ys, _snapDist);
+          if (Math.abs(snapBottom - (startTop + nh)) <= _snapDist) nh = snapBottom - startTop;
+          card.style.height = Math.max(minH, nh) + 'px';
+          var needed = startTop + card.offsetHeight + 20;
+          if (needed > grid.offsetHeight) grid.style.minHeight = needed + 'px';
+        }
+        _updateBadge(card);
+      };
+
+      var onUp = function() {
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup', onUp);
+      };
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup', onUp);
+    });
+  }
+
+  _initResize(card.querySelector('.pdm-resize-se'), 'se');
+  _initResize(card.querySelector('.pdm-resize-e'),  'e');
+  _initResize(card.querySelector('.pdm-resize-s'),  's');
+}
+
+// Initialiser posisjonering for alle kort
+function _initLayoutGrid() {
+  var grid = document.getElementById('pdmLayoutGrid');
+  if (!grid) return;
+  var gridW = grid.offsetWidth;
+  var gap = 12;
+  var cards = grid.querySelectorAll('.pdm-lcard');
+
+  // Hent lagret layout
+  var saved = [];
+  try { saved = JSON.parse(localStorage.getItem('lhbe_pdm_layout') || '[]'); } catch(e) {}
+
+  // Standard layout: 4 kolonner rad 1, 2 kolonner rad 2, 2 kolonner rad 3
+  var defaults = [
+    {id:'prosjektinfo', x:0,          y:0,   w:0.25, h:220},
+    {id:'kontakt',      x:0.25,       y:0,   w:0.25, h:220},
+    {id:'ue',           x:0.5,        y:0,   w:0.25, h:220},
+    {id:'lev',          x:0.75,       y:0,   w:0.25, h:220},
+    {id:'sjekkliste',   x:0,          y:232, w:0.5,  h:380},
+    {id:'notater',      x:0.5,        y:232, w:0.5,  h:380},
+    {id:'mapper',       x:0,          y:624, w:0.5,  h:200},
+    {id:'smartdok',     x:0.5,        y:624, w:0.5,  h:340}
+  ];
+
+  var maxBottom = 0;
+  cards.forEach(function(card) {
+    var id = card.dataset.id;
+    var sv = saved.filter(function(s){return s.id===id;})[0];
+    var def = defaults.filter(function(d){return d.id===id;})[0] || {x:0,y:0,w:0.25,h:220};
+    var x, y, w, h;
+    if (sv && sv.w > 0) {
+      x = sv.x; y = sv.y; w = sv.w; h = sv.h;
+    } else {
+      x = Math.round(def.x * (gridW - gap));
+      y = def.y;
+      w = Math.round(def.w * gridW - gap);
+      h = def.h;
+    }
+    card.style.left   = x + 'px';
+    card.style.top    = y + 'px';
+    card.style.width  = w + 'px';
+    card.style.height = h + 'px';
+    var bottom = y + h;
+    if (bottom > maxBottom) maxBottom = bottom;
+  });
+  grid.style.minHeight = (maxBottom + 20) + 'px';
 }
 
 function toggleLayoutEdit() {
@@ -2033,94 +2273,22 @@ function toggleLayoutEdit() {
   var gridEl = document.getElementById('pdmLayoutGrid');
   var btn = document.getElementById('pdmLayoutBtn');
   if (!gridEl || !btn) return;
+
   if (_layoutEditActive) {
     gridEl.classList.add('pdm-edit-mode');
     btn.className = 'pdm-layout-btn active';
     btn.innerHTML = '&#10003; Ferdig';
-    _applyCardSizes();
-    if (!_muuriGrid && typeof Muuri !== 'undefined') {
-      _muuriGrid = new Muuri('#pdmLayoutGrid', {
-        items: '.pdm-lcard',
-        dragEnabled: true,
-        dragHandle: '.pdm-drag-handle',
-        layout: { fillGaps: true },
-        dragStartPredicate: { distance: 5, delay: 0 }
-      });
-    } else if (_muuriGrid) {
-      _muuriGrid.enable();
-      _muuriGrid.refreshItems().layout();
-    }
-    initResizeMuuri();
+    gridEl.querySelectorAll('.pdm-lcard').forEach(function(card) {
+      _initCardInteraction(card);
+      _updateBadge(card);
+    });
   } else {
     gridEl.classList.remove('pdm-edit-mode');
     btn.className = 'pdm-layout-btn';
     btn.innerHTML = '&#9881; Tilpass';
-    if (_muuriGrid) _muuriGrid.disable();
+    _hideSnapPreview();
     saveLayout();
   }
-}
-
-function saveLayout() {
-  var grid = document.getElementById('pdmLayoutGrid');
-  if (!grid) return;
-  var layout = [];
-  var cards;
-  if (_muuriGrid) {
-    cards = _muuriGrid.getItems().map(function(i){ return i.getElement(); });
-  } else {
-    cards = Array.from(grid.querySelectorAll('.pdm-lcard'));
-  }
-  cards.forEach(function(card, idx) {
-    layout.push({
-      id: card.dataset.id,
-      cols: parseInt(card.dataset.cols) || 3,
-      rows: parseInt(card.dataset.rows) || 1,
-      order: idx
-    });
-  });
-  try { localStorage.setItem('lhbe_pdm_layout', JSON.stringify(layout)); } catch(e) {}
-}
-
-function initResizeMuuri() {
-  var grid = document.getElementById('pdmLayoutGrid');
-  if (!grid) return;
-  grid.querySelectorAll('.pdm-lcard').forEach(function(card) {
-    var handle = card.querySelector('.pdm-resize-handle');
-    if (!handle || handle._resizeInit) return;
-    handle._resizeInit = true;
-    handle.addEventListener('mousedown', function(e) {
-      e.preventDefault();
-      e.stopPropagation();
-      _resizeSrc = card;
-      var startX = e.clientX;
-      var startY = e.clientY;
-      var startCols = parseInt(card.dataset.cols) || 3;
-      var startRows = parseInt(card.dataset.rows) || 1;
-      var colW = _getGridColW();
-      var rowH = 220;
-      var onMove = function(ev) {
-        var dx = ev.clientX - startX;
-        var dy = ev.clientY - startY;
-        var newCols = Math.max(3, Math.min(12, Math.round(startCols + dx / (colW + _GAP))));
-        var newRows = Math.max(1, Math.min(6, Math.round(startRows + dy / (rowH + _GAP))));
-        card.dataset.cols = newCols;
-        card.dataset.rows = newRows;
-        card.style.width = (newCols * colW + (newCols - 1) * _GAP) + 'px';
-        card.style.height = (newRows * rowH + (newRows - 1) * _GAP) + 'px';
-        var badge = card.querySelector('.pdm-size-badge');
-        if (badge) badge.textContent = newCols + '/12' + (newRows > 1 ? ' ×' + newRows : '');
-        if (_muuriGrid) _muuriGrid.refreshItems(card).layout();
-      };
-      var onUp = function() {
-        document.removeEventListener('mousemove', onMove);
-        document.removeEventListener('mouseup', onUp);
-        _resizeSrc = null;
-        if (_muuriGrid) _muuriGrid.refreshItems().layout();
-      };
-      document.addEventListener('mousemove', onMove);
-      document.addEventListener('mouseup', onUp);
-    });
-  });
 }
 /* ===== SLUTT LAYOUT EDITOR ===== */
 function closePD() {
