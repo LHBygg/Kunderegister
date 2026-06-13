@@ -141,7 +141,7 @@ tr.erow td{padding:0;background:var(--bg2);border-bottom:1px solid var(--br2);}
 /* === LAYOUT EDITOR === */
 .pdm-layout-grid{position:relative;width:100%;box-sizing:border-box;padding:20px 22px;}
 .pdm-lcard{position:absolute;box-sizing:border-box;padding:4px;}
-.pdm-lcard-inner{background:var(--bg2);border:1px solid var(--br);border-radius:var(--rl);padding:13px 14px;width:100%;height:100%;overflow-y:auto;position:relative;box-sizing:border-box;}
+.pdm-lcard-inner{background:var(--bg2);border:1px solid var(--br);border-radius:var(--rl);padding:13px 14px;width:100%;height:100%;overflow-y:auto;overflow-x:hidden;position:relative;box-sizing:border-box;scrollbar-width:thin;}
 
 /* Drag handle */
 .pdm-drag-handle{display:none;position:absolute;top:4px;left:4px;right:28px;height:28px;cursor:grab;z-index:10;align-items:center;padding:0 8px;border-radius:6px 6px 0 0;}
@@ -247,7 +247,7 @@ tr.erow td{padding:0;background:var(--bg2);border-bottom:1px solid var(--br2);}
 @keyframes spin{to{transform:rotate(360deg);}}
 .empty{text-align:center;padding:50px 20px;color:var(--tx3);}
 /* SMARTDOK */
-.sdk-box{background:var(--bg3);border:1px solid var(--br);border-radius:var(--rl);overflow:hidden;}
+.sdk-box{background:var(--bg3);border:1px solid var(--br);border-radius:var(--rl);overflow:visible;}
 .sdk-hdr{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--br);}
 .sdk-title{font-size:12px;font-weight:500;display:flex;align-items:center;gap:6px;}
 .sdk-dot{width:8px;height:8px;border-radius:50%;background:var(--grn);}
@@ -2101,6 +2101,20 @@ function saveLayout() {
   try { localStorage.setItem('lhbe_pdm_layout', JSON.stringify(layout)); } catch(e) {}
 }
 
+function resetLayout() {
+  try { localStorage.removeItem('lhbe_pdm_layout'); } catch(e) {}
+  _initLayoutGrid();
+  // Re-init resize handles etter relayout
+  var grid = document.getElementById('pdmLayoutGrid');
+  if (grid) {
+    grid.querySelectorAll('.pdm-lcard').forEach(function(card) {
+      card._lcInit = false;
+      _initCardInteraction(card);
+      _updateBadge(card);
+    });
+  }
+}
+
 // Init drag og resize på alle kort
 function _initCardInteraction(card) {
   if (card._lcInit) return;
@@ -2234,14 +2248,14 @@ function _initLayoutGrid() {
 
   // Standard layout: 4 kolonner rad 1, 2 kolonner rad 2, 2 kolonner rad 3
   var defaults = [
-    {id:'prosjektinfo', x:0,          y:0,   w:0.25, h:220},
-    {id:'kontakt',      x:0.25,       y:0,   w:0.25, h:220},
-    {id:'ue',           x:0.5,        y:0,   w:0.25, h:220},
-    {id:'lev',          x:0.75,       y:0,   w:0.25, h:220},
-    {id:'sjekkliste',   x:0,          y:232, w:0.5,  h:380},
-    {id:'notater',      x:0.5,        y:232, w:0.5,  h:380},
-    {id:'mapper',       x:0,          y:624, w:0.5,  h:200},
-    {id:'smartdok',     x:0.5,        y:624, w:0.5,  h:340}
+    {id:'prosjektinfo', x:0,     y:0,   w:0.18, h:280},
+    {id:'kontakt',      x:0,     y:292, w:0.18, h:260},
+    {id:'sjekkliste',   x:0.185, y:0,   w:0.27, h:560},
+    {id:'notater',      x:0.46,  y:0,   w:0.27, h:560},
+    {id:'mapper',       x:0.185, y:572, w:0.54, h:180},
+    {id:'ue',           x:0.745, y:0,   w:0.255,h:280},
+    {id:'lev',          x:0.745, y:292, w:0.255,h:270},
+    {id:'smartdok',     x:0.745, y:572, w:0.255,h:500}
   ];
 
   var maxBottom = 0;
@@ -2278,6 +2292,18 @@ function toggleLayoutEdit() {
     gridEl.classList.add('pdm-edit-mode');
     btn.className = 'pdm-layout-btn active';
     btn.innerHTML = '&#10003; Ferdig';
+    // Legg til nullstill-knapp hvis ikke finnes
+    if (!document.getElementById('pdmResetBtn')) {
+      var resetBtn = document.createElement('button');
+      resetBtn.id = 'pdmResetBtn';
+      resetBtn.className = 'pdm-layout-btn';
+      resetBtn.style.cssText = 'color:var(--tx2);';
+      resetBtn.innerHTML = '&#8635; Nullstill';
+      resetBtn.onclick = resetLayout;
+      btn.parentNode.insertBefore(resetBtn, btn.nextSibling);
+    } else {
+      document.getElementById('pdmResetBtn').style.display = '';
+    }
     gridEl.querySelectorAll('.pdm-lcard').forEach(function(card) {
       _initCardInteraction(card);
       _updateBadge(card);
@@ -2286,6 +2312,8 @@ function toggleLayoutEdit() {
     gridEl.classList.remove('pdm-edit-mode');
     btn.className = 'pdm-layout-btn';
     btn.innerHTML = '&#9881; Tilpass';
+    var rb = document.getElementById('pdmResetBtn');
+    if (rb) rb.style.display = 'none';
     _hideSnapPreview();
     saveLayout();
   }
