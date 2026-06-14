@@ -2544,6 +2544,27 @@ function toggleLayoutEdit() {
     }
   }
 }
+function sdkAvsluttProsjekt(prosjektnr) {
+  if (!prosjektnr) return;
+  sdkGet('/Projects?projectNumber=' + encodeURIComponent(prosjektnr))
+    .then(function(d) {
+      var list = d.Data || d.data || d.Items || d.items || d || [];
+      if (!Array.isArray(list) || !list.length) return; // finnes ikke i SmartDok – ignorer
+      var sdkId = list[0].Id || list[0].id || list[0].ID;
+      if (!sdkId) return;
+      return fetch(SDK_BASE + '/Projects/' + sdkId, {
+        method: 'PUT',
+        headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+        body: JSON.stringify({ Finished: true })
+      }).then(function(r) {
+        if (!r.ok) throw new Error('SmartDok svarte ' + r.status);
+      });
+    })
+    .catch(function(e) {
+      toast('SmartDok avslutning feilet: ' + e.message, 'e');
+    });
+}
+
 /* ===== SLUTT LAYOUT EDITOR ===== */
 function closePD() {
   if (_layoutEditActive) {
@@ -3143,6 +3164,10 @@ function saveProj() {
         if (status === 'Aktiv' && !body.Underprosjekt && body.Prosjektnummer) {
           setTimeout(function() { sdkOpprettProsjektDialog(body.Prosjektnummer, body.Title, id); }, 600);
         }
+        // Avslutt i SmartDok hvis status ble Avsluttet og det er et hovedprosjekt
+        if (status === 'Avsluttet' && !body.Underprosjekt && body.Prosjektnummer) {
+          sdkAvsluttProsjekt(body.Prosjektnummer);
+        }
       }).catch(function(e) { toast('Feil: ' + e.message, 'e'); });
     };
     openMov('confMov');
@@ -3190,6 +3215,10 @@ function setSt(id, s) {
       // SmartDok-dialog hvis status ble Aktiv og det er et hovedprosjekt
       if (s === 'Aktiv' && !p.Underprosjekt && p.Prosjektnummer) {
         setTimeout(function() { sdkOpprettProsjektDialog(p.Prosjektnummer, p.Title, id); }, 600);
+      }
+      // Avslutt i SmartDok hvis status ble Avsluttet og det er et hovedprosjekt
+      if (s === 'Avsluttet' && !p.Underprosjekt && p.Prosjektnummer) {
+        sdkAvsluttProsjekt(p.Prosjektnummer);
       }
     }).catch(function(e) { toast('Feil: ' + e.message, 'e'); });
   };
