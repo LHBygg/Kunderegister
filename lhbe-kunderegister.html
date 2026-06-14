@@ -393,15 +393,11 @@ tr.erow td{padding:0;background:var(--bg2);border-bottom:1px solid var(--br2);}
     overflow-y:visible !important;
   }
   /* SmartDok-kortet på mobil: litt begrenset høyde for å holde seg ryddig */
-  .pdm-layout-grid.mob-stack .pdm-lcard[data-id="smartdok"] .pdm-lcard-inner{
-    max-height:420px;
-    overflow-y:auto !important;
-  }
-  /* Sjekkliste og notater: fri høyde men med scroll ved mye innhold */
+  .pdm-layout-grid.mob-stack .pdm-lcard[data-id="smartdok"] .pdm-lcard-inner,
   .pdm-layout-grid.mob-stack .pdm-lcard[data-id="sjekkliste"] .pdm-lcard-inner,
   .pdm-layout-grid.mob-stack .pdm-lcard[data-id="notater"] .pdm-lcard-inner{
-    max-height:380px;
-    overflow-y:auto !important;
+    max-height:none !important;
+    overflow-y:visible !important;
   }
 
   /* Mob-tilpass: opp/ned-piler istedenfor drag */
