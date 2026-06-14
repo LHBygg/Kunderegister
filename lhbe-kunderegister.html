@@ -975,6 +975,25 @@ tr.erow td{padding:0;background:var(--bg2);border-bottom:1px solid var(--br2);}
   </div>
 </div>
 
+<!-- MODAL: SMARTDOK OPPRETT PROSJEKT -->
+<div class="mov hid" id="sdkConfMov">
+  <div class="mbox sm">
+    <div class="mbody" style="text-align:center;padding:24px 20px 16px">
+      <div style="font-size:28px;margin-bottom:10px">🏗️</div>
+      <div style="font-size:15px;font-weight:600;margin-bottom:8px">Opprett prosjekt i SmartDok?</div>
+      <div style="font-size:13px;color:var(--tx2);line-height:1.5">
+        Vil du opprette prosjekt <strong id="sdkConfNr"></strong><br>
+        <span id="sdkConfNavn" style="color:var(--tx3);font-size:12px"></span><br>
+        i SmartDok?
+      </div>
+    </div>
+    <div class="mftr">
+      <button class="btn" id="sdkConfAvbryt">Nei</button>
+      <button class="btn pri" id="sdkConfOk">Ja, opprett</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL: TIMER PDF -->
 <div class="mov hid" id="timerPdfMov">
   <div class="mbox sm">
@@ -3115,11 +3134,28 @@ function saveProj() {
     document.getElementById('confTxt').textContent = 'Er du sikker på at du vil lagre endringene på ' + navn + '?';
     document.getElementById('confOk').textContent = 'Ja, lagre';
     document.getElementById('confOk').onclick = function() {
-      spPatch(url, body).then(function() { toast('Prosjekt oppdatert', 's'); closeMov('confMov'); closeMov('projMov'); loadData(); }).catch(function(e) { toast('Feil: ' + e.message, 'e'); });
+      spPatch(url, body).then(function() {
+        toast('Prosjekt oppdatert', 's');
+        closeMov('confMov'); closeMov('projMov');
+        loadData();
+        // SmartDok-dialog hvis status ble Aktiv og det er et hovedprosjekt
+        if (status === 'Aktiv' && !body.Underprosjekt && body.Prosjektnummer) {
+          setTimeout(function() { sdkOpprettProsjektDialog(body.Prosjektnummer, body.Title, id); }, 600);
+        }
+      }).catch(function(e) { toast('Feil: ' + e.message, 'e'); });
     };
     openMov('confMov');
   } else {
-    spPost(url, body).then(function() { toast('Prosjekt opprettet', 's'); closeMov('projMov'); loadData(); }).catch(function(e) { toast('Feil: ' + e.message, 'e'); });
+    spPost(url, body).then(function(d) {
+      toast('Prosjekt opprettet', 's');
+      closeMov('projMov');
+      loadData();
+      // SmartDok-dialog hvis status er Aktiv og det er et hovedprosjekt
+      if (status === 'Aktiv' && !body.Underprosjekt && body.Prosjektnummer) {
+        var nyId = d && d.d && d.d.Id ? d.d.Id : null;
+        setTimeout(function() { sdkOpprettProsjektDialog(body.Prosjektnummer, body.Title, nyId); }, 600);
+      }
+    }).catch(function(e) { toast('Feil: ' + e.message, 'e'); });
   }
 }
 
@@ -3150,6 +3186,10 @@ function setSt(id, s) {
       toast('Status endret til ' + s, 's');
       closeMov('confMov');
       loadData();
+      // SmartDok-dialog hvis status ble Aktiv og det er et hovedprosjekt
+      if (s === 'Aktiv' && !p.Underprosjekt && p.Prosjektnummer) {
+        setTimeout(function() { sdkOpprettProsjektDialog(p.Prosjektnummer, p.Title, id); }, 600);
+      }
     }).catch(function(e) { toast('Feil: ' + e.message, 'e'); });
   };
   openMov('confMov');
@@ -3699,6 +3739,87 @@ function sdkGet(path) {
     if (!r.ok) throw new Error('SmartDok feil: ' + r.status);
     return r.json();
   });
+}
+
+function sdkPost(path, body) {
+  return fetch(SDK_BASE + path, {
+    method: 'POST',
+    headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  }).then(function(r) {
+    if (!r.ok) throw new Error('SmartDok feil: ' + r.status);
+    return r.json();
+  });
+}
+
+/* --- SmartDok: sjekk om prosjektnummer finnes, opprett hvis ikke --- */
+function sdkOpprettProsjektDialog(prosjektnr, prosjektnavn, prosjektId) {
+  // Kun for hovedprosjekter
+  if (!prosjektnr) return;
+
+  // Vis bekreftelsdialog
+  document.getElementById('sdkConfNr').textContent = prosjektnr;
+  document.getElementById('sdkConfNavn').textContent = prosjektnavn;
+  document.getElementById('sdkConfOk').onclick = function() {
+    closeMov('sdkConfMov');
+    sdkSjekkOgOpprett(prosjektnr, prosjektnavn, prosjektId);
+  };
+  document.getElementById('sdkConfAvbryt').onclick = function() {
+    closeMov('sdkConfMov');
+  };
+  openMov('sdkConfMov');
+}
+
+function sdkSjekkOgOpprett(prosjektnr, prosjektnavn, prosjektId) {
+  // Steg 1: sjekk om prosjektet allerede finnes
+  sdkGet('/Projects?projectNumber=' + encodeURIComponent(prosjektnr))
+    .then(function(d) {
+      var list = d.Data || d.data || d.Items || d.items || d || [];
+      if (!Array.isArray(list)) list = [];
+      if (list.length > 0) {
+        toast('Prosjekt ' + prosjektnr + ' finnes allerede i SmartDok', 'w');
+        return;
+      }
+      // Steg 2: opprett prosjektet
+      return sdkPost('/Projects', {
+        ProjectName: prosjektnavn,
+        ProjectNumber: String(prosjektnr),
+        IsActive: true,
+        Departments: [1]
+      }).then(function() {
+        toast('Prosjekt ' + prosjektnr + ' opprettet i SmartDok', 's');
+        // Huk av sjekkliste-punkt 3 (indeks 2) automatisk
+        if (prosjektId) sdkHukAvSjekkliste(prosjektId, 2);
+      });
+    })
+    .catch(function(e) {
+      toast('SmartDok-feil: ' + e.message, 'e');
+    });
+}
+
+function sdkHukAvSjekkliste(prosjektId, idx) {
+  var p = projects.filter(function(x) { return x.ID === prosjektId; })[0];
+  if (!p) return;
+  var ckState = [];
+  try { ckState = JSON.parse(p.Sjekkliste || '[]'); } catch(e) { ckState = []; }
+  while (ckState.length < 12) ckState.push(false);
+  if (ckState[idx]) return; // allerede huket av
+  ckState[idx] = true;
+  p.Sjekkliste = JSON.stringify(ckState);
+  spPatch(SP + '/_api/web/lists(guid\'' + PL + '\')/items(' + prosjektId + ')', { Sjekkliste: p.Sjekkliste })
+    .then(function() {
+      // Oppdater sjekkliste-UI hvis prosjektpanelet er åpent
+      var ckEl = document.querySelector('.pdm-ck-row[data-idx="' + idx + '"] input');
+      if (ckEl) { ckEl.checked = true; }
+      var prog = document.querySelector('.pdm-ck-prog');
+      if (prog) {
+        var done = ckState.filter(Boolean).length;
+        prog.style.width = Math.round(done / 12 * 100) + '%';
+        var lbl = document.querySelector('.pdm-ck-lbl');
+        if (lbl) lbl.textContent = done + ' / 12';
+      }
+    })
+    .catch(function() {});
 }
 
 function loadSDK(prosjektnr) {
