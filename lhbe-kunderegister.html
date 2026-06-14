@@ -2149,11 +2149,17 @@ function filterVelgKunde() {
     return;
   }
   liste.innerHTML = treff.map(function(c) {
-    return '<div class="velg-kunde-rad" onclick="velgKundeOgOpprettProsjekt('' + (c.Title || '').replace(/'/g, "\'") + '')">' +
+    var enc = encodeURIComponent(c.Title || '');
+    return '<div class="velg-kunde-rad" data-kunde="' + enc + '">' +
       '<div style="font-weight:600;font-size:14px;color:var(--tx)">' + (c.Title || '') + '</div>' +
       '<div style="font-size:12px;color:var(--tx3)">' + (c.Kundetype || '') + (c.Adresse ? ' · ' + c.Adresse : '') + '</div>' +
       '</div>';
   }).join('');
+  liste.querySelectorAll('.velg-kunde-rad').forEach(function(el) {
+    el.addEventListener('click', function() {
+      velgKundeOgOpprettProsjekt(decodeURIComponent(this.dataset.kunde));
+    });
+  });
 }
 
 function velgKundeOgOpprettProsjekt(kundenavn) {
