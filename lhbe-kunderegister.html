@@ -166,6 +166,9 @@ tr.erow td{padding:0;background:var(--bg2);border-bottom:1px solid var(--br2);}
 .pdm-edit-mode .pdm-lcard.lc-dragging .pdm-lcard-inner{box-shadow:0 8px 24px rgba(0,0,0,.2);opacity:.85;}
 .pdm-snap-preview{position:absolute;background:rgba(232,184,75,.12);border:2px dashed var(--acc);border-radius:var(--rl);pointer-events:none;z-index:50;transition:all .1s;box-sizing:border-box;}
 .pdm-mob-card-hdr{display:none;}
+.velg-kunde-rad{padding:12px 14px;cursor:pointer;border-bottom:1px solid var(--br);transition:background .1s;}
+.velg-kunde-rad:hover{background:var(--bg3);}
+.velg-kunde-rad:last-child{border-bottom:none;}
 
 /* Tilpass-knapp */
 .pdm-layout-btn{display:flex;align-items:center;gap:5px;padding:5px 10px;background:var(--bg3);border:1px solid var(--br2);border-radius:var(--r);font-size:12px;color:var(--tx2);cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s;flex-shrink:0;}
@@ -520,6 +523,7 @@ tr.erow td{padding:0;background:var(--bg2);border-bottom:1px solid var(--br2);}
   </div>
   <div class="tsp"></div>
   <button class="btn pri" id="newCustBtn">+ Ny kunde</button>
+  <button class="btn pri" id="newProjGlobalBtn" style="margin-left:6px;">+ Nytt prosjekt</button>
 </div>
 
 <div id="mannskapView" style="display:none;padding:18px 24px 32px;">
@@ -995,6 +999,21 @@ tr.erow td{padding:0;background:var(--bg2);border-bottom:1px solid var(--br2);}
   </div>
 </div>
 
+<!-- MODAL: VELG KUNDE FOR NYTT PROSJEKT -->
+<div class="mov hid" id="velgKundeMov">
+  <div class="mbox sm">
+    <div class="mhdr"><div class="mhdr-t">Nytt prosjekt – velg kunde</div><button class="mclose" onclick="closeMov('velgKundeMov')">x</button></div>
+    <div class="mbody">
+      <div class="fg">
+        <label class="fl">Søk etter kunde</label>
+        <input class="fi2" id="velgKundeSok" placeholder="Skriv kundenavn..." oninput="filterVelgKunde()" autocomplete="off">
+      </div>
+      <div id="velgKundeListe" style="max-height:320px;overflow-y:auto;margin-top:8px;border:1px solid var(--br);border-radius:var(--r);"></div>
+    </div>
+    <div class="mftr"><button class="btn" onclick="closeMov('velgKundeMov')">Avbryt</button></div>
+  </div>
+</div>
+
 <!-- MODAL: TIMER PDF -->
 <div class="mov hid" id="timerPdfMov">
   <div class="mbox sm">
@@ -1093,6 +1112,7 @@ function init() {
   });
   document.getElementById('userBtn').addEventListener('click', signOut);
   document.getElementById('newCustBtn').addEventListener('click', function() { openCM(); });
+  document.getElementById('newProjGlobalBtn').addEventListener('click', function() { openVelgKunde(); });
   document.getElementById('pdmCloseBtn').addEventListener('click', closePD);
   // pdov er fullskjerm - ingen klikk-utenfor-lukking
   document.getElementById('spCloseBtn').addEventListener('click', toggleSP);
@@ -2108,6 +2128,39 @@ function openPD(pid) {
 /* ===== LAYOUT EDITOR ===== */
 var _layoutEditActive = false;
 var _snapDist = 18; // px avstand for magnetisk snap
+
+/* ===== VELG KUNDE FOR NYTT PROSJEKT ===== */
+function openVelgKunde() {
+  document.getElementById('velgKundeSok').value = '';
+  filterVelgKunde();
+  openMov('velgKundeMov');
+  setTimeout(function() { document.getElementById('velgKundeSok').focus(); }, 200);
+}
+
+function filterVelgKunde() {
+  var sok = (document.getElementById('velgKundeSok').value || '').toLowerCase().trim();
+  var liste = document.getElementById('velgKundeListe');
+  var treff = customers.filter(function(c) {
+    return !sok || c.Title.toLowerCase().indexOf(sok) > -1;
+  }).sort(function(a, b) { return a.Title.localeCompare(b.Title, 'nb'); });
+
+  if (!treff.length) {
+    liste.innerHTML = '<div style="padding:14px;font-size:13px;color:var(--tx3);text-align:center;">Ingen kunder funnet</div>';
+    return;
+  }
+  liste.innerHTML = treff.map(function(c) {
+    return '<div class="velg-kunde-rad" onclick="velgKundeOgOpprettProsjekt('' + (c.Title || '').replace(/'/g, "\'") + '')">' +
+      '<div style="font-weight:600;font-size:14px;color:var(--tx)">' + (c.Title || '') + '</div>' +
+      '<div style="font-size:12px;color:var(--tx3)">' + (c.Kundetype || '') + (c.Adresse ? ' · ' + c.Adresse : '') + '</div>' +
+      '</div>';
+  }).join('');
+}
+
+function velgKundeOgOpprettProsjekt(kundenavn) {
+  closeMov('velgKundeMov');
+  openNP(kundenavn);
+}
+/* ===== SLUTT VELG KUNDE ===== */
 
 /* --- Mob-deteksjon --- */
 function _isMob() { return window.innerWidth < 900; }
@@ -3189,7 +3242,7 @@ function saveProj() {
       loadData();
       // SmartDok-dialog hvis status er Aktiv og det er et hovedprosjekt
       if (status === 'Aktiv' && !body.Underprosjekt && body.Prosjektnummer) {
-        var nyId = d && d.d && d.d.Id ? d.d.Id : null;
+        var nyId = d && d.Id ? d.Id : null;
         setTimeout(function() { sdkOpprettProsjektDialog(body.Prosjektnummer, body.Title, nyId, body.Prosjektleder, body.Oppstartsdato, body.Sluttdato); }, 600);
       }
     }).catch(function(e) { toast('Feil: ' + e.message, 'e'); });
@@ -3845,7 +3898,7 @@ function sdkSjekkOgOpprett(prosjektnr, prosjektnavn, prosjektId) {
 }
 
 function sdkHukAvSjekkliste(prosjektId, idx) {
-  var p = projects.filter(function(x) { return x.ID === prosjektId; })[0];
+  var p = projects.filter(function(x) { return x.ID === prosjektId || String(x.ID) === String(prosjektId); })[0];
   if (!p) return;
   var ckState = [];
   try { ckState = JSON.parse(p.Sjekkliste || '[]'); } catch(e) { ckState = []; }
