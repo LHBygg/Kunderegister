@@ -2544,7 +2544,7 @@ function toggleLayoutEdit() {
     }
   }
 }
-function sdkAvsluttProsjekt(prosjektnr) {
+function sdkAvsluttProsjekt(prosjektnr, sluttdato) {
   if (!prosjektnr) return;
   sdkGet('/Projects?projectNumber=' + encodeURIComponent(prosjektnr))
     .then(function(d) {
@@ -2556,7 +2556,11 @@ function sdkAvsluttProsjekt(prosjektnr) {
       // Hent fullt prosjektobjekt, sett Finished:true og send tilbake
       return sdkGet('/Projects/' + sdkId)
         .then(function(full) {
-          var oppdatert = Object.assign({}, full, { Finished: true, IsActive: false });
+          var oppdatert = Object.assign({}, full, {
+            Finished: true,
+            IsActive: false,
+            EndDate: sluttdato || null
+          });
           return fetch(SDK_BASE + '/Projects/' + sdkId, {
             method: 'PUT',
             headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
@@ -3169,11 +3173,11 @@ function saveProj() {
         loadData();
         // SmartDok-dialog hvis status ble Aktiv og det er et hovedprosjekt
         if (status === 'Aktiv' && !body.Underprosjekt && body.Prosjektnummer) {
-          setTimeout(function() { sdkOpprettProsjektDialog(body.Prosjektnummer, body.Title, id, body.Prosjektleder, body.Oppstartsdato); }, 600);
+          setTimeout(function() { sdkOpprettProsjektDialog(body.Prosjektnummer, body.Title, id, body.Prosjektleder, body.Oppstartsdato, body.Sluttdato); }, 600);
         }
         // Avslutt i SmartDok hvis status ble Avsluttet og det er et hovedprosjekt
         if (status === 'Avsluttet' && !body.Underprosjekt && body.Prosjektnummer) {
-          sdkAvsluttProsjekt(body.Prosjektnummer);
+          sdkAvsluttProsjekt(body.Prosjektnummer, body.Sluttdato || null);
         }
       }).catch(function(e) { toast('Feil: ' + e.message, 'e'); });
     };
@@ -3186,7 +3190,7 @@ function saveProj() {
       // SmartDok-dialog hvis status er Aktiv og det er et hovedprosjekt
       if (status === 'Aktiv' && !body.Underprosjekt && body.Prosjektnummer) {
         var nyId = d && d.d && d.d.Id ? d.d.Id : null;
-        setTimeout(function() { sdkOpprettProsjektDialog(body.Prosjektnummer, body.Title, nyId, body.Prosjektleder, body.Oppstartsdato); }, 600);
+        setTimeout(function() { sdkOpprettProsjektDialog(body.Prosjektnummer, body.Title, nyId, body.Prosjektleder, body.Oppstartsdato, body.Sluttdato); }, 600);
       }
     }).catch(function(e) { toast('Feil: ' + e.message, 'e'); });
   }
@@ -3221,11 +3225,11 @@ function setSt(id, s) {
       loadData();
       // SmartDok-dialog hvis status ble Aktiv og det er et hovedprosjekt
       if (s === 'Aktiv' && !p.Underprosjekt && p.Prosjektnummer) {
-        setTimeout(function() { sdkOpprettProsjektDialog(p.Prosjektnummer, p.Title, id, p.Prosjektleder, p.Oppstartsdato); }, 600);
+        setTimeout(function() { sdkOpprettProsjektDialog(p.Prosjektnummer, p.Title, id, p.Prosjektleder, p.Oppstartsdato, p.Sluttdato); }, 600);
       }
       // Avslutt i SmartDok hvis status ble Avsluttet og det er et hovedprosjekt
       if (s === 'Avsluttet' && !p.Underprosjekt && p.Prosjektnummer) {
-        sdkAvsluttProsjekt(p.Prosjektnummer);
+        sdkAvsluttProsjekt(p.Prosjektnummer, p.Sluttdato || null);
       }
     }).catch(function(e) { toast('Feil: ' + e.message, 'e'); });
   };
@@ -3792,10 +3796,10 @@ function sdkPost(path, body) {
 /* --- SmartDok: sjekk om prosjektnummer finnes, opprett hvis ikke --- */
 var _sdkOpprettMeta = {};
 
-function sdkOpprettProsjektDialog(prosjektnr, prosjektnavn, prosjektId, prosjektleder, startdato) {
+function sdkOpprettProsjektDialog(prosjektnr, prosjektnavn, prosjektId, prosjektleder, startdato, sluttdato) {
   // Kun for hovedprosjekter
   if (!prosjektnr) return;
-  _sdkOpprettMeta = { prosjektleder: prosjektleder || '', startdato: startdato || null };
+  _sdkOpprettMeta = { prosjektleder: prosjektleder || '', startdato: startdato || null, sluttdato: sluttdato || null };
 
   // Vis bekreftelsdialog
   document.getElementById('sdkConfNr').textContent = prosjektnr;
@@ -3827,7 +3831,8 @@ function sdkSjekkOgOpprett(prosjektnr, prosjektnavn, prosjektId) {
         IsActive: true,
         Departments: [1],
         ProjectOwnerName: _sdkOpprettMeta.prosjektleder || '',
-        StartDate: _sdkOpprettMeta.startdato || null
+        StartDate: _sdkOpprettMeta.startdato || null,
+        EndDate: _sdkOpprettMeta.sluttdato || null
       }).then(function() {
         toast('Prosjekt ' + prosjektnr + ' opprettet i SmartDok', 's');
         // Huk av sjekkliste-punkt 3 (indeks 2) automatisk
