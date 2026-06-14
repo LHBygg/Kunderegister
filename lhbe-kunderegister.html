@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>LH Bygg Kunde/Prosjektregister v5.7</title>
+<title>LH Bygg Kunde/Prosjektregister v5.8</title>
 <script src="msal-browser.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
@@ -365,14 +365,61 @@ tr.erow td{padding:0;background:var(--bg2);border-bottom:1px solid var(--br2);}
 
   /* Prosjektpanel – fullskjerm mobil */
   .pdm-grid4{grid-template-columns:1fr 1fr;}
-  .pdm-layout-grid{grid-template-columns:repeat(4,1fr);}
-  .pdm-lcard[data-cols]{grid-column:span 4 !important;}
   .pdm-grid2{grid-template-columns:1fr;}
   .pdmsub{display:none;}
   .pdmhdr{gap:8px;padding:0 12px;}
   .pdmtitle{font-size:14px;}
   .igrid{grid-template-columns:1fr;}
   .fgrid{grid-template-columns:repeat(auto-fill,minmax(90px,1fr));}
+
+  /* Mobil: vertikal stack-layout for kortene */
+  .pdm-layout-grid.mob-stack{
+    position:static !important;
+    display:flex !important;
+    flex-direction:column !important;
+    gap:10px !important;
+    padding:10px 10px 80px !important;
+    min-height:unset !important;
+  }
+  .pdm-layout-grid.mob-stack .pdm-lcard{
+    position:static !important;
+    left:auto !important; top:auto !important;
+    width:100% !important;
+    height:auto !important;
+    padding:0 !important;
+  }
+  .pdm-layout-grid.mob-stack .pdm-lcard-inner{
+    height:auto !important;
+    overflow-y:visible !important;
+  }
+  /* SmartDok-kortet på mobil: litt begrenset høyde for å holde seg ryddig */
+  .pdm-layout-grid.mob-stack .pdm-lcard[data-id="smartdok"] .pdm-lcard-inner{
+    max-height:420px;
+    overflow-y:auto !important;
+  }
+  /* Sjekkliste og notater: fri høyde men med scroll ved mye innhold */
+  .pdm-layout-grid.mob-stack .pdm-lcard[data-id="sjekkliste"] .pdm-lcard-inner,
+  .pdm-layout-grid.mob-stack .pdm-lcard[data-id="notater"] .pdm-lcard-inner{
+    max-height:380px;
+    overflow-y:auto !important;
+  }
+
+  /* Mob-tilpass: opp/ned-piler istedenfor drag */
+  .mob-order-btn{
+    display:inline-flex;align-items:center;justify-content:center;
+    width:32px;height:32px;border-radius:6px;border:1px solid var(--br2);
+    background:var(--bg3);color:var(--tx2);font-size:16px;cursor:pointer;
+    margin-left:4px;touch-action:manipulation;
+  }
+  .mob-order-btn:active{background:var(--acc);color:#000;}
+  .pdm-layout-grid.mob-stack.pdm-edit-mode .pdm-lcard-inner{
+    box-shadow:0 0 0 1.5px var(--acc) !important;
+  }
+  .pdm-mob-card-hdr{display:none;}
+  .pdm-layout-grid.mob-stack.pdm-edit-mode .pdm-mob-card-hdr{
+    display:flex;align-items:center;justify-content:flex-end;
+    padding:6px 8px 2px;gap:4px;
+  }
 
   /* Modaler – bunn-ark */
   .mov{align-items:flex-end;padding:0;}
@@ -1880,6 +1927,10 @@ function openPD(pid) {
     var lc = layout.filter(function(x){return x.id===id;})[0] || {cols:3,rows:1,x:0,y:0,w:300,h:220};
     var actBtn = extraAct ? '<button class="pdm-card-act" ' + extraAct + '>+ Legg til</button>' : '';
     return '<div class="pdm-lcard" data-id="' + id + '" data-cols="' + lc.cols + '" data-rows="' + lc.rows + '">' +
+      '<div class="pdm-mob-card-hdr">' +
+      '<button class="mob-order-btn" onclick="_mobMoveCard(this.closest(\'.pdm-lcard\'),-1)" title="Flytt opp">&#8679;</button>' +
+      '<button class="mob-order-btn" onclick="_mobMoveCard(this.closest(\'.pdm-lcard\'),1)" title="Flytt ned">&#8681;</button>' +
+      '</div>' +
       '<div class="pdm-lcard-inner">' +
       '<div class="pdm-drag-handle" title="Dra for å flytte"></div>' +
       '<div class="pdm-resize-se" title="Endre størrelse"></div>' +
@@ -2042,6 +2093,56 @@ function openPD(pid) {
 var _layoutEditActive = false;
 var _snapDist = 18; // px avstand for magnetisk snap
 
+/* --- Mob-deteksjon --- */
+function _isMob() { return window.innerWidth < 900; }
+
+/* --- Mobil stack-layout init --- */
+function _initMobStack() {
+  var grid = document.getElementById('pdmLayoutGrid');
+  if (!grid) return;
+  grid.classList.add('mob-stack');
+  // Hent lagret rekkefølge
+  var order = [];
+  try { order = JSON.parse(localStorage.getItem('lhbe_mob_order') || '[]'); } catch(e) {}
+  if (order.length) {
+    var cards = Array.from(grid.querySelectorAll('.pdm-lcard'));
+    order.forEach(function(id) {
+      var card = cards.filter(function(c){ return c.dataset.id === id; })[0];
+      if (card) grid.appendChild(card);
+    });
+  }
+  // Nullstill absolutt posisjonering
+  grid.querySelectorAll('.pdm-lcard').forEach(function(card) {
+    card.style.left=''; card.style.top=''; card.style.width=''; card.style.height='';
+  });
+}
+
+/* --- Flytt kort opp/ned på mobil --- */
+function _mobMoveCard(card, dir) {
+  var grid = document.getElementById('pdmLayoutGrid');
+  if (!grid || !card) return;
+  var cards = Array.from(grid.querySelectorAll('.pdm-lcard'));
+  var idx = cards.indexOf(card);
+  var newIdx = idx + dir;
+  if (newIdx < 0 || newIdx >= cards.length) return;
+  if (dir === -1) {
+    grid.insertBefore(card, cards[newIdx]);
+  } else {
+    var ref = cards[newIdx].nextSibling;
+    if (ref) grid.insertBefore(card, ref);
+    else grid.appendChild(card);
+  }
+  _saveMobOrder();
+}
+
+/* --- Lagre mobil-rekkefølge --- */
+function _saveMobOrder() {
+  var grid = document.getElementById('pdmLayoutGrid');
+  if (!grid) return;
+  var order = Array.from(grid.querySelectorAll('.pdm-lcard')).map(function(c){ return c.dataset.id; });
+  try { localStorage.setItem('lhbe_mob_order', JSON.stringify(order)); } catch(e) {}
+}
+
 // Hjelp: hent alle kortposisjon-rects (ekskl. aktivt kort)
 function _getOtherRects(excludeEl) {
   var grid = document.getElementById('pdmLayoutGrid');
@@ -2114,6 +2215,7 @@ function _updateBadge(card) {
 function saveLayout() {
   var grid = document.getElementById('pdmLayoutGrid');
   if (!grid) return;
+  if (_isMob()) { _saveMobOrder(); return; }
   var avail = Math.max(grid.offsetWidth - 44, 400);
   var layout = [];
   grid.querySelectorAll('.pdm-lcard').forEach(function(card) {
@@ -2311,6 +2413,7 @@ function _initCardInteraction(card) {
 function _initLayoutGrid() {
   var grid = document.getElementById('pdmLayoutGrid');
   if (!grid) return;
+  if (_isMob()) { _initMobStack(); return; }
   var pad = 44, gap = 8;
   var avail = Math.max(grid.offsetWidth - pad, 400);
   var cards = grid.querySelectorAll('.pdm-lcard');
@@ -2360,38 +2463,57 @@ function toggleLayoutEdit() {
   var btn = document.getElementById('pdmLayoutBtn');
   if (!gridEl || !btn) return;
 
+  var mob = _isMob();
+
   if (_layoutEditActive) {
     gridEl.classList.add('pdm-edit-mode');
     btn.className = 'pdm-layout-btn active';
     btn.innerHTML = '&#10003; Ferdig';
-    // Legg til nullstill-knapp hvis ikke finnes
-    if (!document.getElementById('pdmResetBtn')) {
-      var resetBtn = document.createElement('button');
-      resetBtn.id = 'pdmResetBtn';
-      resetBtn.className = 'pdm-layout-btn';
-      resetBtn.innerHTML = '&#8635; Nullstill';
-      resetBtn.onclick = resetLayout;
-      btn.parentNode.insertBefore(resetBtn, btn.nextSibling);
+
+    if (mob) {
+      // Mobil: kun nullstill-knapp (ingen "Lagre som standard")
+      if (!document.getElementById('pdmResetBtn')) {
+        var resetBtnM = document.createElement('button');
+        resetBtnM.id = 'pdmResetBtn';
+        resetBtnM.className = 'pdm-layout-btn';
+        resetBtnM.innerHTML = '&#8635; Nullstill';
+        resetBtnM.onclick = function() {
+          try { localStorage.removeItem('lhbe_mob_order'); } catch(e) {}
+          _initMobStack();
+        };
+        btn.parentNode.insertBefore(resetBtnM, btn.nextSibling);
+      } else {
+        document.getElementById('pdmResetBtn').style.display = '';
+      }
     } else {
-      document.getElementById('pdmResetBtn').style.display = '';
+      // Desktop: nullstill + lagre som standard
+      if (!document.getElementById('pdmResetBtn')) {
+        var resetBtn = document.createElement('button');
+        resetBtn.id = 'pdmResetBtn';
+        resetBtn.className = 'pdm-layout-btn';
+        resetBtn.innerHTML = '&#8635; Nullstill';
+        resetBtn.onclick = resetLayout;
+        btn.parentNode.insertBefore(resetBtn, btn.nextSibling);
+      } else {
+        document.getElementById('pdmResetBtn').style.display = '';
+      }
+      if (!document.getElementById('pdmSaveDefaultBtn')) {
+        var saveDefBtn = document.createElement('button');
+        saveDefBtn.id = 'pdmSaveDefaultBtn';
+        saveDefBtn.className = 'pdm-layout-btn';
+        saveDefBtn.style.cssText = 'background:rgba(59,130,246,.1);border-color:var(--blu);color:var(--blu);';
+        saveDefBtn.innerHTML = '&#9733; Lagre som standard';
+        saveDefBtn.title = 'Lagrer din layout som standard for alle';
+        saveDefBtn.onclick = saveAsDefault;
+        btn.parentNode.insertBefore(saveDefBtn, btn.nextSibling);
+      } else {
+        document.getElementById('pdmSaveDefaultBtn').style.display = '';
+      }
+      gridEl.querySelectorAll('.pdm-lcard').forEach(function(card) {
+        _initCardInteraction(card);
+        _updateBadge(card);
+      });
     }
-    // Lagre som standard - kun for prosjektleder/admin
-    if (!document.getElementById('pdmSaveDefaultBtn')) {
-      var saveDefBtn = document.createElement('button');
-      saveDefBtn.id = 'pdmSaveDefaultBtn';
-      saveDefBtn.className = 'pdm-layout-btn';
-      saveDefBtn.style.cssText = 'background:rgba(59,130,246,.1);border-color:var(--blu);color:var(--blu);';
-      saveDefBtn.innerHTML = '&#9733; Lagre som standard';
-      saveDefBtn.title = 'Lagrer din layout som standard for alle';
-      saveDefBtn.onclick = saveAsDefault;
-      btn.parentNode.insertBefore(saveDefBtn, btn.nextSibling);
-    } else {
-      document.getElementById('pdmSaveDefaultBtn').style.display = '';
-    }
-    gridEl.querySelectorAll('.pdm-lcard').forEach(function(card) {
-      _initCardInteraction(card);
-      _updateBadge(card);
-    });
   } else {
     gridEl.classList.remove('pdm-edit-mode');
     btn.className = 'pdm-layout-btn';
@@ -2400,8 +2522,10 @@ function toggleLayoutEdit() {
     if (rb) rb.style.display = 'none';
     var sdb = document.getElementById('pdmSaveDefaultBtn');
     if (sdb) sdb.style.display = 'none';
-    _hideSnapPreview();
-    saveLayout();
+    if (!mob) {
+      _hideSnapPreview();
+      saveLayout();
+    }
   }
 }
 /* ===== SLUTT LAYOUT EDITOR ===== */
