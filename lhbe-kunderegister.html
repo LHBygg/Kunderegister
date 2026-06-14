@@ -1403,6 +1403,7 @@ function setView(v, el) {
   // Skjul filterTabs helt på ue/lev (inkl. Mannskap)
   document.getElementById('filterTabs').style.display = regView ? 'none' : '';
   document.getElementById('newCustBtn').style.display = regView ? 'none' : '';
+  document.getElementById('newProjGlobalBtn').style.display = regView ? 'none' : '';
   if (v === 'prosjekter') {
     document.querySelector('.tw').style.display = 'none';
     document.getElementById('projView').style.display = '';
