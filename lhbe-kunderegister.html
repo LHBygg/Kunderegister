@@ -4634,8 +4634,9 @@ function toggleIOOrdre(ordreId, projId) {
 
           html.push('<div class="io-linje" id="io_linje_' + l.ID + '">');
           if (l.BildeUrl) {
-          html.push('<img class="io-linje-bilde" src="' + l.BildeUrl + '" alt="" style="cursor:zoom-in;" onclick="visIOLightbox(\''+ l.BildeUrl +'\')" onerror="this.style.display=&quot;none&quot;;this.nextSibling.style.display=&quot;flex&quot;">');
-            html.push('<div class="io-linje-bilde-ph" style="display:none;">📦</div>');
+            var bUrl = l.BildeUrl.replace(/"/g, '&quot;');
+            html.push('<img class="io-linje-bilde" src="" alt="" style="cursor:zoom-in;display:none;" data-spurl="' + bUrl + '" onclick="visIOLightbox(this.src)">');
+            html.push('<div class="io-linje-bilde-ph">📦</div>');
           } else {
             html.push('<div class="io-linje-bilde-ph">📦</div>');
           }
@@ -4667,6 +4668,10 @@ function toggleIOOrdre(ordreId, projId) {
       }
 
       body.innerHTML = html.join('');
+      // Last autentiserte bilder
+      body.querySelectorAll('img[data-spurl]').forEach(function(img) {
+        lastIOBilde(img, img.dataset.spurl);
+      });
     })
     .catch(function(e) {
       body.innerHTML = '<div class="io-empty">Feil: ' + e.message + '</div>';
@@ -4738,10 +4743,62 @@ function slettIOOrdre(ordreId, ordreNr, projId) {
     .catch(function(e) { toast('Feil ved sletting: ' + e.message, 'e'); });
 }
 
-function visIOLightbox(url) {
+// Cache for autentiserte bilder
+var ioBildeCache = {};
+
+function lastIOBilde(imgEl, url) {
+  if (!url) return;
+  // Sjekk cache
+  if (ioBildeCache[url]) {
+    imgEl.src = ioBildeCache[url];
+    imgEl.style.display = '';
+    if (imgEl.nextSibling) imgEl.nextSibling.style.display = 'none';
+    return;
+  }
+  // Hent med MSAL-token
+  getToken().then(function(token) {
+    return fetch(url, { headers: { Authorization: 'Bearer ' + token } });
+  }).then(function(r) {
+    if (!r.ok) throw new Error('Bilde feilet: ' + r.status);
+    return r.blob();
+  }).then(function(blob) {
+    var blobUrl = URL.createObjectURL(blob);
+    ioBildeCache[url] = blobUrl;
+    imgEl.src = blobUrl;
+    imgEl.style.display = '';
+    if (imgEl.nextSibling) imgEl.nextSibling.style.display = 'none';
+  }).catch(function() {
+    imgEl.style.display = 'none';
+    if (imgEl.nextSibling) imgEl.nextSibling.style.display = 'flex';
+  });
+}
+
+function visIOLightbox(urlOrEl) {
+  var url = typeof urlOrEl === 'string' ? urlOrEl : '';
   var lb = document.createElement('div');
   lb.className = 'io-lightbox';
-  lb.innerHTML = '<button class="io-lightbox-close" onclick="this.parentElement.remove()">&#x2715;</button><img src="' + url + '" alt="Varebilde">';
+  var img = document.createElement('img');
+  img.alt = 'Varebilde';
+  img.style.maxWidth = '90vw';
+  img.style.maxHeight = '90vh';
+  img.style.borderRadius = '8px';
+  img.style.objectFit = 'contain';
+  if (url && url.startsWith('blob:')) {
+    img.src = url;
+  } else if (url && url.startsWith('http')) {
+    // Last med auth
+    getToken().then(function(token) {
+      return fetch(url, { headers: { Authorization: 'Bearer ' + token } });
+    }).then(function(r){ return r.blob(); })
+    .then(function(blob){ img.src = URL.createObjectURL(blob); })
+    .catch(function(){ img.alt = 'Kunne ikke laste bilde'; });
+  }
+  var closeBtn = document.createElement('button');
+  closeBtn.className = 'io-lightbox-close';
+  closeBtn.innerHTML = '&#x2715;';
+  closeBtn.onclick = function(){ lb.remove(); };
+  lb.appendChild(closeBtn);
+  lb.appendChild(img);
   lb.addEventListener('click', function(e){ if(e.target===lb) lb.remove(); });
   document.body.appendChild(lb);
 }
