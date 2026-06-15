@@ -588,9 +588,16 @@ function sendOrdre(){
             linjeId: linjeId,
             base64Full: l.full,
             filnavn: (d.ordreNr||'IO') + '-' + (idx+1)
-          }).catch(function(){});
+          }).then(function(res){
+            if(res && res.ok) toast('Bilde lastet opp OK', 'ok');
+            else toast('Bilde feil: ' + JSON.stringify(res), 'e');
+          }).catch(function(e){ toast('Bilde feilet: ' + e.message, 'e'); });
+        } else {
+          toast('Ingen bilde for linje ' + idx, 'i');
         }
       });
+    } else {
+      toast('Ingen linjeIder fra Worker', 'i');
     }
     visScreen('screenSendt');
   }).catch(function(e){
