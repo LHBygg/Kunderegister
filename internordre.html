@@ -317,7 +317,7 @@ input[type=file]{display:none;}
 // ===================== KONFIG =====================
 var WORKER_URL = 'https://gentle-snowflake-e307.tom-andre.workers.dev';
 var WORKER_KEY = 'LHBygg-Internordre-2026-XK9m';
-var CLAUDE_API = 'https://api.anthropic.com/v1/messages';
+// AI-gjenkjenning går via Cloudflare Worker
 
 // ===================== STATE =====================
 var innloggetBruker = null;
@@ -614,41 +614,16 @@ function visAiSpinner() {
 }
 
 function kallClaudeAI(base64Data, mediaType, originalBase64Full, originalType) {
-  fetch(CLAUDE_API, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      model: 'claude-sonnet-4-6',
-      max_tokens: 300,
-      messages: [{
-        role: 'user',
-        content: [
-          {
-            type: 'image',
-            source: { type: 'base64', media_type: mediaType, data: base64Data }
-          },
-          {
-            type: 'text',
-            text: 'Du er en produktekspert for et norsk byggefirma. Analyser bildet og identifiser produktet. Svar KUN med JSON i dette formatet (ingen annen tekst): {"navn":"Produktnavn på norsk","kategori":"kategori","beskrivelse":"kort beskrivelse"}\n\nVer presis og konkret. Bruk norske fagbegreper. Eksempel: {"navn":"Forskalingsskrue DW15 17x225mm","kategori":"Forskalingsmateriell","beskrivelse":"Forskalingsskrue for trestendere"}'
-          }
-        ]
-      }]
-    })
-  }).then(function(r){ return r.json(); })
+  workerPost('/ai-gjenkjenn', { base64: base64Data, mediaType: mediaType })
   .then(function(d) {
-    var tekst = '';
-    if (d.content && d.content[0] && d.content[0].text) tekst = d.content[0].text.trim();
-    var parsed = null;
-    try {
-      var clean = tekst.replace(/```json|```/g,'').trim();
-      parsed = JSON.parse(clean);
-    } catch(e) { parsed = null; }
+    if (d.error) throw new Error(d.error);
+    var parsed = d.navn ? { navn: d.navn, kategori: d.kategori } : null;
     visAiPreview(parsed, originalBase64Full);
   })
   .catch(function(e) {
     document.getElementById('aiStatus').style.display = 'none';
     document.getElementById('bildeZone').style.display = 'block';
-    toast('AI-gjenkjenning feilet. Prøv igjen.', 'e');
+    toast('AI-gjenkjenning feilet: ' + e.message, 'e');
   });
 }
 
