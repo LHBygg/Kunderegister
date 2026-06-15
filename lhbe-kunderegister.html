@@ -4754,40 +4754,23 @@ function lastIOBilde(imgEl, url) {
     if (imgEl.nextSibling) imgEl.nextSibling.style.display = 'none';
     return;
   }
-
-  function visBilde(src) {
-    ioBildeCache[url] = src;
-    imgEl.src = src;
+  // Hent alltid med MSAL-token – URL er permanent Graph API-URL
+  getToken().then(function(token) {
+    return fetch(url, { headers: { Authorization: 'Bearer ' + token } });
+  }).then(function(r) {
+    if (!r.ok) throw new Error(r.status);
+    return r.blob();
+  }).then(function(blob) {
+    var blobUrl = URL.createObjectURL(blob);
+    ioBildeCache[url] = blobUrl;
+    imgEl.src = blobUrl;
     imgEl.style.display = '';
     imgEl.style.cursor = 'zoom-in';
-    imgEl.onclick = function() { visIOLightbox(src); };
+    imgEl.onclick = function() { visIOLightbox(blobUrl); };
     if (imgEl.nextSibling) imgEl.nextSibling.style.display = 'none';
-  }
-
-  function skjulBilde() {
+  }).catch(function() {
     imgEl.style.display = 'none';
     if (imgEl.nextSibling) imgEl.nextSibling.style.display = 'flex';
-  }
-
-  // Prøv direkte URL først (fungerer for downloadUrl og offentlige URLer)
-  fetch(url, { method: 'HEAD' }).then(function(r) {
-    if (r.ok) {
-      visBilde(url);
-    } else {
-      throw new Error('Direkte URL feilet: ' + r.status);
-    }
-  }).catch(function() {
-    // Prøv med MSAL-token (for SharePoint-URLer)
-    getToken().then(function(token) {
-      return fetch(url, { headers: { Authorization: 'Bearer ' + token } });
-    }).then(function(r) {
-      if (!r.ok) throw new Error('Auth feilet: ' + r.status);
-      return r.blob();
-    }).then(function(blob) {
-      visBilde(URL.createObjectURL(blob));
-    }).catch(function() {
-      skjulBilde();
-    });
   });
 }
 
