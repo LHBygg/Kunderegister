@@ -574,7 +574,7 @@ function sendOrdre(){
     var ei=document.querySelector('#linje_'+l.id+' .enhet-sel');if(ei)l.enhet=ei.value;
   });
   var notat=document.getElementById('ordreNotat').value.trim();
-  var linjer=ordreLinjer.map(function(l){return{Varenavn:l.navn,Antall:l.antall,Enhet:l.enhet,BildeBase64:l.full||''};});
+  var linjer=ordreLinjer.map(function(l){return{Varenavn:l.navn,Antall:l.antall,Enhet:l.enhet,BildeBase64:''};});
   var body={ProsjektID:valgtProsjekt.ID,ProsjektNavn:valgtProsjekt.Title,ProsjektNummer:valgtProsjekt.Prosjektnummer||'',Bestiller:innloggetBruker,Notat:notat};
   workerPost('/ordre2',{ordre:body,linjer:linjer}).then(function(d){
     if(d.error)throw new Error(d.error);
