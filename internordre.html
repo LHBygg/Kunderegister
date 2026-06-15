@@ -579,6 +579,19 @@ function sendOrdre(){
   workerPost('/ordre2',{ordre:body,linjer:linjer}).then(function(d){
     if(d.error)throw new Error(d.error);
     document.getElementById('ordreNrVist').textContent=d.ordreNr||'';
+    // Last opp bilder i bakgrunnen
+    if(d.linjeIder && d.linjeIder.length){
+      d.linjeIder.forEach(function(linjeId, idx){
+        var l = ordreLinjer[idx];
+        if(l && l.full && l.full.length > 100){
+          workerPost('/last-opp-bilde',{
+            linjeId: linjeId,
+            base64Full: l.full,
+            filnavn: (d.ordreNr||'IO') + '-' + (idx+1)
+          }).catch(function(){});
+        }
+      });
+    }
     visScreen('screenSendt');
   }).catch(function(e){
     toast('Feil ved sending: '+e.message,'e');
