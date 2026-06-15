@@ -290,6 +290,7 @@ tr.erow td{padding:0;background:var(--bg2);border-bottom:1px solid var(--br2);}
 .io-ny-badge{font-size:10px;padding:2px 7px;border-radius:20px;background:rgba(59,130,246,.12);color:#3b82f6;font-weight:600;}
 .io-godkjent-badge{font-size:10px;padding:2px 7px;border-radius:20px;background:rgba(34,197,94,.12);color:#22c55e;font-weight:600;}
 .io-avvist-badge{font-size:10px;padding:2px 7px;border-radius:20px;background:rgba(239,68,68,.12);color:#ef4444;font-weight:600;}
+.io-fakturert-badge{font-size:10px;padding:2px 7px;border-radius:20px;background:rgba(232,184,75,.15);color:var(--acc);font-weight:600;}
 .res-card{background:var(--bg4);border-radius:var(--r);padding:10px 12px;margin-bottom:8px;display:flex;align-items:center;gap:10px;}
 .res-card:last-child{margin-bottom:0;}
 .res-av{width:34px;height:34px;border-radius:50%;background:var(--blu);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:#fff;flex-shrink:0;}
@@ -4572,13 +4573,14 @@ function renderProjIOListe(projId) {
         var stKls = 'io-ny-badge';
         if (o.Status === 'Godkjent') stKls = 'io-godkjent-badge';
         if (o.Status === 'Avvist') stKls = 'io-avvist-badge';
+        if (o.Status === 'Fakturert') stKls = 'io-fakturert-badge';
         var dato = o.Dato ? new Date(o.Dato).toLocaleDateString('no-NO',{day:'2-digit',month:'2-digit',year:'numeric'}) : '';
         html.push('<div class="io-ordre" id="io_ordre_' + o.ID + '">');
-        html.push('<div class="io-ordre-hdr">');
-        html.push('<span class="io-ordre-nr" onclick="toggleIOOrdre(' + o.ID + ',' + projId + ')" style="cursor:pointer;">' + (o.Title||'') + '</span>');
-        html.push('<span class="io-ordre-meta" onclick="toggleIOOrdre(' + o.ID + ',' + projId + ')" style="cursor:pointer;flex:1;">' + (o.Bestiller||'') + ' &middot; ' + dato + '</span>');
+        html.push('<div class="io-ordre-hdr" onclick="toggleIOOrdre(' + o.ID + ',' + projId + ')" style="cursor:pointer;">');
+        html.push('<span class="io-ordre-nr">' + (o.Title||'') + '</span>');
+        html.push('<span class="io-ordre-meta">' + (o.Bestiller||'') + ' &middot; ' + dato + '</span>');
         html.push('<span class="' + stKls + '">' + (o.Status||'Ny') + '</span>');
-        html.push('<button onclick="slettIOOrdre(' + o.ID + ',\'' + (o.Title||'') + '\',' + projId + ')" style="margin-left:6px;width:24px;height:24px;border-radius:6px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);color:#ef4444;cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;" title="Slett ordre">&times;</button>');
+        html.push('<button onclick="event.stopPropagation();slettIOOrdre(' + o.ID + ',\'' + (o.Title||'') + '\',' + projId + ')" style="margin-left:6px;width:24px;height:24px;border-radius:6px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);color:#ef4444;cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;" title="Slett ordre">&times;</button>');
         html.push('</div>');
         html.push('<div class="io-ordre-body" id="io_body_' + o.ID + '">');
         html.push('<div class="sdk-load"><div class="sdk-spin"></div>Laster...</div>');
@@ -4611,7 +4613,7 @@ function toggleIOOrdre(ordreId, projId) {
       html.push('<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">');
       html.push('<span style="font-size:11px;color:var(--tx2);">Status:</span>');
       html.push('<select class="io-status-sel" onchange="endreIOStatus(' + ordreId + ',this.value,' + projId + ')">');
-      ['Ny','Godkjent','Avvist'].forEach(function(s) {
+      ['Ny','Godkjent','Avvist','Fakturert'].forEach(function(s) {
         html.push('<option value="' + s + '"' + (o && o.Status === s ? ' selected' : '') + '>' + s + '</option>');
       });
       html.push('</select>');
@@ -4632,7 +4634,8 @@ function toggleIOOrdre(ordreId, projId) {
 
           html.push('<div class="io-linje" id="io_linje_' + l.ID + '">');
           if (l.BildeUrl) {
-            html.push('<img class="io-linje-bilde" src="' + l.BildeUrl + '" alt="" style="cursor:zoom-in;" onclick="visIOLightbox(\'' + l.BildeUrl + '\')">');
+            html.push('<img class="io-linje-bilde" src="' + l.BildeUrl + '" alt="" style="cursor:zoom-in;" onclick="visIOLightbox(\'' + l.BildeUrl + '\')" onerror="this.style.display='none';this.nextSibling.style.display='flex'">');
+            html.push('<div class="io-linje-bilde-ph" style="display:none;">📦</div>');
           } else {
             html.push('<div class="io-linje-bilde-ph">📦</div>');
           }
@@ -4697,7 +4700,11 @@ function endreIOStatus(ordreId, status, projId) {
       // Oppdater badge i header
       var hdr = document.querySelector('#io_ordre_' + ordreId + ' .io-ny-badge, #io_ordre_' + ordreId + ' .io-godkjent-badge, #io_ordre_' + ordreId + ' .io-avvist-badge');
       if (hdr) {
-        hdr.className = status === 'Godkjent' ? 'io-godkjent-badge' : status === 'Avvist' ? 'io-avvist-badge' : 'io-ny-badge';
+        var kls = 'io-ny-badge';
+        if (status === 'Godkjent') kls = 'io-godkjent-badge';
+        else if (status === 'Avvist') kls = 'io-avvist-badge';
+        else if (status === 'Fakturert') kls = 'io-fakturert-badge';
+        hdr.className = kls;
         hdr.textContent = status;
       }
     })
