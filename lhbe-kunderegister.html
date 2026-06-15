@@ -4634,7 +4634,7 @@ function toggleIOOrdre(ordreId, projId) {
 
           html.push('<div class="io-linje" id="io_linje_' + l.ID + '">');
           if (l.BildeUrl) {
-            html.push('<img class="io-linje-bilde" src="' + l.BildeUrl + '" alt="" style="cursor:zoom-in;" onclick="visIOLightbox(\'' + l.BildeUrl + '\')" onerror="this.style.display='none';this.nextSibling.style.display='flex'">');
+          html.push('<img class="io-linje-bilde" src="' + l.BildeUrl + '" alt="" style="cursor:zoom-in;" onclick="visIOLightbox(\''+ l.BildeUrl +'\')" onerror="this.style.display=&quot;none&quot;;this.nextSibling.style.display=&quot;flex&quot;">');
             html.push('<div class="io-linje-bilde-ph" style="display:none;">📦</div>');
           } else {
             html.push('<div class="io-linje-bilde-ph">📦</div>');
