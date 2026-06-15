@@ -4754,9 +4754,9 @@ function lastIOBilde(imgEl, url) {
     if (imgEl.nextSibling) imgEl.nextSibling.style.display = 'none';
     return;
   }
-  // Hent alltid med MSAL-token – URL er permanent Graph API-URL
+  // Hent med SharePoint MSAL-token
   getToken().then(function(token) {
-    return fetch(url, { headers: { Authorization: 'Bearer ' + token } });
+    return fetch(url, { headers: { Authorization: 'Bearer ' + token, Accept: 'application/octet-stream' } });
   }).then(function(r) {
     if (!r.ok) throw new Error(r.status);
     return r.blob();
