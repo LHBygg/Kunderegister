@@ -4571,7 +4571,6 @@ function renderProjIOListe(projId) {
       var html = [];
       ordrer.forEach(function(o) {
         var stKls = 'io-ny-badge';
-        if (o.Status === 'Godkjent') stKls = 'io-godkjent-badge';
         if (o.Status === 'Avvist') stKls = 'io-avvist-badge';
         if (o.Status === 'Fakturert') stKls = 'io-fakturert-badge';
         var dato = o.Dato ? new Date(o.Dato).toLocaleDateString('no-NO',{day:'2-digit',month:'2-digit',year:'numeric'}) : '';
@@ -4613,7 +4612,7 @@ function toggleIOOrdre(ordreId, projId) {
       html.push('<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">');
       html.push('<span style="font-size:11px;color:var(--tx2);">Status:</span>');
       html.push('<select class="io-status-sel" onchange="endreIOStatus(' + ordreId + ',this.value,' + projId + ')">');
-      ['Ny','Godkjent','Avvist','Fakturert'].forEach(function(s) {
+      ['Ny','Avvist','Fakturert'].forEach(function(s) {
         html.push('<option value="' + s + '"' + (o && o.Status === s ? ' selected' : '') + '>' + s + '</option>');
       });
       html.push('</select>');
@@ -4635,7 +4634,7 @@ function toggleIOOrdre(ordreId, projId) {
           html.push('<div class="io-linje" id="io_linje_' + l.ID + '">');
           if (l.BildeUrl) {
             var bUrl = l.BildeUrl.replace(/"/g, '&quot;');
-            html.push('<img class="io-linje-bilde" src="" alt="" style="cursor:zoom-in;display:none;" data-spurl="' + bUrl + '" onclick="visIOLightbox(this.src)">');
+            html.push('<img class="io-linje-bilde" src="" alt="" style="cursor:zoom-in;display:none;" data-spurl="' + bUrl + '">');
             html.push('<div class="io-linje-bilde-ph">📦</div>');
           } else {
             html.push('<div class="io-linje-bilde-ph">📦</div>');
@@ -4703,11 +4702,10 @@ function endreIOStatus(ordreId, status, projId) {
     .then(function() {
       toast('Status oppdatert', 's');
       // Oppdater badge i header
-      var hdr = document.querySelector('#io_ordre_' + ordreId + ' .io-ny-badge, #io_ordre_' + ordreId + ' .io-godkjent-badge, #io_ordre_' + ordreId + ' .io-avvist-badge');
+      var hdr = document.querySelector('#io_ordre_' + ordreId + ' .io-ny-badge, #io_ordre_' + ordreId + ' .io-avvist-badge, #io_ordre_' + ordreId + ' .io-fakturert-badge');
       if (hdr) {
         var kls = 'io-ny-badge';
-        if (status === 'Godkjent') kls = 'io-godkjent-badge';
-        else if (status === 'Avvist') kls = 'io-avvist-badge';
+        if (status === 'Avvist') kls = 'io-avvist-badge';
         else if (status === 'Fakturert') kls = 'io-fakturert-badge';
         hdr.className = kls;
         hdr.textContent = status;
@@ -4766,6 +4764,8 @@ function lastIOBilde(imgEl, url) {
     ioBildeCache[url] = blobUrl;
     imgEl.src = blobUrl;
     imgEl.style.display = '';
+    imgEl.style.cursor = 'zoom-in';
+    imgEl.onclick = function() { visIOLightbox(blobUrl); };
     if (imgEl.nextSibling) imgEl.nextSibling.style.display = 'none';
   }).catch(function() {
     imgEl.style.display = 'none';
