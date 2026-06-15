@@ -4574,10 +4574,11 @@ function renderProjIOListe(projId) {
         if (o.Status === 'Avvist') stKls = 'io-avvist-badge';
         var dato = o.Dato ? new Date(o.Dato).toLocaleDateString('no-NO',{day:'2-digit',month:'2-digit',year:'numeric'}) : '';
         html.push('<div class="io-ordre" id="io_ordre_' + o.ID + '">');
-        html.push('<div class="io-ordre-hdr" onclick="toggleIOOrdre(' + o.ID + ',' + projId + ')">');
-        html.push('<span class="io-ordre-nr">' + (o.Title||'') + '</span>');
-        html.push('<span class="io-ordre-meta">' + (o.Bestiller||'') + ' &middot; ' + dato + '</span>');
+        html.push('<div class="io-ordre-hdr">');
+        html.push('<span class="io-ordre-nr" onclick="toggleIOOrdre(' + o.ID + ',' + projId + ')" style="cursor:pointer;">' + (o.Title||'') + '</span>');
+        html.push('<span class="io-ordre-meta" onclick="toggleIOOrdre(' + o.ID + ',' + projId + ')" style="cursor:pointer;flex:1;">' + (o.Bestiller||'') + ' &middot; ' + dato + '</span>');
         html.push('<span class="' + stKls + '">' + (o.Status||'Ny') + '</span>');
+        html.push('<button onclick="slettIOOrdre(' + o.ID + ',\'' + (o.Title||'') + '\',' + projId + ')" style="margin-left:6px;width:24px;height:24px;border-radius:6px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);color:#ef4444;cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;" title="Slett ordre">&times;</button>');
         html.push('</div>');
         html.push('<div class="io-ordre-body" id="io_body_' + o.ID + '">');
         html.push('<div class="sdk-load"><div class="sdk-spin"></div>Laster...</div>');
@@ -4701,6 +4702,33 @@ function endreIOStatus(ordreId, status, projId) {
       }
     })
     .catch(function(e) { toast('Feil: ' + e.message, 'e'); });
+}
+
+function slettIOOrdre(ordreId, ordreNr, projId) {
+  if (!confirm('Slett ordre ' + ordreNr + '? Dette kan ikke angres.')) return;
+  // Slett linjer først, deretter ordre
+  spGet(SP + '/_api/web/lists(guid\'' + IO_LINJER2 + '\')/items?$filter=OrdreID eq ' + ordreId + '&$select=ID&$top=100')
+    .then(function(d) {
+      var linjer = d.value || [];
+      var slett = linjer.map(function(l) {
+        return spDelete(SP + '/_api/web/lists(guid\'' + IO_LINJER2 + '\')/items(' + l.ID + ')');
+      });
+      return Promise.all(slett);
+    })
+    .then(function() {
+      return spDelete(SP + '/_api/web/lists(guid\'' + IO_ORDRER2 + '\')/items(' + ordreId + ')');
+    })
+    .then(function() {
+      toast('Ordre slettet', 's');
+      var el = document.getElementById('io_ordre_' + ordreId);
+      if (el) el.remove();
+      // Vis tom-melding hvis ingen ordrer igjen
+      var container = document.getElementById('projIOListe_' + projId);
+      if (container && !container.querySelector('.io-ordre')) {
+        container.innerHTML = '<div class="io-empty">Ingen internordrer på dette prosjektet.</div>';
+      }
+    })
+    .catch(function(e) { toast('Feil ved sletting: ' + e.message, 'e'); });
 }
 
 function visIOLightbox(url) {
