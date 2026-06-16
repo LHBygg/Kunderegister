@@ -4537,7 +4537,7 @@ function renderProjLevListe(projId) {
     html.push('<div style="flex:1;min-width:0;">');
     html.push('<div style="font-size:13px;font-weight:500;">' + levNavn + '</div>');
     if (levKat) html.push('<span style="display:inline-block;font-size:10px;background:var(--bg4);border:1px solid var(--br);border-radius:20px;padding:1px 8px;margin-top:3px;">' + levKat + '</span>');
-    // pl.Title ikke vist - inneholder automatisk generert verdi
+    if (pl.Title) html.push('<div style="margin-top:6px;font-size:11px;color:var(--tx2);background:var(--bg4);border-radius:var(--r);padding:4px 8px;">Notat: ' + pl.Title + '</div>');
     if (k) {
       html.push('<div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:4px;">');
       html.push('<div style="display:inline-flex;align-items:center;gap:5px;font-size:11px;background:var(--bg4);border:1px solid var(--br);border-radius:20px;padding:2px 8px;">');
