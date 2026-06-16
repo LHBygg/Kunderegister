@@ -491,10 +491,9 @@ function startNyOrdre(){
   document.getElementById('projDropdown').classList.remove('open');
   document.getElementById('projKnapp').classList.remove('aktiv');
   document.getElementById('projPil').classList.remove('opp');
-  document.getElementById('projRes').innerHTML='';
-  document.getElementById('projRes').classList.remove('open');
   document.getElementById('projValgt').style.display='none';
-  document.getElementById('projListe').style.display='block';
+  var si=document.getElementById('projSokInput');if(si)si.value='';
+  renderProjListe(alleProsjekter);
   document.getElementById('vareListe').innerHTML='';
   document.getElementById('ordreNotat').value='';
   document.getElementById('kameraInput').value='';
