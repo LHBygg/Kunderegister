@@ -104,6 +104,13 @@ input[type=file]{display:none;}
 .ai-navn-edit{width:100%;padding:8px 10px;background:var(--bg4);border:1px solid var(--br2);border-radius:7px;color:var(--tx);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;margin-bottom:8px;}
 .ai-navn-edit:focus{outline:none;border-color:var(--acc);}
 .ai-actions{display:flex;gap:7px;}
+.ai-forslag-liste{display:flex;flex-direction:column;gap:5px;margin-bottom:8px;}
+.ai-forslag-btn{width:100%;text-align:left;padding:8px 12px;background:var(--bg4);border:1px solid var(--br2);border-radius:7px;color:var(--tx);font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;transition:all .15s;}
+.ai-forslag-btn:hover{border-color:var(--acc);background:var(--bg3);}
+.ai-forslag-btn.valgt{border-color:var(--acc);background:rgba(232,184,75,.10);font-weight:600;}
+.ai-produkt-liste{display:flex;flex-direction:column;gap:6px;margin-bottom:10px;}
+.ai-produkt-rad{display:flex;align-items:center;gap:9px;padding:8px 12px;background:var(--bg4);border:1px solid var(--br2);border-radius:7px;cursor:pointer;font-size:13px;}
+.ai-produkt-rad input{width:16px;height:16px;accent-color:var(--acc);cursor:pointer;flex-shrink:0;}
 .vare-linje{background:var(--bg3);border:1px solid var(--br);border-radius:var(--r);padding:12px;margin-bottom:8px;display:flex;gap:10px;align-items:flex-start;}
 .vare-bilde{width:56px;height:56px;border-radius:8px;object-fit:cover;flex-shrink:0;border:1px solid var(--br);}
 .vare-bilde-ph{width:56px;height:56px;border-radius:8px;flex-shrink:0;background:var(--bg4);border:1px solid var(--br);display:flex;align-items:center;justify-content:center;font-size:22px;}
@@ -498,28 +505,75 @@ function kallAI(b64,mt,full){
   workerPost('/ai-gjenkjenn',{base64:b64,mediaType:mt}).then(function(d){
     if(d.error)throw new Error(d.error);
     document.getElementById('aiStatus').style.display='none';
-    visAiPreview(d.navn||'',full);
+    if(d.modus==='flere'){
+      visFlereProdukt(d.produkter||[],full);
+    } else {
+      visEttProdukt(d.forslag||[d.navn||''],full);
+    }
   }).catch(function(e){
     document.getElementById('aiStatus').style.display='none';
     toast('AI-gjenkjenning feilet: '+e.message,'e');
   });
 }
-function visAiPreview(navn,full){
+function visEttProdukt(forslag,full){
   var el=document.getElementById('aiPreview');
   var imgHtml=full?'<img class="ai-preview-img" src="'+full+'" alt="">':'';
-  var badgeHtml=navn?'<div class="ai-badge">✨ AI-gjenkjent</div>':'';
   var encFull=btoa(encodeURIComponent(full||''));
+  var forslagHtml='';
+  forslag.forEach(function(f,i){
+    forslagHtml+='<button class="ai-forslag-btn'+(i===0?' valgt':'')+'" data-enc="'+encFull+'" data-navn="'+f.replace(/"/g,'&quot;')+'" onclick="velgForslag(this)">'+f+'</button>';
+  });
   el.innerHTML='<div class="ai-preview">'+imgHtml+
-    '<div class="ai-preview-info">'+badgeHtml+
-    '<input class="ai-navn-edit" type="text" id="aiNavnInput" value="" placeholder="Skriv produktnavn...">'+
+    '<div class="ai-preview-info">'+
+    '<div class="ai-badge">AI-gjenkjent - velg riktig navn</div>'+
+    '<div class="ai-forslag-liste">'+forslagHtml+'</div>'+
+    '<input class="ai-navn-edit" type="text" id="aiNavnInput" value="'+forslag[0].replace(/"/g,'&quot;')+'" placeholder="Eller skriv produktnavn...">'+
     '<div class="ai-actions">'+
     '<button class="btn sm pri" id="aiLeggTilBtn">Legg til vare</button>'+
     '<button class="btn sm ghost" onclick="avbrytAi()">Avbryt</button>'+
     '</div></div></div>';
   el.style.display='block';
-  var inp=document.getElementById('aiNavnInput');
-  if(inp){inp.value=navn;setTimeout(function(){inp.focus();inp.select();},80);}
   document.getElementById('aiLeggTilBtn').addEventListener('click',function(){leggTilVare(encFull);});
+}
+function velgForslag(btn){
+  document.querySelectorAll('.ai-forslag-btn').forEach(function(b){b.classList.remove('valgt');});
+  btn.classList.add('valgt');
+  var inp=document.getElementById('aiNavnInput');
+  if(inp) inp.value=btn.dataset.navn;
+}
+function visFlereProdukt(produkter,full){
+  var el=document.getElementById('aiPreview');
+  var imgHtml=full?'<img class="ai-preview-img" src="'+full+'" alt="">':'';
+  var encFull=btoa(encodeURIComponent(full||''));
+  var listeHtml='';
+  produkter.forEach(function(p,i){
+    var safeNavn=p.navn.replace(/"/g,'&quot;');
+    listeHtml+='<label class="ai-produkt-rad"><input type="checkbox" class="ai-produkt-cb" data-navn="'+safeNavn+'" data-enc="'+encFull+'"> <span>'+p.navn+'</span></label>';
+  });
+  el.innerHTML='<div class="ai-preview">'+imgHtml+
+    '<div class="ai-preview-info">'+
+    '<div class="ai-badge">Flere produkter funnet - hak av de du vil legge til</div>'+
+    '<div class="ai-produkt-liste">'+listeHtml+'</div>'+
+    '<div class="ai-actions">'+
+    '<button class="btn sm pri" onclick="leggTilFlere(''+encFull+'')">Legg til valgte</button>'+
+    '<button class="btn sm ghost" onclick="avbrytAi()">Avbryt</button>'+
+    '</div></div></div>';
+  el.style.display='block';
+}
+function leggTilFlere(encFull){
+  var valgte=document.querySelectorAll('.ai-produkt-cb:checked');
+  if(!valgte.length){toast('Velg minst ett produkt','i');return;}
+  var full='';try{full=decodeURIComponent(atob(encFull));}catch(e){}
+  valgte.forEach(function(cb){
+    var id=++linjeIdTeller;
+    ordreLinjer.push({id:id,navn:cb.dataset.navn,full:full,antall:1,enhet:'stk'});
+  });
+  oppdaterVareListe();
+  document.getElementById('aiPreview').style.display='none';
+  document.getElementById('kameraInput').value='';
+  document.getElementById('filInput').value='';
+  oppdaterSendBar();
+  toast(valgte.length+' vare'+(valgte.length>1?'r':'')+' lagt til','ok');
 }
 function avbrytAi(){
   document.getElementById('aiPreview').style.display='none';
