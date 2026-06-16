@@ -547,18 +547,19 @@ function visFlereProdukt(produkter,full){
   var encFull=btoa(encodeURIComponent(full||''));
   var listeHtml='';
   produkter.forEach(function(p,i){
-    var safeNavn=p.navn.replace(/"/g,'&quot;');
-    listeHtml+='<label class="ai-produkt-rad"><input type="checkbox" class="ai-produkt-cb" data-navn="'+safeNavn+'" data-enc="'+encFull+'"> <span>'+p.navn+'</span></label>';
+    var safeNavn=p.navn.replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+    listeHtml+='<label class="ai-produkt-rad"><input type="checkbox" class="ai-produkt-cb" data-navn="'+safeNavn+'"> <span>'+p.navn+'</span></label>';
   });
   el.innerHTML='<div class="ai-preview">'+imgHtml+
     '<div class="ai-preview-info">'+
     '<div class="ai-badge">Flere produkter funnet - hak av de du vil legge til</div>'+
     '<div class="ai-produkt-liste">'+listeHtml+'</div>'+
     '<div class="ai-actions">'+
-    '<button class="btn sm pri" onclick="leggTilFlere(''+encFull+'')">Legg til valgte</button>'+
+    '<button class="btn sm pri" id="aiFlereBtn">Legg til valgte</button>'+
     '<button class="btn sm ghost" onclick="avbrytAi()">Avbryt</button>'+
     '</div></div></div>';
   el.style.display='block';
+  document.getElementById('aiFlereBtn').addEventListener('click',function(){leggTilFlere(encFull);});
 }
 function leggTilFlere(encFull){
   var valgte=document.querySelectorAll('.ai-produkt-cb:checked');
