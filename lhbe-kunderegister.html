@@ -931,6 +931,13 @@ tr.erow td{padding:0;background:var(--bg2);border-bottom:1px solid var(--br2);}
           </select>
         </div>
       </div>
+      <div class="fg"><label class="fl">Prosjekttype</label>
+        <select class="fi2" id="pProsjekttype">
+          <option value="">- Velg type -</option>
+          <option value="Anbudsprosjekt">Anbudsprosjekt</option>
+          <option value="Timeprosjekt">Timeprosjekt</option>
+        </select>
+      </div>
       <div style="font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--tx3);font-weight:500;margin:14px 0 10px;padding-top:10px;border-top:1px solid var(--br)">Kontaktinfo for dette prosjektet</div>
       <div id="pSammeKundeWrap" style="display:none;margin-bottom:10px;">
         <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;padding:8px 10px;background:var(--bg3);border-radius:var(--r);border:1px solid var(--br2);">
@@ -3138,6 +3145,7 @@ function openNP(kn) {
   document.getElementById('pKalk').value = getNextKalkylenr();
   document.getElementById('pStat').value = 'Under kalkyle';
   document.getElementById('pLeder').value = '';
+  document.getElementById('pProsjekttype').value = '';
   document.getElementById('pNrWarn').style.display = 'none';
   document.getElementById('pKalkWarn').style.display = 'none';
   // Nullstill underprosjekt-valg
@@ -3171,6 +3179,7 @@ function openEditP(id) {
   document.getElementById('pSluttdato').value = fmtDate(p.Sluttdato);
   document.getElementById('pStat').value = p.Status || 'Under kalkyle';
   document.getElementById('pLeder').value = p.Prosjektleder || '';
+  document.getElementById('pProsjekttype').value = p.Prosjekttype || '';
   document.getElementById('pNotat').value = p.Notat || '';
   document.getElementById('pKontakt').value = p.Kontaktperson || '';
   document.getElementById('pEpost').value = p.Epost || '';
@@ -3252,7 +3261,8 @@ function saveProj() {
     Telefon: document.getElementById('pTelefon').value,
     Adresse: document.getElementById('pAdresse').value,
     S_x00f8_knadspliktig: document.getElementById('pSoknadspliktig').checked,
-    Tiltaksklasse: (function() { var r = document.querySelector('input[name="pTiltaksklasse"]:checked'); return r ? parseInt(r.value) : null; })()
+    Tiltaksklasse: (function() { var r = document.querySelector('input[name="pTiltaksklasse"]:checked'); return r ? parseInt(r.value) : null; })(),
+    Prosjekttype: document.getElementById('pProsjekttype').value || null
   };
   if (isUnder) {
     body.Underprosjekt = true;
