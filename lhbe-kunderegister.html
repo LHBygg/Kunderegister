@@ -4677,11 +4677,18 @@ function toggleIOOrdre(ordreId, projId) {
           html.push('<option value="' + s + '"' + (curStatus === s ? ' selected' : '') + '>' + s + '</option>');
         });
         html.push('</select>');
-        html.push('<button class="io-lagre-alle-btn" id="io_lagre_alle_' + ordreId + '" onclick="lagreIOOrdre(' + ordreId + ',\'' + projId + \')">Lagre ordre</button>');
+        html.push('<button class="io-lagre-alle-btn" id="io_lagre_alle_' + ordreId + '" data-projid="' + projId + '">Lagre ordre</button>');
         html.push('</div>');
       }
 
       body.innerHTML = html.join('');
+      // Knytt lagre-knapp med event listener
+      var lagreBtn = document.getElementById('io_lagre_alle_' + ordreId);
+      if (lagreBtn) {
+        lagreBtn.addEventListener('click', function() {
+          lagreIOOrdre(ordreId, this.dataset.projid);
+        });
+      }
       // Last autentiserte bilder
       body.querySelectorAll('img[data-spurl]').forEach(function(img) {
         lastIOBilde(img, img.dataset.spurl);
