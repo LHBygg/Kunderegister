@@ -86,6 +86,16 @@ body:not(.light) .login-logo img{filter:invert(1);mix-blend-mode:normal;}
 .search-item:hover{background:var(--bg4);}
 .search-empty{padding:12px 14px;color:var(--tx3);font-size:13px;}
 .proj-valgt{margin-top:8px;padding:10px 12px;background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.2);border-radius:var(--r);font-size:13px;color:#22c55e;font-weight:500;display:none;align-items:center;justify-content:space-between;}
+.proj-velger-knapp{width:100%;display:flex;align-items:center;justify-content:space-between;padding:11px 14px;background:var(--bg3);border:1px solid var(--br2);border-radius:var(--r);color:var(--tx2);font-size:14px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:border-color .15s;}
+.proj-velger-knapp:hover{border-color:var(--acc);}
+.proj-velger-knapp.aktiv{border-color:var(--acc);border-bottom-left-radius:0;border-bottom-right-radius:0;}
+.proj-dropdown{display:none;background:var(--bg3);border:1px solid var(--acc);border-top:none;border-bottom-left-radius:var(--r);border-bottom-right-radius:var(--r);max-height:260px;overflow-y:auto;}
+.proj-dropdown.open{display:block;}
+.proj-sok{padding:8px 10px;border-bottom:1px solid var(--br);}
+.proj-sok input{width:100%;padding:7px 10px;background:var(--bg4);border:1px solid var(--br2);border-radius:6px;color:var(--tx);font-size:13px;font-family:'DM Sans',sans-serif;}
+.proj-sok input:focus{outline:none;border-color:var(--acc);}
+.pil{font-size:11px;transition:transform .2s;}
+.pil.opp{transform:rotate(180deg);}
 .proj-liste{margin-top:10px;max-height:220px;overflow-y:auto;border:1px solid var(--br);border-radius:var(--r);background:var(--bg3);}
 .bilde-knappar{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;}
 .bilde-knapp{padding:16px 12px;background:var(--bg3);border:1px solid var(--br2);border-radius:var(--r);cursor:pointer;text-align:center;transition:all .2s;font-family:'DM Sans',sans-serif;color:var(--tx);}
@@ -210,16 +220,18 @@ input[type=file]{display:none;}
 
       <div class="card">
         <div class="card-title">Velg prosjekt</div>
-        <div class="search-wrap" style="margin-bottom:8px;">
-          <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-          <input class="search-input" type="text" placeholder="Søk i prosjekter..." id="projInput" oninput="sokProsjekt(this.value)" autocomplete="off">
+        <button class="proj-velger-knapp" id="projKnapp" onclick="toggleProjDropdown()">
+          <span id="projKnappTekst" style="color:var(--tx3);">Velg prosjekt...</span>
+          <span class="pil" id="projPil">▼</span>
+        </button>
+        <div class="proj-dropdown" id="projDropdown">
+          <div class="proj-sok"><input type="text" placeholder="Søk..." id="projSokInput" oninput="filtrerProjDropdown(this.value)" autocomplete="off"></div>
+          <div id="projListe"></div>
         </div>
-        <div class="search-results" id="projRes"></div>
         <div class="proj-valgt" id="projValgt">
           <span>✓ <span id="projNavn"></span></span>
           <span style="font-size:12px;color:var(--tx3);cursor:pointer;font-weight:400;" onclick="nullstillProsjekt()">Endre</span>
         </div>
-        <div class="proj-liste" id="projListe"></div>
       </div>
 
       <div class="card">
@@ -417,9 +429,12 @@ function visOrdreDetalj(id){
 }
 function lukkModal(e){if(!e||e.target===document.getElementById('modalBg'))document.getElementById('modalBg').classList.remove('vis');}
 function visProsjektListe(){
+  renderProjListe(alleProsjekter);
+}
+function renderProjListe(liste){
   var el=document.getElementById('projListe');
-  if(!alleProsjekter.length){el.innerHTML='<div class="search-empty">Ingen aktive prosjekter</div>';return;}
-  el.innerHTML=alleProsjekter.map(function(p){
+  if(!liste.length){el.innerHTML='<div class="search-empty">Ingen prosjekter funnet</div>';return;}
+  el.innerHTML=liste.map(function(p){
     var navn=(p.Title||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;');
     return '<div class="search-item" data-id="'+p.ID+'" data-navn="'+navn+'" data-nr="'+(p.Prosjektnummer||'')+'">'+
       '<div style="font-size:13px;font-weight:500">'+(p.Title||'')+'</div>'+
@@ -428,41 +443,54 @@ function visProsjektListe(){
   }).join('');
   el.querySelectorAll('.search-item').forEach(function(item){item.addEventListener('click',function(){velgProsjekt(this.dataset.id,this.dataset.navn,this.dataset.nr);});});
 }
-function sokProsjekt(q){
-  var resEl=document.getElementById('projRes');
-  if(!q){resEl.classList.remove('open');resEl.innerHTML='';return;}
-  var ql=q.toLowerCase();
-  var treff=alleProsjekter.filter(function(p){return(p.Title||'').toLowerCase().includes(ql)||(p.Prosjektnummer||'').toLowerCase().includes(ql);}).slice(0,8);
-  if(!treff.length){resEl.innerHTML='<div class="search-empty">Ingen prosjekter funnet</div>';resEl.classList.add('open');return;}
-  resEl.innerHTML=treff.map(function(p){
-    var navn=(p.Title||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;');
-    return '<div class="search-item" data-id="'+p.ID+'" data-navn="'+navn+'" data-nr="'+(p.Prosjektnummer||'')+'">'+
-      '<div style="font-size:13px;font-weight:500">'+(p.Title||'')+'</div>'+
-      (p.Prosjektnummer?'<div style="font-size:11px;color:var(--tx2)">Nr. '+p.Prosjektnummer+'</div>':'')+
-      '</div>';
-  }).join('');
-  resEl.classList.add('open');
-  resEl.querySelectorAll('.search-item').forEach(function(item){item.addEventListener('click',function(){velgProsjekt(this.dataset.id,this.dataset.navn,this.dataset.nr);});});
+function toggleProjDropdown(){
+  var dd=document.getElementById('projDropdown');
+  var knapp=document.getElementById('projKnapp');
+  var pil=document.getElementById('projPil');
+  var open=dd.classList.contains('open');
+  if(open){
+    dd.classList.remove('open');
+    knapp.classList.remove('aktiv');
+    pil.classList.remove('opp');
+  } else {
+    renderProjListe(alleProsjekter);
+    dd.classList.add('open');
+    knapp.classList.add('aktiv');
+    pil.classList.add('opp');
+    setTimeout(function(){document.getElementById('projSokInput').focus();},80);
+  }
+}
+function filtrerProjDropdown(q){
+  var ql=(q||'').toLowerCase();
+  var treff=ql?alleProsjekter.filter(function(p){return(p.Title||'').toLowerCase().includes(ql)||(p.Prosjektnummer||'').toLowerCase().includes(ql);}):alleProsjekter;
+  renderProjListe(treff);
 }
 function velgProsjekt(id,navn,nr){
   valgtProsjekt={ID:id,Title:navn,Prosjektnummer:nr};
-  document.getElementById('projInput').value=navn;
+  var knappTekst=document.getElementById('projKnappTekst');
+  if(knappTekst){knappTekst.textContent=navn;knappTekst.style.color='';}
   document.getElementById('projNavn').textContent=navn;
   document.getElementById('projValgt').style.display='flex';
-  document.getElementById('projListe').style.display='none';
-  document.getElementById('projRes').classList.remove('open');
+  document.getElementById('projDropdown').classList.remove('open');
+  document.getElementById('projKnapp').classList.remove('aktiv');
+  document.getElementById('projPil').classList.remove('opp');
   oppdaterSendBar();
 }
 function nullstillProsjekt(){
   valgtProsjekt=null;
-  document.getElementById('projInput').value='';
+  var kt=document.getElementById('projKnappTekst');
+  if(kt){kt.textContent='Velg prosjekt...';kt.style.color='var(--tx3)';}
   document.getElementById('projValgt').style.display='none';
-  document.getElementById('projListe').style.display='block';
+  document.getElementById('projSokInput').value='';
+  renderProjListe(alleProsjekter);
   oppdaterSendBar();
 }
 function startNyOrdre(){
   valgtProsjekt=null;ordreLinjer=[];linjeIdTeller=0;
-  document.getElementById('projInput').value='';
+  var kt=document.getElementById('projKnappTekst');if(kt){kt.textContent='Velg prosjekt...';kt.style.color='var(--tx3)';}
+  document.getElementById('projDropdown').classList.remove('open');
+  document.getElementById('projKnapp').classList.remove('aktiv');
+  document.getElementById('projPil').classList.remove('opp');
   document.getElementById('projRes').innerHTML='';
   document.getElementById('projRes').classList.remove('open');
   document.getElementById('projValgt').style.display='none';
@@ -523,14 +551,15 @@ function kallAI(b64,mt,full){
     if(d.modus==='flere'){
       visFlereProdukt(d.produkter||[],full);
     } else {
-      visEttProdukt(d.forslag||[d.navn||''],full);
+      visEttProdukt(d.forslag||[d.navn||''],full,d.enhet||'stk');
     }
   }).catch(function(e){
     document.getElementById('aiStatus').style.display='none';
     toast('AI-gjenkjenning feilet: '+e.message,'e');
   });
 }
-function visEttProdukt(forslag,full){
+function visEttProdukt(forslag,full,enhet){
+  enhet=enhet||'stk';
   var el=document.getElementById('aiPreview');
   var imgHtml=full?'<img class="ai-preview-img" src="'+full+'" alt="">':'';
   var encFull=btoa(encodeURIComponent(full||''));
@@ -548,7 +577,7 @@ function visEttProdukt(forslag,full){
     '<button class="btn sm ghost" onclick="avbrytAi()">Avbryt</button>'+
     '</div></div></div>';
   el.style.display='block';
-  document.getElementById('aiLeggTilBtn').addEventListener('click',function(){leggTilVare(encFull);});
+  document.getElementById('aiLeggTilBtn').addEventListener('click',function(){leggTilVare(encFull,enhet);});
 }
 function velgForslag(btn){
   document.querySelectorAll('.ai-forslag-btn').forEach(function(b){b.classList.remove('valgt');});
@@ -563,7 +592,7 @@ function visFlereProdukt(produkter,full){
   var listeHtml='';
   produkter.forEach(function(p,i){
     var safeNavn=p.navn.replace(/"/g,'&quot;').replace(/'/g,'&#39;');
-    listeHtml+='<label class="ai-produkt-rad"><input type="checkbox" class="ai-produkt-cb" data-navn="'+safeNavn+'"> <span>'+p.navn+'</span></label>';
+    listeHtml+='<label class="ai-produkt-rad"><input type="checkbox" class="ai-produkt-cb" data-navn="'+safeNavn+'" data-enhet="'+(p.enhet||'stk')+'"> <span>'+p.navn+'</span></label>';
   });
   el.innerHTML='<div class="ai-preview">'+imgHtml+
     '<div class="ai-preview-info">'+
@@ -582,7 +611,7 @@ function leggTilFlere(encFull){
   var full='';try{full=decodeURIComponent(atob(encFull));}catch(e){}
   valgte.forEach(function(cb){
     var id=++linjeIdTeller;
-    ordreLinjer.push({id:id,navn:cb.dataset.navn,full:full,antall:1,enhet:'stk'});
+    ordreLinjer.push({id:id,navn:cb.dataset.navn,full:full,antall:1,enhet:cb.dataset.enhet||'stk'});
   });
   oppdaterVareListe();
   document.getElementById('aiPreview').style.display='none';
@@ -596,13 +625,13 @@ function avbrytAi(){
   document.getElementById('kameraInput').value='';
   document.getElementById('filInput').value='';
 }
-function leggTilVare(encFull){
+function leggTilVare(encFull,enhet){
   var inp=document.getElementById('aiNavnInput');
   var navn=inp?inp.value.trim():'';
   if(!navn){toast('Skriv produktnavn','i');if(inp)inp.focus();return;}
   var full='';try{full=decodeURIComponent(atob(encFull));}catch(e){}
   var id=++linjeIdTeller;
-  ordreLinjer.push({id:id,navn:navn,full:full,antall:1,enhet:'stk'});
+  ordreLinjer.push({id:id,navn:navn,full:full,antall:1,enhet:enhet||'stk'});
   oppdaterVareListe();
   document.getElementById('aiPreview').style.display='none';
   document.getElementById('kameraInput').value='';
