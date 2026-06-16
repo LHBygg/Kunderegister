@@ -4648,7 +4648,12 @@ function toggleIOOrdre(ordreId, projId) {
             html.push('<div class="io-linje-bilde-ph">📦</div>');
           }
           html.push('<div class="io-linje-info">');
-          html.push('<div class="io-linje-navn">' + (l.Varenavn||'') + '</div>');
+          html.push('<div class="io-linje-navn" style="display:flex;align-items:center;gap:6px;">' +
+            '<span class="io-varenavn-tekst" id="io_navn_tekst_' + l.ID + '">' + (l.Varenavn||'') + '</span>' +
+            '<button class="io-navn-edit-btn" onclick="toggleVarenavnEdit(' + l.ID + ')" title="Rediger varenavn" style="background:none;border:none;cursor:pointer;color:var(--tx3);font-size:11px;padding:0 2px;">✏️</button>' +
+            '</div>');
+          html.push('<input class="io-varenavn-inp" type="text" id="io_navn_inp_' + l.ID + '" value="' + (l.Varenavn||'').replace(/"/g,'&quot;') + '" style="display:none;width:100%;padding:4px 7px;font-size:12px;border:1px solid var(--acc);border-radius:5px;background:var(--bg4);color:var(--tx);font-family:inherit;margin-bottom:4px;" onkeydown="if(event.key===\'Enter\')lagreVarenavn(' + l.ID + ',' + ordreId + ');">');
+          html.push('<div id="io_navn_handl_' + l.ID + '" style="display:none;margin-bottom:6px;"><button class="io-lagre-btn" onclick="lagreVarenavn(' + l.ID + ',' + ordreId + ')">Lagre navn</button> <button onclick="avbrytVarenavnEdit(' + l.ID + ')" style="font-size:11px;cursor:pointer;background:none;border:none;color:var(--tx3);">Avbryt</button></div>');
           html.push('<div class="io-linje-meta">' + antall + ' ' + (l.Enhet||'stk') + '</div>');
           html.push('<div class="io-pris-row">');
           html.push('<span style="font-size:11px;color:var(--tx3);width:48px;">Innpris</span>');
@@ -4751,6 +4756,40 @@ function lagreIOOrdre(ordreId, projId) {
   });
 }
 
+function toggleVarenavnEdit(lid) {
+  var tekst = document.getElementById('io_navn_tekst_' + lid);
+  var inp = document.getElementById('io_navn_inp_' + lid);
+  var handl = document.getElementById('io_navn_handl_' + lid);
+  if (!tekst || !inp) return;
+  tekst.parentElement.style.display = 'none';
+  inp.style.display = 'block';
+  handl.style.display = 'block';
+  inp.focus(); inp.select();
+}
+function avbrytVarenavnEdit(lid) {
+  var tekst = document.getElementById('io_navn_tekst_' + lid);
+  var inp = document.getElementById('io_navn_inp_' + lid);
+  var handl = document.getElementById('io_navn_handl_' + lid);
+  if (!tekst || !inp) return;
+  tekst.parentElement.style.display = 'flex';
+  inp.style.display = 'none';
+  handl.style.display = 'none';
+}
+function lagreVarenavn(lid, ordreId) {
+  var inp = document.getElementById('io_navn_inp_' + lid);
+  var tekst = document.getElementById('io_navn_tekst_' + lid);
+  if (!inp) return;
+  var nyNavn = inp.value.trim();
+  if (!nyNavn) { toast('Varenavn kan ikke være tomt', 'w'); return; }
+  spPatch(SP + '/_api/web/lists(guid\'' + IO_LINJER2 + '\')/items(' + lid + ')', { Varenavn: nyNavn })
+    .then(function() {
+      if (tekst) tekst.textContent = nyNavn;
+      avbrytVarenavnEdit(lid);
+      toast('Varenavn oppdatert', 's');
+    })
+    .catch(function(e) { toast('Feil: ' + e.message, 'e'); });
+}
+
 function genererFakturaOgLastOpp(ordreId, projId) {
   // Hent ordre + linjer
   fetch(IO_BASE + '/ordre/' + ordreId, { headers: { 'X-Api-Key': IO_KEY } })
@@ -4771,90 +4810,129 @@ function lagJspdfOgLastOpp(o, linjer, proj) {
   script.onload = function() {
     try {
       var doc = new window.jspdf.jsPDF({ unit: 'mm', format: 'a4' });
-      var pw = 210, ml = 15, mr = 15, cw = pw - ml - mr;
-      var y = 18;
+      var pw = 210, ml = 16, mr = 16, cw = pw - ml - mr;
 
-      // Header
-      doc.setFontSize(18); doc.setFont('helvetica','bold');
-      doc.text('LH Bygg Entreprenør AS', ml, y); y += 7;
-      doc.setFontSize(10); doc.setFont('helvetica','normal');
-      doc.setTextColor(120,120,120);
-      doc.text('Internfaktura', ml, y); y += 10;
-      doc.setTextColor(0,0,0);
+      // ── Logo + firmainfo ──────────────────────────────────────────
+      try {
+        doc.addImage( + logo_b64 + , 'JPEG', ml, 10, 38, 12);
+      } catch(e) {}
+      doc.setFontSize(8); doc.setFont('helvetica','normal');
+      doc.setTextColor(130,130,130);
+      doc.text('LH Bygg Entreprenør AS  ·  Industriveien 1, 7340 Oppdal  ·  Org.nr: 921 052 684', pw - mr, 13, {align:'right'});
+      doc.text('Alle priser er eks. mva.', pw - mr, 17, {align:'right'});
 
-      // Ordreinfo
-      doc.setFontSize(9); doc.setFont('helvetica','bold');
-      doc.text('ORDRENR', ml, y);
-      doc.text('PROSJEKT', ml+50, y);
-      doc.text('DATO', ml+130, y);
-      doc.text('BESTILLER', ml+160, y);
-      y += 4;
-      doc.setFont('helvetica','normal');
-      var dato = o && o.Dato ? new Date(o.Dato).toLocaleDateString('no-NO') : new Date().toLocaleDateString('no-NO');
-      doc.text(o && o.Title ? o.Title : '-', ml, y);
-      doc.text(proj ? (proj.Prosjektnummer ? proj.Prosjektnummer + ' - ' : '') + (proj.Title || '') : '-', ml+50, y, {maxWidth:75});
-      doc.text(dato, ml+130, y);
-      doc.text(o && o.Bestiller ? o.Bestiller : '-', ml+160, y);
+      // ── Tittellinje ───────────────────────────────────────────────
+      doc.setDrawColor(220,220,220); doc.line(ml, 24, pw - mr, 24);
+      doc.setFontSize(13); doc.setFont('helvetica','bold'); doc.setTextColor(30,30,30);
+      doc.text('Internordre', ml, 31);
+      var ordreNr = o && o.Title ? o.Title : '-';
+      doc.setFontSize(9); doc.setFont('helvetica','normal'); doc.setTextColor(100,100,100);
+      doc.text(ordreNr, pw - mr, 31, {align:'right'});
+      doc.line(ml, 33, pw - mr, 33);
+
+      // ── Metadata-rader ────────────────────────────────────────────
+      var y = 41;
+      var dato = o && o.Dato ? new Date(o.Dato).toLocaleDateString('no-NO',{day:'2-digit',month:'2-digit',year:'numeric'}) : new Date().toLocaleDateString('no-NO');
+      var bestiller = o && o.Bestiller ? o.Bestiller : '-';
+      var projNavn = proj ? ((proj.Prosjektnummer ? proj.Prosjektnummer + ' – ' : '') + (proj.Title || '')) : '-';
+
+      function metaCell(label, value, x, maxW) {
+        doc.setFontSize(7); doc.setFont('helvetica','bold'); doc.setTextColor(130,130,130);
+        doc.text(label.toUpperCase(), x, y - 3.5);
+        doc.setFontSize(9); doc.setFont('helvetica','normal'); doc.setTextColor(30,30,30);
+        doc.text(value, x, y, {maxWidth: maxW});
+      }
+      metaCell('Prosjekt', projNavn, ml, 80);
+      metaCell('Dato', dato, ml + 90, 35);
+      metaCell('Bestiller', bestiller, ml + 130, 48);
+
       y += 10;
+      doc.setDrawColor(220,220,220); doc.line(ml, y, pw - mr, y);
+      y += 6;
 
-      // Linjehode
-      doc.setFillColor(245,245,245);
-      doc.rect(ml, y-4, cw, 7, 'F');
-      doc.setFont('helvetica','bold'); doc.setFontSize(8);
-      doc.text('Varenavn', ml+1, y);
-      doc.text('Ant', ml+100, y, {align:'right'});
-      doc.text('Enh', ml+114, y);
-      doc.text('Innpris', ml+135, y, {align:'right'});
-      doc.text('Utpris', ml+158, y, {align:'right'});
-      doc.text('Sum utpris', ml+cw, y, {align:'right'});
+      // ── Kolonneoverskrifter ───────────────────────────────────────
+      doc.setFillColor(248,248,248);
+      doc.rect(ml, y - 3.5, cw, 7, 'F');
+      doc.setFontSize(7.5); doc.setFont('helvetica','bold'); doc.setTextColor(80,80,80);
+      doc.text('VARENAVN', ml + 1, y);
+      doc.text('ANT', ml + 110, y, {align:'right'});
+      doc.text('ENH', ml + 118, y);
+      doc.text('KOSTPRIS', ml + 145, y, {align:'right'});
+      doc.text('PRIS EKS. MVA', cw + mr, y, {align:'right'});
       y += 5;
+      doc.setDrawColor(200,200,200); doc.line(ml, y, pw - mr, y);
+      y += 4;
 
-      doc.setFont('helvetica','normal');
+      // ── Varelinjer ───────────────────────────────────────────────
       var totInn = 0, totUt = 0;
-      linjer.forEach(function(l) {
+      linjer.forEach(function(l, idx) {
         var inn = parseFloat(document.getElementById('io_inn_'+l.ID) ? document.getElementById('io_inn_'+l.ID).value : l.Innpris) || 0;
-        var ut = parseFloat(document.getElementById('io_ut_'+l.ID) ? document.getElementById('io_ut_'+l.ID).value : l.Utpris) || 0;
+        var ut  = parseFloat(document.getElementById('io_ut_'+l.ID)  ? document.getElementById('io_ut_'+l.ID).value  : l.Utpris)  || 0;
         var ant = parseFloat(l.Antall) || 1;
         totInn += inn * ant; totUt += ut * ant;
-        doc.setFontSize(8);
+
+        if (idx % 2 === 0) {
+          doc.setFillColor(252,252,252);
+          doc.rect(ml, y - 3, cw, 6.5, 'F');
+        }
+
+        doc.setFontSize(8.5); doc.setFont('helvetica','normal'); doc.setTextColor(30,30,30);
         var navn = l.Varenavn || '';
-        if (navn.length > 55) navn = navn.substring(0,52) + '...';
-        doc.text(navn, ml+1, y);
-        doc.text(String(ant), ml+100, y, {align:'right'});
-        doc.text(l.Enhet || 'stk', ml+114, y);
-        doc.text(inn > 0 ? inn.toFixed(2) : '-', ml+135, y, {align:'right'});
-        doc.text(ut > 0 ? ut.toFixed(2) : '-', ml+158, y, {align:'right'});
-        doc.text(ut > 0 ? (ut*ant).toFixed(2) : '-', ml+cw, y, {align:'right'});
-        y += 5;
-        if (y > 270) { doc.addPage(); y = 18; }
+        if (navn.length > 52) navn = navn.substring(0,49) + '...';
+        doc.text(navn, ml + 1, y);
+        doc.setTextColor(80,80,80);
+        doc.text(String(ant), ml + 110, y, {align:'right'});
+        doc.text(l.Enhet || 'stk', ml + 119, y);
+        doc.setTextColor(30,30,30);
+        doc.text(inn > 0 ? inn.toFixed(2) + ' kr' : '–', ml + 145, y, {align:'right'});
+        doc.setFont('helvetica','bold');
+        doc.text(ut > 0 ? (ut * ant).toFixed(2) + ' kr' : '–', cw + mr, y, {align:'right'});
+        doc.setFont('helvetica','normal');
+        y += 7;
+        if (y > 265) {
+          doc.addPage(); y = 20;
+          doc.setFontSize(7.5); doc.setFont('helvetica','bold'); doc.setTextColor(80,80,80);
+          doc.setFillColor(248,248,248);
+          doc.rect(ml, y - 3.5, cw, 7, 'F');
+          doc.text('VARENAVN', ml + 1, y);
+          doc.text('ANT', ml + 110, y, {align:'right'});
+          doc.text('ENH', ml + 118, y);
+          doc.text('KOSTPRIS', ml + 145, y, {align:'right'});
+          doc.text('PRIS EKS. MVA', cw + mr, y, {align:'right'});
+          y += 5;
+          doc.setDrawColor(200,200,200); doc.line(ml, y, pw - mr, y); y += 4;
+        }
       });
 
-      // Sum-linje
+      // ── Summeringsboks ────────────────────────────────────────────
       y += 2;
-      doc.setDrawColor(200,200,200); doc.line(ml, y, ml+cw, y); y += 5;
-      doc.setFont('helvetica','bold'); doc.setFontSize(8);
-      var margin = totUt - totInn;
-      var marginPct = totUt > 0 ? Math.round((margin/totUt)*100) : 0;
-      doc.text('Innpris total:', ml+100, y); doc.setFont('helvetica','normal');
-      doc.text(totInn.toFixed(2) + ' kr', ml+cw, y, {align:'right'}); y += 5;
-      doc.setFont('helvetica','bold');
-      doc.text('Utpris total:', ml+100, y); doc.setFont('helvetica','normal');
-      doc.text(totUt.toFixed(2) + ' kr', ml+cw, y, {align:'right'}); y += 5;
-      doc.setFont('helvetica','bold');
-      doc.text('Margin:', ml+100, y); doc.setFont('helvetica','normal');
-      doc.text(margin.toFixed(2) + ' kr (' + marginPct + '%)', ml+cw, y, {align:'right'}); y += 12;
+      doc.setDrawColor(200,200,200); doc.line(ml, y, pw - mr, y); y += 5;
 
-      // Footer
-      doc.setFontSize(8); doc.setTextColor(150,150,150);
-      doc.text('Generert ' + new Date().toLocaleString('no-NO') + ' · LH Bygg Entreprenør AS', ml, 290);
+      doc.setFillColor(248,248,248);
+      doc.rect(pw - mr - 75, y - 3.5, 75, 20, 'F');
+      doc.setFontSize(8); doc.setFont('helvetica','normal'); doc.setTextColor(80,80,80);
+      doc.text('Kostpris eks. mva:', pw - mr - 2, y, {align:'right'});
+      doc.setFont('helvetica','bold'); doc.setTextColor(30,30,30);
+      doc.text(totInn.toFixed(2) + ' kr', cw + mr, y, {align:'right'}); y += 7;
 
-      // Last ned i nettleser
-      var filnavn = (o && o.Title ? o.Title : 'faktura') + '.pdf';
+      doc.setFontSize(9); doc.setFont('helvetica','bold'); doc.setTextColor(30,30,30);
+      doc.text('Totalpris eks. mva:', pw - mr - 2, y, {align:'right'});
+      doc.setFontSize(10);
+      doc.text(totUt.toFixed(2) + ' kr', cw + mr, y, {align:'right'});
+
+      // ── Bunntekst ─────────────────────────────────────────────────
+      doc.setFontSize(7.5); doc.setFont('helvetica','normal'); doc.setTextColor(170,170,170);
+      doc.line(ml, 284, pw - mr, 284);
+      doc.text('Generert ' + new Date().toLocaleString('no-NO') + '  ·  LH Bygg Entreprenør AS  ·  Alle priser eks. mva', ml, 288);
+      doc.text(ordreNr, pw - mr, 288, {align:'right'});
+
+      // Last ned
+      var filnavn = ordreNr + '.pdf';
       doc.save(filnavn);
 
-      // Last opp til SharePoint Faktura-mappe
-      var pdfBlob = doc.output('arraybuffer');
-      lastOppFakturaPdf(pdfBlob, filnavn, proj, o);
+      // Last opp til SharePoint
+      var pdfBuffer = doc.output('arraybuffer');
+      lastOppFakturaPdf(pdfBuffer, filnavn, proj, o);
 
     } catch(e) { toast('PDF-feil: ' + e.message, 'e'); }
   };
