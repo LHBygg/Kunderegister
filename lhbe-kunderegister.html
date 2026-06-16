@@ -295,6 +295,8 @@ tr.erow td{padding:0;background:var(--bg2);border-bottom:1px solid var(--br2);}
 .io-godkjent-badge{font-size:10px;padding:2px 7px;border-radius:20px;background:rgba(34,197,94,.12);color:#22c55e;font-weight:600;}
 .io-avvist-badge{font-size:10px;padding:2px 7px;border-radius:20px;background:rgba(239,68,68,.12);color:#ef4444;font-weight:600;}
 .io-fakturert-badge{font-size:10px;padding:2px 7px;border-radius:20px;background:rgba(232,184,75,.15);color:var(--acc);font-weight:600;}
+.io-ordre.fakturert{opacity:.5;pointer-events:none;}
+.io-ordre.fakturert .io-ordre-hdr{cursor:default;}
 .res-card{background:var(--bg4);border-radius:var(--r);padding:10px 12px;margin-bottom:8px;display:flex;align-items:center;gap:10px;}
 .res-card:last-child{margin-bottom:0;}
 .res-av{width:34px;height:34px;border-radius:50%;background:var(--blu);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:#fff;flex-shrink:0;}
@@ -4588,7 +4590,8 @@ function renderProjIOListe(projId) {
         if (o.Status === 'Avvist') stKls = 'io-avvist-badge';
         if (o.Status === 'Fakturert') stKls = 'io-fakturert-badge';
         var dato = o.Dato ? new Date(o.Dato).toLocaleDateString('no-NO',{day:'2-digit',month:'2-digit',year:'numeric'}) : '';
-        html.push('<div class="io-ordre" id="io_ordre_' + o.ID + '">');
+        var fakturertKls = o.Status === 'Fakturert' ? ' fakturert' : '';
+        html.push('<div class="io-ordre' + fakturertKls + '" id="io_ordre_' + o.ID + '">');
         html.push('<div class="io-ordre-hdr" onclick="toggleIOOrdre(' + o.ID + ',' + projId + ')" style="cursor:pointer;">');
         html.push('<span class="io-ordre-nr">' + (o.Title||'') + '</span>');
         html.push('<span class="io-ordre-meta">' + (o.Bestiller||'') + ' &middot; ' + dato + '</span>');
@@ -4734,6 +4737,11 @@ function lagreIOOrdre(ordreId, projId) {
       var kls = nyStatus === 'Avvist' ? 'io-avvist-badge' : nyStatus === 'Fakturert' ? 'io-fakturert-badge' : 'io-ny-badge';
       hdr.className = kls; hdr.textContent = nyStatus;
     }
+    var ordreEl = document.getElementById('io_ordre_' + ordreId);
+    if (ordreEl) {
+      if (nyStatus === 'Fakturert') ordreEl.classList.add('fakturert');
+      else ordreEl.classList.remove('fakturert');
+    }
     // PDF ved Fakturert
     if (nyStatus === 'Fakturert') {
       setTimeout(function() { genererFakturaOgLastOpp(ordreId, projId); }, 300);
@@ -4858,27 +4866,37 @@ function lagJspdfOgLastOpp(o, linjer, proj) {
 function lastOppFakturaPdf(pdfBuffer, filnavn, proj, o) {
   if (!proj) { toast('PDF lastet ned – kunne ikke laste opp (ukjent prosjekt)', 'w'); return; }
   getToken().then(function(t) {
-    // Bygg sti basert på underprosjekt/hovedprosjekt
+    // Bygg serverrelativ sti – ikke kode skråstrekene
     var base = '/sites/Industriveien1ASLHBygg/Delte dokumenter/Felles/LHBE/';
     var mappe;
     if (proj.Underprosjekt) {
-      mappe = base + 'Underprosjekter/' + proj.Title + '/Faktura/';
+      mappe = base + 'Underprosjekter/' + proj.Title + '/Faktura';
     } else {
       var nr = proj.Prosjektnummer || '';
       var navn = proj.Title || '';
-      mappe = base + 'Prosjekter/' + (nr ? nr + ' - ' : '') + navn + '/Faktura/';
+      mappe = base + 'Prosjekter/' + (nr ? nr + ' - ' : '') + navn + '/Faktura';
     }
-    var uploadUrl = 'https://lhbent.sharepoint.com/_api/web/GetFolderByServerRelativeUrl(\'' + encodeURIComponent(mappe) + '\')/Files/add(url=\'' + encodeURIComponent(filnavn) + '\',overwrite=true)';
+    // Kode kun mappe og filnavn separat – skråstrekene i base skal ikke kodes
+    var safeMappe = mappe.split('/').map(function(s){ return encodeURIComponent(s); }).join('/');
+    var safeFilnavn = encodeURIComponent(filnavn);
+    var uploadUrl = SP + "/_api/web/GetFolderByServerRelativeUrl('" + safeMappe + "')/Files/add(url='" + safeFilnavn + "',overwrite=true)";
     return fetch(uploadUrl, {
       method: 'POST',
-      headers: { Authorization: 'Bearer ' + t, 'Content-Length': String(pdfBuffer.byteLength) },
+      headers: {
+        Authorization: 'Bearer ' + t,
+        'Content-Type': 'application/pdf',
+        'Content-Length': String(pdfBuffer.byteLength)
+      },
       body: pdfBuffer
     });
   }).then(function(r) {
     if (r && r.ok) {
       toast('PDF lastet opp til Faktura-mappen', 's');
     } else if (r) {
-      return r.text().then(function(txt) { toast('Opplasting feilet: ' + txt.substring(0,80), 'w'); });
+      return r.text().then(function(txt) {
+        console.error('SP upload feil:', txt);
+        toast('Opplasting feilet – sjekk at Faktura-mappen finnes', 'w');
+      });
     }
   }).catch(function(e) { toast('Kunne ikke laste opp PDF: ' + e.message, 'w'); });
 }
