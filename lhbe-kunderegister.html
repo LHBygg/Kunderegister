@@ -283,6 +283,10 @@ tr.erow td{padding:0;background:var(--bg2);border-bottom:1px solid var(--br2);}
 .io-status-sel{padding:3px 8px;border-radius:20px;font-size:10px;font-weight:600;border:1px solid var(--br2);background:var(--bg4);color:var(--tx);font-family:'DM Sans',sans-serif;cursor:pointer;}
 .io-lagre-btn{padding:4px 10px;border-radius:6px;background:var(--acc);color:#000;border:none;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;cursor:pointer;}
 .io-lagre-btn:hover{filter:brightness(1.08);}
+.io-ordre-lagre-bar{display:flex;align-items:center;justify-content:flex-end;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid var(--br);}
+.io-lagre-alle-btn{padding:7px 16px;border-radius:8px;background:var(--acc);color:#000;border:none;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:700;cursor:pointer;}
+.io-lagre-alle-btn:hover{filter:brightness(1.08);}
+.io-lagre-alle-btn:disabled{opacity:.5;cursor:default;}
 .io-empty{padding:16px;text-align:center;font-size:12px;color:var(--tx3);}
 .io-lightbox{position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:9999;display:flex;align-items:center;justify-content:center;cursor:pointer;}
 .io-lightbox img{max-width:90vw;max-height:90vh;border-radius:8px;object-fit:contain;}
@@ -4618,16 +4622,8 @@ function toggleIOOrdre(ordreId, projId) {
       var linjer = d.linjer || [];
       var html = [];
 
-      // Status-endring
-      html.push('<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">');
-      html.push('<span style="font-size:11px;color:var(--tx2);">Status:</span>');
-      html.push('<select class="io-status-sel" onchange="endreIOStatus(' + ordreId + ',this.value,' + projId + ')">');
-      ['Ny','Avvist','Fakturert'].forEach(function(s) {
-        html.push('<option value="' + s + '"' + (o && o.Status === s ? ' selected' : '') + '>' + s + '</option>');
-      });
-      html.push('</select>');
-      if (o && o.Notat) html.push('<span style="font-size:11px;color:var(--tx2);margin-left:4px;">📝 ' + o.Notat + '</span>');
-      html.push('</div>');
+      // Notat
+      if (o && o.Notat) html.push('<div style="font-size:11px;color:var(--tx2);margin-bottom:10px;">📝 ' + o.Notat + '</div>');
 
       // Varelinjer
       if (!linjer.length) {
@@ -4660,8 +4656,6 @@ function toggleIOOrdre(ordreId, projId) {
           html.push('</div>');
           html.push('<div class="io-pris-row">');
           html.push('<label class="io-fakt-chk"><input type="checkbox" id="io_fakt_' + l.ID + '"' + (l.Fakturerbar ? ' checked' : '') + '> Fakturerbar</label>');
-          html.push('<span style="flex:1;"></span>');
-          html.push('<button class="io-lagre-btn" onclick="lagreIOLinje(' + l.ID + ',' + ordreId + ')">Lagre</button>');
           html.push('</div>');
           html.push('</div></div>');
         });
@@ -4673,6 +4667,17 @@ function toggleIOOrdre(ordreId, projId) {
         html.push('<span class="io-sum-item">Innpris total: <span class="io-sum-val">' + fmtCur(totInn) + '</span></span>');
         html.push('<span class="io-sum-item">Utpris total: <span class="io-sum-val">' + fmtCur(totUt) + '</span></span>');
         html.push('<span class="io-sum-item">Margin: <span class="io-sum-val" style="color:' + (margin >= 0 ? 'var(--grn)' : 'var(--red)') + '">' + fmtCur(margin) + ' (' + marginPct + '%)</span></span>');
+        html.push('</div>');
+
+        // Felles lagre-bar
+        var curStatus = o && o.Status ? o.Status : 'Ny';
+        html.push('<div class="io-ordre-lagre-bar">');
+        html.push('<select class="io-status-sel" id="io_status_' + ordreId + '">');
+        ['Ny','Avvist','Fakturert'].forEach(function(s) {
+          html.push('<option value="' + s + '"' + (curStatus === s ? ' selected' : '') + '>' + s + '</option>');
+        });
+        html.push('</select>');
+        html.push('<button class="io-lagre-alle-btn" id="io_lagre_alle_' + ordreId + '" onclick="lagreIOOrdre(' + ordreId + ',\'' + projId + \')">Lagre ordre</button>');
         html.push('</div>');
       }
 
@@ -4687,41 +4692,188 @@ function toggleIOOrdre(ordreId, projId) {
     });
 }
 
-function lagreIOLinje(linjeId, ordreId) {
-  var innEl = document.getElementById('io_inn_' + linjeId);
-  var utEl = document.getElementById('io_ut_' + linjeId);
-  var faktEl = document.getElementById('io_fakt_' + linjeId);
-  var innpris = innEl ? parseFloat(innEl.value) || 0 : 0;
-  var utpris = utEl ? parseFloat(utEl.value) || 0 : 0;
-  var fakturerbar = faktEl ? faktEl.checked : false;
+function lagreIOOrdre(ordreId, projId) {
+  var btn = document.getElementById('io_lagre_alle_' + ordreId);
+  var statusSel = document.getElementById('io_status_' + ordreId);
+  var nyStatus = statusSel ? statusSel.value : 'Ny';
+  if (btn) { btn.disabled = true; btn.textContent = 'Lagrer...'; }
 
-  spPatch(SP + '/_api/web/lists(guid\'' + IO_LINJER2 + '\')/items(' + linjeId + ')', {
-    Innpris: innpris,
-    Utpris: utpris,
-    Fakturerbar: fakturerbar
-  }).then(function() {
-    toast('Linje lagret', 's');
-    // Oppdater summer
-    var body = document.getElementById('io_body_' + ordreId);
-    if (body) { body.dataset.loaded = ''; toggleIOOrdre(ordreId, null); body.dataset.loaded = ''; toggleIOOrdre(ordreId, null); }
-  }).catch(function(e) { toast('Feil: ' + e.message, 'e'); });
+  // Finn alle linjer i denne ordren
+  var linjePatcher = [];
+  var body = document.getElementById('io_body_' + ordreId);
+  if (body) {
+    body.querySelectorAll('.io-linje').forEach(function(el) {
+      var lid = el.id.replace('io_linje_', '');
+      var innEl = document.getElementById('io_inn_' + lid);
+      var utEl = document.getElementById('io_ut_' + lid);
+      var faktEl = document.getElementById('io_fakt_' + lid);
+      linjePatcher.push(spPatch(SP + '/_api/web/lists(guid\'' + IO_LINJER2 + '\')/items(' + lid + ')', {
+        Innpris: innEl ? parseFloat(innEl.value) || 0 : 0,
+        Utpris: utEl ? parseFloat(utEl.value) || 0 : 0,
+        Fakturerbar: faktEl ? faktEl.checked : false
+      }));
+    });
+  }
+
+  // Lagre status på ordre
+  linjePatcher.push(spPatch(SP + '/_api/web/lists(guid\'' + IO_ORDRER2 + '\')/items(' + ordreId + ')', { Status: nyStatus }));
+
+  Promise.all(linjePatcher).then(function() {
+    toast('Ordre lagret', 's');
+    if (btn) { btn.disabled = false; btn.textContent = 'Lagre ordre'; }
+    // Oppdater badge
+    var hdr = document.querySelector('#io_ordre_' + ordreId + ' .io-ny-badge, #io_ordre_' + ordreId + ' .io-avvist-badge, #io_ordre_' + ordreId + ' .io-fakturert-badge');
+    if (hdr) {
+      var kls = nyStatus === 'Avvist' ? 'io-avvist-badge' : nyStatus === 'Fakturert' ? 'io-fakturert-badge' : 'io-ny-badge';
+      hdr.className = kls; hdr.textContent = nyStatus;
+    }
+    // PDF ved Fakturert
+    if (nyStatus === 'Fakturert') {
+      setTimeout(function() { genererFakturaOgLastOpp(ordreId, projId); }, 300);
+    }
+  }).catch(function(e) {
+    toast('Feil ved lagring: ' + e.message, 'e');
+    if (btn) { btn.disabled = false; btn.textContent = 'Lagre ordre'; }
+  });
 }
 
-function endreIOStatus(ordreId, status, projId) {
-  spPatch(SP + '/_api/web/lists(guid\'' + IO_ORDRER2 + '\')/items(' + ordreId + ')', { Status: status })
-    .then(function() {
-      toast('Status oppdatert', 's');
-      // Oppdater badge i header
-      var hdr = document.querySelector('#io_ordre_' + ordreId + ' .io-ny-badge, #io_ordre_' + ordreId + ' .io-avvist-badge, #io_ordre_' + ordreId + ' .io-fakturert-badge');
-      if (hdr) {
-        var kls = 'io-ny-badge';
-        if (status === 'Avvist') kls = 'io-avvist-badge';
-        else if (status === 'Fakturert') kls = 'io-fakturert-badge';
-        hdr.className = kls;
-        hdr.textContent = status;
-      }
+function genererFakturaOgLastOpp(ordreId, projId) {
+  // Hent ordre + linjer
+  fetch(IO_BASE + '/ordre/' + ordreId, { headers: { 'X-Api-Key': IO_KEY } })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      var o = d.ordre;
+      var linjer = d.linjer || [];
+      // Finn prosjekt
+      var proj = projects.find(function(p) { return String(p.ID) === String(projId); });
+      lagJspdfOgLastOpp(o, linjer, proj);
     })
-    .catch(function(e) { toast('Feil: ' + e.message, 'e'); });
+    .catch(function(e) { toast('Kunne ikke hente ordredata for PDF: ' + e.message, 'e'); });
+}
+
+function lagJspdfOgLastOpp(o, linjer, proj) {
+  var script = document.createElement('script');
+  script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+  script.onload = function() {
+    try {
+      var doc = new window.jspdf.jsPDF({ unit: 'mm', format: 'a4' });
+      var pw = 210, ml = 15, mr = 15, cw = pw - ml - mr;
+      var y = 18;
+
+      // Header
+      doc.setFontSize(18); doc.setFont('helvetica','bold');
+      doc.text('LH Bygg Entreprenør AS', ml, y); y += 7;
+      doc.setFontSize(10); doc.setFont('helvetica','normal');
+      doc.setTextColor(120,120,120);
+      doc.text('Internfaktura', ml, y); y += 10;
+      doc.setTextColor(0,0,0);
+
+      // Ordreinfo
+      doc.setFontSize(9); doc.setFont('helvetica','bold');
+      doc.text('ORDRENR', ml, y);
+      doc.text('PROSJEKT', ml+50, y);
+      doc.text('DATO', ml+130, y);
+      doc.text('BESTILLER', ml+160, y);
+      y += 4;
+      doc.setFont('helvetica','normal');
+      var dato = o && o.Dato ? new Date(o.Dato).toLocaleDateString('no-NO') : new Date().toLocaleDateString('no-NO');
+      doc.text(o && o.Title ? o.Title : '-', ml, y);
+      doc.text(proj ? (proj.Prosjektnummer ? proj.Prosjektnummer + ' - ' : '') + (proj.Title || '') : '-', ml+50, y, {maxWidth:75});
+      doc.text(dato, ml+130, y);
+      doc.text(o && o.Bestiller ? o.Bestiller : '-', ml+160, y);
+      y += 10;
+
+      // Linjehode
+      doc.setFillColor(245,245,245);
+      doc.rect(ml, y-4, cw, 7, 'F');
+      doc.setFont('helvetica','bold'); doc.setFontSize(8);
+      doc.text('Varenavn', ml+1, y);
+      doc.text('Ant', ml+100, y, {align:'right'});
+      doc.text('Enh', ml+114, y);
+      doc.text('Innpris', ml+135, y, {align:'right'});
+      doc.text('Utpris', ml+158, y, {align:'right'});
+      doc.text('Sum utpris', ml+cw, y, {align:'right'});
+      y += 5;
+
+      doc.setFont('helvetica','normal');
+      var totInn = 0, totUt = 0;
+      linjer.forEach(function(l) {
+        var inn = parseFloat(document.getElementById('io_inn_'+l.ID) ? document.getElementById('io_inn_'+l.ID).value : l.Innpris) || 0;
+        var ut = parseFloat(document.getElementById('io_ut_'+l.ID) ? document.getElementById('io_ut_'+l.ID).value : l.Utpris) || 0;
+        var ant = parseFloat(l.Antall) || 1;
+        totInn += inn * ant; totUt += ut * ant;
+        doc.setFontSize(8);
+        var navn = l.Varenavn || '';
+        if (navn.length > 55) navn = navn.substring(0,52) + '...';
+        doc.text(navn, ml+1, y);
+        doc.text(String(ant), ml+100, y, {align:'right'});
+        doc.text(l.Enhet || 'stk', ml+114, y);
+        doc.text(inn > 0 ? inn.toFixed(2) : '-', ml+135, y, {align:'right'});
+        doc.text(ut > 0 ? ut.toFixed(2) : '-', ml+158, y, {align:'right'});
+        doc.text(ut > 0 ? (ut*ant).toFixed(2) : '-', ml+cw, y, {align:'right'});
+        y += 5;
+        if (y > 270) { doc.addPage(); y = 18; }
+      });
+
+      // Sum-linje
+      y += 2;
+      doc.setDrawColor(200,200,200); doc.line(ml, y, ml+cw, y); y += 5;
+      doc.setFont('helvetica','bold'); doc.setFontSize(8);
+      var margin = totUt - totInn;
+      var marginPct = totUt > 0 ? Math.round((margin/totUt)*100) : 0;
+      doc.text('Innpris total:', ml+100, y); doc.setFont('helvetica','normal');
+      doc.text(totInn.toFixed(2) + ' kr', ml+cw, y, {align:'right'}); y += 5;
+      doc.setFont('helvetica','bold');
+      doc.text('Utpris total:', ml+100, y); doc.setFont('helvetica','normal');
+      doc.text(totUt.toFixed(2) + ' kr', ml+cw, y, {align:'right'}); y += 5;
+      doc.setFont('helvetica','bold');
+      doc.text('Margin:', ml+100, y); doc.setFont('helvetica','normal');
+      doc.text(margin.toFixed(2) + ' kr (' + marginPct + '%)', ml+cw, y, {align:'right'}); y += 12;
+
+      // Footer
+      doc.setFontSize(8); doc.setTextColor(150,150,150);
+      doc.text('Generert ' + new Date().toLocaleString('no-NO') + ' · LH Bygg Entreprenør AS', ml, 290);
+
+      // Last ned i nettleser
+      var filnavn = (o && o.Title ? o.Title : 'faktura') + '.pdf';
+      doc.save(filnavn);
+
+      // Last opp til SharePoint Faktura-mappe
+      var pdfBlob = doc.output('arraybuffer');
+      lastOppFakturaPdf(pdfBlob, filnavn, proj, o);
+
+    } catch(e) { toast('PDF-feil: ' + e.message, 'e'); }
+  };
+  script.onerror = function() { toast('Kunne ikke laste jsPDF', 'e'); };
+  document.head.appendChild(script);
+}
+
+function lastOppFakturaPdf(pdfBuffer, filnavn, proj, o) {
+  if (!proj) { toast('PDF lastet ned – kunne ikke laste opp (ukjent prosjekt)', 'w'); return; }
+  getToken().then(function(t) {
+    // Bygg sti basert på underprosjekt/hovedprosjekt
+    var base = '/sites/Industriveien1ASLHBygg/Delte dokumenter/Felles/LHBE/';
+    var mappe;
+    if (proj.Underprosjekt) {
+      mappe = base + 'Underprosjekter/' + proj.Title + '/Faktura/';
+    } else {
+      var nr = proj.Prosjektnummer || '';
+      var navn = proj.Title || '';
+      mappe = base + 'Prosjekter/' + (nr ? nr + ' - ' : '') + navn + '/Faktura/';
+    }
+    var uploadUrl = 'https://lhbent.sharepoint.com/_api/web/GetFolderByServerRelativeUrl('' + encodeURIComponent(mappe) + '')/Files/add(url='' + encodeURIComponent(filnavn) + '',overwrite=true)';
+    return fetch(uploadUrl, {
+      method: 'POST',
+      headers: { Authorization: 'Bearer ' + t, 'Content-Length': String(pdfBuffer.byteLength) },
+      body: pdfBuffer
+    });
+  }).then(function(r) {
+    if (r && r.ok) {
+      toast('PDF lastet opp til Faktura-mappen', 's');
+    } else if (r) {
+      return r.text().then(function(txt) { toast('Opplasting feilet: ' + txt.substring(0,80), 'w'); });
+    }
+  }).catch(function(e) { toast('Kunne ikke laste opp PDF: ' + e.message, 'w'); });
 }
 
 function slettIOOrdre(ordreId, ordreNr, projId) {
