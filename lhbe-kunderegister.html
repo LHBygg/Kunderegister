@@ -4740,7 +4740,10 @@ function toggleIOOrdre(ordreId, projId) {
           html.push('<div class="io-linje-meta">' + antall + ' ' + (l.Enhet||'stk') + '</div>');
           html.push('<div class="io-pris-row">');
           html.push('<span style="font-size:11px;color:var(--tx3);width:48px;">Innpris</span>');
-          html.push('<input class="io-pris-inp" type="number" min="0" step="0.01" placeholder="kr" value="' + (l.Innpris||'') + '" id="io_inn_' + l.ID + '">');
+          html.push('<input class="io-pris-inp" type="number" min="0" step="0.01" placeholder="kr" value="' + (l.Innpris||'') + '" id="io_inn_' + l.ID + '" oninput="beregnUtpris(' + l.ID + ')">');
+          html.push('<span style="font-size:11px;color:var(--tx3);margin-left:6px;">+</span>');
+          html.push('<input type="number" min="0" step="1" value="20" id="io_pst_' + l.ID + '" oninput="beregnUtpris(' + l.ID + ')" style="width:42px;padding:4px 5px;font-size:12px;border:1px solid var(--brd);border-radius:5px;background:var(--bg4);color:var(--tx);text-align:center;">');
+          html.push('<span style="font-size:11px;color:var(--tx3);">%</span>');
           html.push('<span style="font-size:11px;color:var(--tx3);width:42px;margin-left:6px;">Utpris</span>');
           html.push('<input class="io-pris-inp" type="number" min="0" step="0.01" placeholder="kr" value="' + (l.Utpris||'') + '" id="io_ut_' + l.ID + '">');
           html.push('</div>');
@@ -4837,6 +4840,17 @@ function lagreIOOrdre(ordreId, projId) {
     toast('Feil ved lagring: ' + e.message, 'e');
     if (btn) { btn.disabled = false; btn.textContent = 'Lagre ordre'; }
   });
+}
+
+function beregnUtpris(lid) {
+  var innEl = document.getElementById('io_inn_' + lid);
+  var pstEl = document.getElementById('io_pst_' + lid);
+  var utEl  = document.getElementById('io_ut_'  + lid);
+  if (!innEl || !pstEl || !utEl) return;
+  var inn = parseFloat(innEl.value) || 0;
+  var pst = parseFloat(pstEl.value);
+  if (isNaN(pst)) pst = 20;
+  utEl.value = inn > 0 ? Math.round(inn * (1 + pst / 100) * 100) / 100 : '';
 }
 
 function toggleVarenavnEdit(lid) {
