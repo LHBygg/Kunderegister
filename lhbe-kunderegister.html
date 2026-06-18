@@ -203,6 +203,8 @@ tr.erow td{padding:0;background:var(--bg2);border-bottom:1px solid var(--br2);}
 .fitem:last-child{border-bottom:none;}
 .fitem:hover{background:var(--bg4);}
 .fitem-folder{cursor:pointer;}
+.flytt-mappe{display:flex;align-items:center;gap:8px;padding:9px 10px;border-radius:8px;font-size:13px;color:var(--tx);cursor:pointer;border:1px solid var(--brd);margin-bottom:4px;background:var(--bg4);}
+.flytt-mappe:hover,.flytt-mappe[data-valgt="1"]{background:var(--acc2);color:var(--acc);}
 .fn{flex:1;font-size:13px;color:var(--blu);cursor:pointer;text-decoration:none;}
 .fn:hover{text-decoration:underline;}
 .fm{font-size:11px;color:var(--tx3);font-family:'DM Mono',monospace;white-space:nowrap;}
@@ -2951,6 +2953,92 @@ function renderFpanel(mappenavn) {
   fp.innerHTML = '<div class="fpanel"><div class="fphdr"><div class="fptitle"><span class="fbc-wrap">' + bcHtml + '</span></div><div style="display:flex;gap:6px;flex-shrink:0"><button class="btn sm" onclick="visOpprettMappeDialog()">+ Ny mappe</button><button class="btn sm" onclick="document.getElementById(\'upIn\').click()">Last opp</button>' + (erIDybden ? '<button class="btn sm" onclick="navigerTilBreadcrumb(' + (fPathStack.length - 2) + ')">&#8592; Tilbake</button>' : '<button class="btn sm" onclick="closeF(\'' + mappenavn + '\')">&#8593; Lukk</button>') + '</div></div><div id="flist" class="flist"><div class="fempty">Laster...</div></div><div class="uzone" id="uz" ondragover="dov2(event)" ondragleave="dlv2()" ondrop="drop2(event)" onclick="document.getElementById(\'upIn\').click()"><div class="uzone-icon">&#128206;</div>Dra filer hit eller klikk for a laste opp</div><input type="file" id="upIn" multiple style="display:none" onchange="upF(event)"></div>';
 }
 
+function visFlytt(serverRelativeUrl, filnavn) {
+  // Hent alle mapper på rotnivå + aktiv sti for å bygge mappeliste
+  var spBase = '/sites/Industriveien1ASLHBygg/Delte dokumenter/' + activePath;
+  var encoded = encodeURIComponent(spBase);
+  getToken().then(function(t) {
+    return fetch(SP + '/_api/web/GetFolderByServerRelativePath(decodedurl=\'' + encoded + '\')/Folders?$select=Name&$orderby=Name', {
+      headers: { Authorization: 'Bearer ' + t, Accept: 'application/json;odata=nometadata' }
+    });
+  }).then(function(r) { return r.json(); }).then(function(data) {
+    var mapper = (data.value || []).filter(function(f) { return f.Name !== 'Forms'; });
+    // Legg til rotmappen selv som alternativ
+    var rotNavn = activePath.split('/').pop();
+    var mappeHtml = '';
+    // Rotnivå-alternativ (en nivå opp)
+    var pathParts = activePath.split('/');
+    if (pathParts.length > 1) {
+      var oppPath = pathParts.slice(0, -1).join('/');
+      var oppNavn = pathParts[pathParts.length - 2];
+      mappeHtml += '<div class="flytt-mappe" data-path="' + oppPath + '" onclick="velgFlyttMappe(this)"><span>&#128193;</span> ↑ ' + oppNavn + ' (ett nivå opp)</div>';
+    }
+    mapper.forEach(function(m) {
+      var mp = activePath + '/' + m.Name;
+      mappeHtml += '<div class="flytt-mappe" data-path="' + mp + '" onclick="velgFlyttMappe(this)"><span>&#128193;</span> ' + m.Name + '</div>';
+    });
+    if (!mappeHtml) mappeHtml = '<div style="font-size:13px;color:var(--tx3);padding:8px 0;">Ingen undermapper tilgjengelig</div>';
+
+    // Vis modal
+    var modal = document.createElement('div');
+    modal.id = 'flytt-modal';
+    modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.55);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;';
+    modal.innerHTML = '<div style="background:var(--bg2);border-radius:12px;border:1px solid var(--brd);padding:20px;width:100%;max-width:340px;max-height:70vh;overflow:auto;">' +
+      '<div style="font-size:14px;font-weight:600;color:var(--tx);margin-bottom:4px;">Flytt fil</div>' +
+      '<div style="font-size:12px;color:var(--tx3);margin-bottom:14px;word-break:break-all;">' + filnavn + '</div>' +
+      '<div style="font-size:12px;color:var(--tx2);margin-bottom:8px;">Velg destinasjonsmappe:</div>' +
+      '<div id="flytt-mapper" style="margin-bottom:14px;">' + mappeHtml + '</div>' +
+      '<div style="display:flex;gap:8px;">' +
+      '<button class="btn sm ghost" style="flex:1;" onclick="document.getElementById('flytt-modal').remove()">Avbryt</button>' +
+      '<button class="btn sm pri" style="flex:1;" id="flytt-ok-btn" onclick="utforFlytt('' + serverRelativeUrl.replace(/'/g, "\'") + '','' + filnavn.replace(/'/g, "\'") + '')">Flytt hit</button>' +
+      '</div></div>';
+    document.body.appendChild(modal);
+  }).catch(function(e) {
+    toast('Kunne ikke laste mapper: ' + e.message, 'e');
+  });
+}
+
+function velgFlyttMappe(el) {
+  document.querySelectorAll('.flytt-mappe').forEach(function(m) { m.style.background = ''; m.style.color = ''; });
+  el.style.background = 'var(--acc2)';
+  el.style.color = 'var(--acc)';
+  el.setAttribute('data-valgt', '1');
+}
+
+function utforFlytt(serverRelativeUrl, filnavn) {
+  var valgt = document.querySelector('.flytt-mappe[data-valgt="1"]');
+  if (!valgt) { toast('Velg en mappe først', 'w'); return; }
+  var destPath = valgt.getAttribute('data-path');
+  var destUrl = '/sites/Industriveien1ASLHBygg/Delte dokumenter/' + destPath + '/' + filnavn;
+  var srcEncoded = encodeURIComponent(serverRelativeUrl);
+  var dstEncoded = encodeURIComponent(destUrl);
+  var btn = document.getElementById('flytt-ok-btn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Flytter...'; }
+  getToken().then(function(t) {
+    return fetch(SP + "/_api/web/GetFileByServerRelativePath(decodedurl='" + srcEncoded + "')/MoveTo(newUrl='" + dstEncoded + "',flags=1)", {
+      method: 'POST',
+      headers: {
+        Authorization: 'Bearer ' + t,
+        Accept: 'application/json;odata=nometadata',
+        'X-RequestDigest': 'bypass'
+      }
+    });
+  }).then(function(r) {
+    var modal = document.getElementById('flytt-modal');
+    if (modal) modal.remove();
+    if (r.ok) {
+      toast(filnavn + ' flyttet til ' + destPath.split('/').pop(), 's');
+      loadFiles(activePath);
+    } else {
+      return r.text().then(function(txt) { toast('Feil ved flytting: ' + txt.substring(0, 100), 'e'); });
+    }
+  }).catch(function(e) {
+    var modal = document.getElementById('flytt-modal');
+    if (modal) modal.remove();
+    toast('Feil: ' + e.message, 'e');
+  });
+}
+
 function loadFiles(path) {
   var spBase = '/sites/Industriveien1ASLHBygg/Delte dokumenter/' + path;
   var encoded = encodeURIComponent(spBase);
@@ -2969,7 +3057,9 @@ function loadFiles(path) {
     });
     files.forEach(function(f) {
       var fileUrl = 'https://lhbent.sharepoint.com' + f.ServerRelativeUrl;
-      html += '<div class="fitem"><span>&#128196;</span><a class="fn" href="' + fileUrl + '" target="_blank">' + f.Name + '</a><span class="fm">' + fmtSize(f.Length) + '</span><span class="fm">' + fmtDate(f.TimeLastModified) + '</span></div>';
+      var sru = f.ServerRelativeUrl.replace(/'/g, "\\'");
+      var fn  = f.Name.replace(/'/g, "\\'");
+      html += '<div class="fitem"><span>&#128196;</span><a class="fn" href="' + fileUrl + '" target="_blank">' + f.Name + '</a><span class="fm">' + fmtSize(f.Length) + '</span><span class="fm">' + fmtDate(f.TimeLastModified) + '</span><button class="btn sm" style="margin-left:4px;font-size:11px;padding:2px 7px;" onclick="visFlytt(\'' + sru + '\',\'' + fn + '\')">Flytt</button></div>';
     });
     el.innerHTML = html;
   }).catch(function() {
