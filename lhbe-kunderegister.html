@@ -1121,7 +1121,7 @@ var LEVKL = '30434dbc-a93e-43a4-aa5e-2f7a89d7e7dd';
 var PLEVL = '91a10cdc-2629-4f80-ae9a-95b05978e44b';
 var NL = '55e4ff82-3d85-480e-a97e-23921b1c8edf';
 var SETTINGS_KEY = 'lhbe_standard_layout'; // SP-liste-tittel for lagring
-var LEV_KATEGORIER = ['Byggvarer','Betong','Stål/Armering','Transport','Verktøy/maskin','Elektro','VVS-materiell','Annet'];
+var LEV_KATEGORIER = ['Byggvarer','Betong','Stål/Armering','Festemidler','Transport','Verktøy/maskin','Elektro','VVS-materiell','Annet'];
 var levList = [];
 var levKontakter = [];
 var prosjektLev = [];
@@ -1368,6 +1368,9 @@ function applyDeferredView() {
     document.querySelector('.tw').style.display = 'none';
     document.getElementById('projView').style.display = '';
     renderProjView();
+  } else if (activeView === 'ue' || activeView === 'lev') {
+    var tabEl = document.getElementById(activeView === 'ue' ? 'viewUE' : 'viewLev');
+    setView(activeView, tabEl);
   } else {
     document.querySelector('.tw').style.display = '';
     document.getElementById('projView').style.display = 'none';
@@ -1440,6 +1443,7 @@ function mvNext() { mvOffset++; loadMannskap(); }
 function setView(v, el) {
   activeView = v;
   saveSetting('view', v);
+  history.replaceState(null, '', '#' + v);
   document.querySelectorAll('#viewTabs .ftab').forEach(function(t) { t.classList.remove('on'); });
   if (el) el.classList.add('on');
   var phMap = {kunder:'Sok kunde, kontaktperson...', ue:'Sok UE-firma, fagomrade...', lev:'Sok leverandor, kategori...', prosjekter:'Sok prosjekt, kundenavn...'};
@@ -3482,17 +3486,18 @@ function loadSettings() {
       document.querySelectorAll('#sortAZ,#sortZA,#sortFirma,#sortPrivat').forEach(function(b){b.classList.remove('on');});
       sortBtn.classList.add('on');
     }
-    // Last visningsvalg – les og sett activeView, men hold DOM i Kunder-visning
-    // til applyDeferredView() kalles etter at loadData() er ferdig
-    activeView = s.view || 'kunder';
-    var vBtn = document.getElementById(activeView === 'prosjekter' ? 'viewProsjekter' : 'viewKunder');
+    // Last visningsvalg – les hash først, deretter lagret setting
+    var hashView = (location.hash || '').replace('#','');
+    var validViews = ['kunder','prosjekter','ue','lev'];
+    activeView = (validViews.indexOf(hashView) >= 0 ? hashView : null) || s.view || 'kunder';
+    var vBtnMap = {kunder:'viewKunder',prosjekter:'viewProsjekter',ue:'viewUE',lev:'viewLev'};
+    var vBtn = document.getElementById(vBtnMap[activeView] || 'viewKunder');
     if (vBtn) {
       document.querySelectorAll('#viewTabs .ftab').forEach(function(b){b.classList.remove('on');});
       vBtn.classList.add('on');
     }
-    if (activeView === 'prosjekter') {
-      document.getElementById('srchIn').placeholder = 'Sok prosjekt, kundenavn...';
-    }
+    var phMap2 = {kunder:'Sok kunde, kontaktperson...', ue:'Sok UE-firma, fagomrade...', lev:'Sok leverandor, kategori...', prosjekter:'Sok prosjekt, kundenavn...'};
+    document.getElementById('srchIn').placeholder = phMap2[activeView] || 'Sok...';
     // Alltid start i Kunder-visning i DOM til data er klar
     document.querySelector('.tw').style.display = '';
     document.getElementById('projView').style.display = 'none';
