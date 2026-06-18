@@ -2971,11 +2971,11 @@ function visFlytt(serverRelativeUrl, filnavn) {
     if (pathParts.length > 1) {
       var oppPath = pathParts.slice(0, -1).join('/');
       var oppNavn = pathParts[pathParts.length - 2];
-      mappeHtml += '<div class="flytt-mappe" data-path="' + oppPath + '" onclick="velgFlyttMappe(this)"><span>&#128193;</span> ↑ ' + oppNavn + ' (ett nivå opp)</div>';
+      mappeHtml += '<div class="flytt-mappe" data-path="' + oppPath + '"><span>&#128193;</span> ↑ ' + oppNavn + ' (ett nivå opp)</div>';
     }
     mapper.forEach(function(m) {
       var mp = activePath + '/' + m.Name;
-      mappeHtml += '<div class="flytt-mappe" data-path="' + mp + '" onclick="velgFlyttMappe(this)"><span>&#128193;</span> ' + m.Name + '</div>';
+      mappeHtml += '<div class="flytt-mappe" data-path="' + mp + '"><span>&#128193;</span> ' + m.Name + '</div>';
     });
     if (!mappeHtml) mappeHtml = '<div style="font-size:13px;color:var(--tx3);padding:8px 0;">Ingen undermapper tilgjengelig</div>';
 
@@ -2995,6 +2995,12 @@ function visFlytt(serverRelativeUrl, filnavn) {
     document.body.appendChild(modal);
     document.getElementById('flytt-avbryt-btn').addEventListener('click', function() {
       var m = document.getElementById('flytt-modal'); if (m) m.remove();
+    });
+    document.getElementById('flytt-mapper').addEventListener('click', function(e) {
+      var el = e.target.closest('.flytt-mappe');
+      if (!el) return;
+      document.querySelectorAll('.flytt-mappe').forEach(function(m) { m.removeAttribute('data-valgt'); });
+      el.setAttribute('data-valgt', '1');
     });
     document.getElementById('flytt-ok-btn').addEventListener('click', function() {
       utforFlytt(serverRelativeUrl, filnavn);
