@@ -5024,8 +5024,8 @@ function lagJspdfOgLastOpp(o, linjer, proj) {
       doc.setFontSize(8); doc.setFont('helvetica','normal'); doc.setTextColor(80,80,80);
       doc.text('Mva. (25%):', sumBoksX + 3, y);
       doc.setFont('helvetica','normal');
-      doc.text(mva.toFixed(2) + ' kr', pw - mr - 2, y, {align:'right'}); y += 7;
-      doc.setDrawColor(180,180,180); doc.line(sumBoksX + 3, y - 2, pw - mr - 2, y - 2);
+      doc.text(mva.toFixed(2) + ' kr', pw - mr - 2, y, {align:'right'}); y += 9;
+      doc.setDrawColor(180,180,180); doc.line(sumBoksX + 3, y - 4, pw - mr - 2, y - 4);
       doc.setFontSize(10); doc.setFont('helvetica','bold'); doc.setTextColor(30,30,30);
       doc.text('Totalpris inkl. mva:', sumBoksX + 3, y);
       doc.setFontSize(11);
