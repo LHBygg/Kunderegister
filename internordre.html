@@ -605,6 +605,11 @@ function velgForslag(btn){
   btn.classList.add('valgt');
   var inp=document.getElementById('aiNavnInput');
   if(inp) inp.value=btn.dataset.navn;
+  // Tøm dimensjonfeltet hvis dimensjonen allerede er i det valgte navnet
+  var dimInp=document.getElementById('aiDimInput');
+  if(dimInp && dimInp.value.trim() && inp && inp.value.includes(dimInp.value.trim())){
+    dimInp.value='';
+  }
 }
 function visFlereProdukt(produkter,full){
   var el=document.getElementById('aiPreview');
