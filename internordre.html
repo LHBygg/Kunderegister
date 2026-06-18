@@ -547,18 +547,23 @@ function kallAI(b64,mt,full){
   workerPost('/ai-gjenkjenn',{base64:b64,mediaType:mt}).then(function(d){
     if(d.error)throw new Error(d.error);
     document.getElementById('aiStatus').style.display='none';
-    if(d.modus==='flere'){
+    if(!d.ok && d.feil){
+      toast(d.feil,'i');
+      document.getElementById('aiPreview').style.display='none';
+    } else if(d.modus==='flere'){
       visFlereProdukt(d.produkter||[],full);
     } else {
-      visEttProdukt(d.forslag||[d.navn||''],full,d.enhet||'stk');
+      visEttProdukt(d.forslag||[d.navn||''],full,d.enhet||'stk',d.dimensjon||'',d.antall||1,d.usikkert||false);
     }
   }).catch(function(e){
     document.getElementById('aiStatus').style.display='none';
     toast('AI-gjenkjenning feilet: '+e.message,'e');
   });
 }
-function visEttProdukt(forslag,full,enhet){
+function visEttProdukt(forslag,full,enhet,dimensjon,antall,usikkert){
   enhet=enhet||'stk';
+  dimensjon=dimensjon||'';
+  antall=antall||1;
   var el=document.getElementById('aiPreview');
   var imgHtml=full?'<img class="ai-preview-img" src="'+full+'" alt="">':'';
   var encFull=btoa(encodeURIComponent(full||''));
@@ -566,17 +571,34 @@ function visEttProdukt(forslag,full,enhet){
   forslag.forEach(function(f,i){
     forslagHtml+='<button class="ai-forslag-btn'+(i===0?' valgt':'')+'" data-enc="'+encFull+'" data-navn="'+f.replace(/"/g,'&quot;')+'" onclick="velgForslag(this)">'+f+'</button>';
   });
+  var usikkertHtml=usikkert?'<div style="font-size:11px;color:#e8a04a;margin-bottom:6px;">⚠️ Emballasje er åpnet – antall kan være usikkert</div>':'';
+  var dimHtml='<div style="margin-bottom:8px;">'+
+    '<label style="font-size:11px;color:var(--tx2);display:block;margin-bottom:3px;">Dimensjon (fyll inn hvis ikke automatisk)</label>'+
+    '<input type="text" id="aiDimInput" value="'+dimensjon.replace(/"/g,'&quot;')+'" placeholder="f.eks. 48x98mm eller 4,0x40mm" style="width:100%;padding:6px 10px;font-size:13px;border:1px solid var(--br2);border-radius:7px;background:var(--bg4);color:var(--tx);font-family:'DM Sans',sans-serif;">'+
+    '</div>';
   el.innerHTML='<div class="ai-preview">'+imgHtml+
     '<div class="ai-preview-info">'+
     '<div class="ai-badge">AI-gjenkjent - velg riktig navn</div>'+
+    usikkertHtml+
     '<div class="ai-forslag-liste">'+forslagHtml+'</div>'+
     '<input class="ai-navn-edit" type="text" id="aiNavnInput" value="'+forslag[0].replace(/"/g,'&quot;')+'" placeholder="Eller skriv produktnavn...">'+
+    dimHtml+
     '<div class="ai-actions">'+
     '<button class="btn sm pri" id="aiLeggTilBtn">Legg til vare</button>'+
     '<button class="btn sm ghost" onclick="avbrytAi()">Avbryt</button>'+
     '</div></div></div>';
   el.style.display='block';
-  document.getElementById('aiLeggTilBtn').addEventListener('click',function(){leggTilVare(encFull,enhet);});
+  document.getElementById('aiLeggTilBtn').addEventListener('click',function(){
+    // Slå sammen navn og dimensjon hvis dimensjon er fylt inn
+    var dim=(document.getElementById('aiDimInput')||{}).value||'';
+    if(dim.trim()){
+      var navnInp=document.getElementById('aiNavnInput');
+      if(navnInp && !navnInp.value.includes(dim.trim())){
+        navnInp.value=navnInp.value.trim()+' '+dim.trim();
+      }
+    }
+    leggTilVare(encFull,enhet,antall);
+  });
 }
 function velgForslag(btn){
   document.querySelectorAll('.ai-forslag-btn').forEach(function(b){b.classList.remove('valgt');});
@@ -624,13 +646,14 @@ function avbrytAi(){
   document.getElementById('kameraInput').value='';
   document.getElementById('filInput').value='';
 }
-function leggTilVare(encFull,enhet){
+function leggTilVare(encFull,enhet,antall){
   var inp=document.getElementById('aiNavnInput');
   var navn=inp?inp.value.trim():'';
   if(!navn){toast('Skriv produktnavn','i');if(inp)inp.focus();return;}
   var full='';try{full=decodeURIComponent(atob(encFull));}catch(e){}
   var id=++linjeIdTeller;
-  ordreLinjer.push({id:id,navn:navn,full:full,antall:1,enhet:enhet||'stk'});
+  var ant=parseFloat(antall)||1;
+  ordreLinjer.push({id:id,navn:navn,full:full,antall:ant,enhet:enhet||'stk'});
   oppdaterVareListe();
   document.getElementById('aiPreview').style.display='none';
   document.getElementById('kameraInput').value='';
