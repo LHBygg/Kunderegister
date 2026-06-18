@@ -3551,14 +3551,15 @@ function saveProj() {
         toast('Prosjekt oppdatert', 's');
         closeMov('confMov'); closeMov('projMov');
         loadData();
-        // SmartDok-dialog hvis status ble Aktiv og det er et hovedprosjekt
-        if (status === 'Aktiv' && !body.Underprosjekt && body.Prosjektnummer) {
-          setTimeout(function() { sdkOpprettProsjektDialog(body.Prosjektnummer, body.Title, id, body.Prosjektleder, body.Oppstartsdato, body.Sluttdato); }, 600);
-        }
-        // Avslutt i SmartDok hvis status ble Avsluttet og det er et hovedprosjekt
-        if (status === 'Avsluttet' && !body.Underprosjekt && body.Prosjektnummer) {
-          sdkAvsluttProsjekt(body.Prosjektnummer, body.Sluttdato || null);
-        }
+        // SmartDok auto-opprett DEAKTIVERT – prosjekter opprettes i Tripletex og synkes til SmartDok
+        // Reaktiver ved å fjerne kommentar: sdkOpprettProsjektDialog(body.Prosjektnummer, body.Title, id, body.Prosjektleder, body.Oppstartsdato, body.Sluttdato)
+        // if (status === 'Aktiv' && !body.Underprosjekt && body.Prosjektnummer) {
+        //   setTimeout(function() { sdkOpprettProsjektDialog(body.Prosjektnummer, body.Title, id, body.Prosjektleder, body.Oppstartsdato, body.Sluttdato); }, 600);
+        // }
+        // SmartDok auto-avslutt DEAKTIVERT – avklares når Tripletex-synk er på plass
+        // if (status === 'Avsluttet' && !body.Underprosjekt && body.Prosjektnummer) {
+        //   sdkAvsluttProsjekt(body.Prosjektnummer, body.Sluttdato || null);
+        // }
       }).catch(function(e) { toast('Feil: ' + e.message, 'e'); });
     };
     openMov('confMov');
@@ -3567,11 +3568,11 @@ function saveProj() {
       toast('Prosjekt opprettet', 's');
       closeMov('projMov');
       loadData();
-      // SmartDok-dialog hvis status er Aktiv og det er et hovedprosjekt
-      if (status === 'Aktiv' && !body.Underprosjekt && body.Prosjektnummer) {
-        var nyId = d && d.Id ? d.Id : null;
-        setTimeout(function() { sdkOpprettProsjektDialog(body.Prosjektnummer, body.Title, nyId, body.Prosjektleder, body.Oppstartsdato, body.Sluttdato); }, 600);
-      }
+      // SmartDok auto-opprett DEAKTIVERT – prosjekter opprettes i Tripletex og synkes til SmartDok
+      // if (status === 'Aktiv' && !body.Underprosjekt && body.Prosjektnummer) {
+      //   var nyId = d && d.Id ? d.Id : null;
+      //   setTimeout(function() { sdkOpprettProsjektDialog(body.Prosjektnummer, body.Title, nyId, body.Prosjektleder, body.Oppstartsdato, body.Sluttdato); }, 600);
+      // }
     }).catch(function(e) { toast('Feil: ' + e.message, 'e'); });
   }
 }
@@ -3603,14 +3604,14 @@ function setSt(id, s) {
       toast('Status endret til ' + s, 's');
       closeMov('confMov');
       loadData();
-      // SmartDok-dialog hvis status ble Aktiv og det er et hovedprosjekt
-      if (s === 'Aktiv' && !p.Underprosjekt && p.Prosjektnummer) {
-        setTimeout(function() { sdkOpprettProsjektDialog(p.Prosjektnummer, p.Title, id, p.Prosjektleder, p.Oppstartsdato, p.Sluttdato); }, 600);
-      }
-      // Avslutt i SmartDok hvis status ble Avsluttet og det er et hovedprosjekt
-      if (s === 'Avsluttet' && !p.Underprosjekt && p.Prosjektnummer) {
-        sdkAvsluttProsjekt(p.Prosjektnummer, p.Sluttdato || null);
-      }
+      // SmartDok auto-opprett DEAKTIVERT – prosjekter opprettes i Tripletex og synkes til SmartDok
+      // if (s === 'Aktiv' && !p.Underprosjekt && p.Prosjektnummer) {
+      //   setTimeout(function() { sdkOpprettProsjektDialog(p.Prosjektnummer, p.Title, id, p.Prosjektleder, p.Oppstartsdato, p.Sluttdato); }, 600);
+      // }
+      // SmartDok auto-avslutt DEAKTIVERT – avklares når Tripletex-synk er på plass
+      // if (s === 'Avsluttet' && !p.Underprosjekt && p.Prosjektnummer) {
+      //   sdkAvsluttProsjekt(p.Prosjektnummer, p.Sluttdato || null);
+      // }
     }).catch(function(e) { toast('Feil: ' + e.message, 'e'); });
   };
   openMov('confMov');
