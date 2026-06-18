@@ -574,7 +574,7 @@ function visEttProdukt(forslag,full,enhet,dimensjon,antall,usikkert){
   var usikkertHtml=usikkert?'<div style="font-size:11px;color:#e8a04a;margin-bottom:6px;">⚠️ Emballasje er åpnet – antall kan være usikkert</div>':'';
   var dimHtml='<div style="margin-bottom:8px;">'+
     '<label style="font-size:11px;color:var(--tx2);display:block;margin-bottom:3px;">Dimensjon (fyll inn hvis ikke automatisk)</label>'+
-    '<input type="text" id="aiDimInput" value="'+dimensjon.replace(/"/g,'&quot;')+'" placeholder="f.eks. 48x98mm eller 4,0x40mm" style="width:100%;padding:6px 10px;font-size:13px;border:1px solid var(--br2);border-radius:7px;background:var(--bg4);color:var(--tx);font-family:'DM Sans',sans-serif;">'+
+    '<input type="text" id="aiDimInput" value="'+dimensjon.replace(/"/g,'&quot;')+'" placeholder="f.eks. 48x98mm eller 4,0x40mm" style="width:100%;padding:6px 10px;font-size:13px;border:1px solid var(--br2);border-radius:7px;background:var(--bg4);color:var(--tx);">'+
     '</div>';
   el.innerHTML='<div class="ai-preview">'+imgHtml+
     '<div class="ai-preview-info">'+
