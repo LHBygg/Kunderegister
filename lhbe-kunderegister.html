@@ -3116,13 +3116,24 @@ function drop2(e) { e.preventDefault(); document.getElementById('uz').classList.
 function upF(e) { upFiles2(e.target.files); }
 
 function erUforklarligNavn(filnavn) {
-  var uten = filnavn.replace(/\.[^.]+$/, '');
-  // Trigger hvis: kun tall/koder, kamera-format, scan-format, eller veldig vagt (1-2 ord uten mening)
-  if (/^(IMG|DSC|DCIM|MVI|VID|MOV|scan|dok|doc|fil|file|bilde|photo|image|tmp|temp)[_\-]?\d+$/i.test(uten)) return true;
+  var uten = filnavn.replace(/\.[^.]+$/, '').toLowerCase();
+  // Beskrivendeprefiks - disse trenger ikke AI
+  var beskrivende = ['tilbud','kontrakt','faktura','fremdrift','sha','hms','fdv','tegning','protokoll',
+    'rapport','notat','avvik','referat','avtale','anbudsbeskrivelse','sjekkliste','plan','beskrivelse',
+    'beregning','kalkyle','korrespondanse','mail','epost','brev','situasjonsplan','bruksanvisning'];
+  for (var i = 0; i < beskrivende.length; i++) {
+    if (uten.indexOf(beskrivende[i]) >= 0) return false;
+  }
+  // Trigger: kamera/scan-format
+  if (/^(img|dsc|dcim|mvi|vid|mov|scan|dok|doc|fil|file|bilde|photo|image|tmp|temp)[_\-]?\d+$/.test(uten)) return true;
+  // Trigger: bare tall
   if (/^\d+$/.test(uten)) return true;
-  if (/^[a-zA-Z]{1,4}\d{3,}$/.test(uten)) return true; // f.eks. doc345, ab1234
-  if (/^\d{4}[-_]\d{2}[-_]\d{2}$/.test(uten)) return true; // bare dato
-  if (uten.length < 6) return true; // veldig kort
+  // Trigger: kort kode + tall (doc345, ab1234, IO-20260616-652)
+  if (/^[a-z]{1,4}[-_]?\d/.test(uten)) return true;
+  // Trigger: dato-basert navn (20260616, 2026-06-16 osv)
+  if (/^\d{4}[-_]?\d{2}[-_]?\d{2}/.test(uten)) return true;
+  // Trigger: veldig kort
+  if (uten.replace(/[^a-zæøå]/g, '').length < 4) return true;
   return false;
 }
 
