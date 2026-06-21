@@ -6226,7 +6226,7 @@ function fpNyAkt(){
     document.getElementById('fpMAktor').innerHTML = '<div style="font-size:11px;color:var(--red);">Legg til aktører via ⚙ Aktører først.</div>';
   } else {
     document.getElementById('fpMAktor').innerHTML=fpAktorer.map(function(a){
-      return '<div class="fp-aktor-item" onclick="this.parentElement.querySelectorAll(\'.fp-aktor-item\').forEach(function(x){x.style.color=\'\';x.style.borderColor=\'\';x.style.background=\'var(--bg4)\';});this.style.color=\''+a.farge+'\';this.style.borderColor=\''+a.farge+'\';this.style.background=\''+a.farge+'15\';" data-navn="'+a.navn+'"><div style="width:8px;height:8px;border-radius:50%;background:'+a.farge+';"></div>'+a.navn+'</div>';
+      return '<div class="fp-aktor-item" data-navn="'+a.navn+'" data-farge="'+a.farge+'" onclick="fpVelgAktorItem(this)"><div style="width:8px;height:8px;border-radius:50%;background:'+a.farge+';flex-shrink:0;"></div>'+a.navn+'</div>';
     }).join('');
   }
   document.getElementById('fpNyAktMbg').classList.add('open');
