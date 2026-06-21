@@ -5865,30 +5865,8 @@ function fpLastKort(projID, planStart, planSlutt){
   if(planStart) fpPeriodeStart = fpD(planStart);
   if(planSlutt) fpPeriodeSlutt = fpD(planSlutt);
 
-  // Hent aktører og aktiviteter parallelt
-  Promise.all([
-    spGet(SP + "/_api/lists('" + FP_AKTORER_GUID + "')/items?$filter=ProsjektID eq " + projID + "&$orderby=Title&$top=50"),
-    spGet(SP + "/_api/lists('" + FP_AKTIVITETER_GUID + "')/items?$filter=ProsjektID eq " + projID + "&$orderby=ID&$top=500")
-  ]).then(function(res){
-    var aktorRaw = (res[0].value||res[0].d&&res[0].d.results||[]);
-    var aktRaw   = (res[1].value||res[1].d&&res[1].d.results||[]);
-    fpAktorer = aktorRaw.map(function(a){ return {id:a.ID||a.id,navn:a.Title,farge:a.Farge||'#5c6480',projID:projID}; });
-    fpAktiviteter = aktRaw.map(function(a){ return {
-      id:a.ID||a.id, spID:a.ID||a.id, faseId:a.Fase, navn:a.Title,
-      start:fpD(a.Startdato), slutt:fpD(a.Sluttdato),
-      type:a.Type||'Aktivitet', aktorNavn:a.AktorNavn||'',
-      status:a.Status||'Ikke startet', notat:a.Notat||'',
-      nr:a.ID||a.id
-    }; });
-    fpFaser = [];
-    fpAktiviteter.forEach(function(a){
-      if(a.faseId && !fpFaser.find(function(f){return f.navn===a.faseId;})){
-        fpFaser.push({navn:a.faseId,aapen:true});
-      }
-    });
+  fpHentData(projID, function(){
     fpRendreKort(projID, el);
-  }).catch(function(e){
-    el.innerHTML = '<div style="font-size:11px;color:var(--red);">Feil ved lasting: '+e.message+'</div>';
   });
 }
 
@@ -5959,14 +5937,39 @@ function fpApne(projID, navnEnc, fulltNavn){
   document.getElementById('fpOvDato').textContent = fpFmt(FP_TODAY);
   document.getElementById('fpOverlay').classList.add('open');
   document.getElementById('fpLukkBtn').classList.add('vis');
+  // Hent alltid ferske data
+  fpHentData(projID, function(){
+    if(!fpPeriodeStart){
+      fpSettPeriode(12);
+      fpVisPeriodeModal();
+    } else {
+      fpRender();
+      setTimeout(fpScrollIdag, 100);
+    }
+  });
+}
 
-  if(!fpPeriodeStart){
-    fpSettPeriode(12);
-    fpVisPeriodeModal();
-  } else {
-    fpRender();
-    setTimeout(fpScrollIdag, 100);
-  }
+function fpHentData(projID, callback){
+  Promise.all([
+    spGet(SP + "/_api/lists('" + FP_AKTORER_GUID + "')/items?$filter=ProsjektID eq " + projID + "&$orderby=Title&$top=50"),
+    spGet(SP + "/_api/lists('" + FP_AKTIVITETER_GUID + "')/items?$filter=ProsjektID eq " + projID + "&$orderby=ID&$top=500")
+  ]).then(function(res){
+    var aktorRaw = res[0].value||[];
+    var aktRaw   = res[1].value||[];
+    fpAktorer = aktorRaw.map(function(a){ return {id:a.ID,navn:a.Title,farge:a.Farge||'#5c6480'}; });
+    fpAktiviteter = aktRaw.map(function(a){ return {
+      id:a.ID, spID:a.ID, faseId:a.Fase, navn:a.Title,
+      start:fpD(a.Startdato), slutt:fpD(a.Sluttdato),
+      type:a.Type||'Aktivitet', aktorNavn:a.AktorNavn||'',
+      status:a.Status||'Ikke startet', notat:a.Notat||'', nr:a.ID
+    }; });
+    fpFaser = [];
+    fpAktiviteter.forEach(function(a){
+      if(a.faseId && !fpFaser.find(function(f){return f.navn===a.faseId;}))
+        fpFaser.push({navn:a.faseId, aapen:true});
+    });
+    if(callback) callback();
+  }).catch(function(e){ toast('Feil ved lasting: '+e.message,'e'); });
 }
 
 function fpLukk(){
@@ -6192,9 +6195,13 @@ function fpNyAkt(){
   document.getElementById('fpMStart').value=fpFmtISO(FP_TODAY);
   document.getElementById('fpMSlutt').value=fpFmtISO(fpAddD(FP_TODAY,6));
   document.getElementById('fpMFase').innerHTML=fpFaser.map(function(f){return '<option>'+f.navn+'</option>';}).join('');
-  document.getElementById('fpMAktor').innerHTML=fpAktorer.map(function(a){
-    return '<div class="fp-aktor-item" onclick="this.parentElement.querySelectorAll(\'.fp-aktor-item\').forEach(function(x){x.style.color=\'\';x.style.borderColor=\'\';x.style.background=\'var(--bg4)\';});this.style.color=\''+a.farge+'\';this.style.borderColor=\''+a.farge+'\';this.style.background=\''+a.farge+'15\';" data-navn="'+a.navn+'"><div style="width:8px;height:8px;border-radius:50%;background:'+a.farge+';"></div>'+a.navn+'</div>';
-  }).join('');
+  if(fpAktorer.length === 0){
+    document.getElementById('fpMAktor').innerHTML = '<div style="font-size:11px;color:var(--red);">Legg til aktører via ⚙ Aktører først.</div>';
+  } else {
+    document.getElementById('fpMAktor').innerHTML=fpAktorer.map(function(a){
+      return '<div class="fp-aktor-item" onclick="this.parentElement.querySelectorAll(\'.fp-aktor-item\').forEach(function(x){x.style.color=\'\';x.style.borderColor=\'\';x.style.background=\'var(--bg4)\';});this.style.color=\''+a.farge+'\';this.style.borderColor=\''+a.farge+'\';this.style.background=\''+a.farge+'15\';" data-navn="'+a.navn+'"><div style="width:8px;height:8px;border-radius:50%;background:'+a.farge+';"></div>'+a.navn+'</div>';
+    }).join('');
+  }
   document.getElementById('fpNyAktMbg').classList.add('open');
   setTimeout(function(){document.getElementById('fpMNavn').focus();},50);
 }
@@ -6208,8 +6215,9 @@ function fpLagreNyAkt(){
   var type=document.getElementById('fpMType').value;
   var status=document.getElementById('fpMStatus').value;
   var fase=document.getElementById('fpMFase').value;
-  var valgtA=document.querySelector('#fpMAktor .fp-aktor-item[style*="background"]');
+  var valgtA=document.querySelector('#fpMAktor .fp-aktor-item[style*="15"]');
   var aktorNavn=valgtA?valgtA.dataset.navn:'';
+  if(!aktorNavn && fpAktorer.length > 0){toast('Velg en aktør','e');return;}
   var body={Title:navn,ProsjektID:fpProjID,Fase:fase,Startdato:start,Sluttdato:type==='Milepæl'?start:slutt,Type:type,Status:status,AktorNavn:aktorNavn,Notat:''};
   spPost(SP+"/_api/lists('"+FP_AKTIVITETER_GUID+"')/items", body).then(function(res){
     var nyID=(res&&(res.id||res.Id||(res.d&&(res.d.Id||res.d.id))))||fpNextId++;
