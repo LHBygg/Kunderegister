@@ -5952,10 +5952,12 @@ function fpApne(projID, navnEnc, fulltNavn){
 function fpHentData(projID, callback){
   Promise.all([
     spGet(SP + "/_api/lists('" + FP_AKTORER_GUID + "')/items?$filter=ProsjektID eq " + projID + "&$orderby=Title&$top=50"),
-    spGet(SP + "/_api/lists('" + FP_AKTIVITETER_GUID + "')/items?$filter=ProsjektID eq " + projID + "&$orderby=ID&$top=500")
+    spGet(SP + "/_api/lists('" + FP_AKTIVITETER_GUID + "')/items?$filter=ProsjektID eq " + projID + "&$orderby=ID&$top=500"),
+    spGet(SP + "/_api/lists('3DB9CF64-778C-48D8-8F32-044AC6EE249C')/items(" + projID + ")?$select=PlanStart,PlanSlutt")
   ]).then(function(res){
     var aktorRaw = res[0].value||[];
     var aktRaw   = res[1].value||[];
+    var proj     = res[2]||{};
     fpAktorer = aktorRaw.map(function(a){ return {id:a.ID,navn:a.Title,farge:a.Farge||'#5c6480'}; });
     fpAktiviteter = aktRaw.map(function(a){ return {
       id:a.ID, spID:a.ID, faseId:a.Fase, navn:a.Title,
@@ -5968,6 +5970,9 @@ function fpHentData(projID, callback){
       if(a.faseId && !fpFaser.find(function(f){return f.navn===a.faseId;}))
         fpFaser.push({navn:a.faseId, aapen:true});
     });
+    // Hent periode fra prosjektet
+    if(proj.PlanStart) fpPeriodeStart = fpD(proj.PlanStart);
+    if(proj.PlanSlutt) fpPeriodeSlutt = fpD(proj.PlanSlutt);
     if(callback) callback();
   }).catch(function(e){ toast('Feil ved lasting: '+e.message,'e'); });
 }
