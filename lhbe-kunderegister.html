@@ -2080,7 +2080,8 @@ function openPD(pid) {
     {id:'sjekkliste',   cols:6, rows:2},
     {id:'notater',      cols:6, rows:2},
     {id:'mapper',       cols:6, rows:1},
-    {id:'smartdok',     cols:6, rows:2}
+    {id:'smartdok',     cols:6, rows:2},
+    {id:'fremdrift',    cols:6, rows:3}
   ];
   var savedLayout = [];
   try { savedLayout = JSON.parse(localStorage.getItem('lhbe_pdm_layout') || '[]'); } catch(e){}
@@ -2232,6 +2233,8 @@ function openPD(pid) {
   renderProjLevListe(p.ID);
   renderNotater(p.ID);
   renderProjIOListe(p.ID);
+  // Last fremdriftsplan-kort
+  setTimeout(function() { fpLastKort(p.ID, p.PlanStart, p.PlanSlutt); }, 200);
 
   if (s === 'Aktiv' && p.Prosjektnummer) {
     sdkWeekOffset = 0;
@@ -2653,6 +2656,7 @@ function _initLayoutGrid() {
   var h_pi=271, h_ka=254, h_mid=525, h_bunn=695;
   var y2=h_pi+gap, yB=h_mid+gap;
 
+  var yFP = h_mid + gap + h_bunn + gap;
   var defaults = [
     {id:'prosjektinfo', x:xA,              y:0,   w:w1,   h:h_pi},
     {id:'kontakt',      x:xA,              y:y2,  w:w1,   h:h_ka},
@@ -2661,7 +2665,9 @@ function _initLayoutGrid() {
     {id:'mapper',       x:xD,              y:0,   w:wMap, h:h_mid},
     {id:'smartdok',     x:xD,              y:yB,  w:wCol, h:h_bunn},
     {id:'ue',           x:xD+wCol+gap,     y:yB,  w:wCol, h:h_bunn},
-    {id:'lev',          x:xD+2*(wCol+gap), y:yB,  w:wCol, h:h_bunn}
+    {id:'lev',          x:xD+2*(wCol+gap), y:yB,  w:wCol, h:h_bunn},
+    {id:'fremdrift',    x:0,               y:yFP, w:wCol*3+gap*2, h:400},
+    {id:'internordre',  x:wCol*3+gap*3,    y:yFP, w:wCol*3+gap*2, h:400}
   ];
 
   var maxBottom = 0;
