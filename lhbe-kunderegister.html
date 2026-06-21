@@ -6206,11 +6206,11 @@ function fpLagreNyAkt(){
   var type=document.getElementById('fpMType').value;
   var status=document.getElementById('fpMStatus').value;
   var fase=document.getElementById('fpMFase').value;
-  var valgtA=document.querySelector('#fpMAktor .fp-aktor-item[style*="15"]');
+  var valgtA=document.querySelector('#fpMAktor .fp-aktor-item[style*="background"]');
   var aktorNavn=valgtA?valgtA.dataset.navn:'';
   var body={Title:navn,ProsjektID:fpProjID,Fase:fase,Startdato:start,Sluttdato:type==='Milepæl'?start:slutt,Type:type,Status:status,AktorNavn:aktorNavn,Notat:''};
   spPost(SP+"/_api/lists('"+FP_AKTIVITETER_GUID+"')/items", body).then(function(res){
-    var nyID=res.d.Id||res.d.id||fpNextId++;
+    var nyID=(res&&res.d&&(res.d.Id||res.d.id))||fpNextId++;
     fpAktiviteter.push({id:nyID,spID:nyID,faseId:fase,navn:navn,start:fpD(start),slutt:fpD(type==='Milepæl'?start:slutt),type:type,aktorNavn:aktorNavn,status:status,notat:'',nr:nyID});
     if(!fpFaser.find(function(f){return f.navn===fase;})) fpFaser.push({navn:fase,aapen:true});
     fpLukkModal('fpNyAktMbg');
@@ -6257,7 +6257,7 @@ function fpLeggTilAktor(){
   if(!navn){toast('Fyll inn navn','e');return;}
   var body={Title:navn,Farge:farge,ProsjektID:fpProjID};
   spPost(SP+"/_api/lists('"+FP_AKTORER_GUID+"')/items", body).then(function(res){
-    var nyID=res.d.Id||fpNextId++;
+    var nyID=(res&&res.d&&(res.d.Id||res.d.id))||fpNextId++;
     fpAktorer.push({id:nyID,navn:navn,farge:farge});
     document.getElementById('fpNyAktorNavn').value='';
     fpRendreAktorListe(); fpRender(); fpRendreLegend();
