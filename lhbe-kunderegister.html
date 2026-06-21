@@ -5818,8 +5818,8 @@ var fpAktorer = [];
 var fpFaser = [];
 var fpAktiviteter = [];
 var fpValgtId = null;
-var fpZoom = 'maaned';
-var fpCOL_W = 26;
+var fpZoom = 'uke';
+var fpCOL_W = 28;
 var fpPeriodeStart = null;
 var fpPeriodeSlutt = null;
 var fpAktorFilter = null;
@@ -5963,7 +5963,7 @@ function fpHentData(projID, callback){
       id:a.ID, spID:a.ID, faseId:a.Fase, navn:a.Title,
       start:fpD(a.Startdato), slutt:fpD(a.Sluttdato),
       type:a.Type||'Aktivitet', aktorNavn:a.AktorNavn||'',
-      status:a.Status||'Ikke startet', notat:a.Notat||'', nr:a.ID
+      status:fpAutoStatus(fpD(a.Startdato), fpD(a.Sluttdato)), notat:a.Notat||'', nr:a.ID
     }; });
     fpFaser = [];
     fpAktiviteter.forEach(function(a){
@@ -6146,7 +6146,7 @@ function fpVisDP(id){
     '<div><div class="fp-dp-lbl">Navn</div><input class="fp-dp-inp" id="fpDPNavn" type="text" value="'+akt.navn+'"></div>'+
     '<div><div class="fp-dp-lbl">Fase</div><select class="fp-sel" id="fpDPFase">'+fpFaser.map(function(f){return '<option value="'+f.navn+'"'+(f.navn===akt.faseId?' selected':'')+'>'+f.navn+'</option>';}).join('')+'</select></div>'+
     '<div style="display:flex;gap:8px;"><div style="flex:1;"><div class="fp-dp-lbl">Start</div><input class="fp-dp-inp" id="fpDPStart" type="date" value="'+fpFmtISO(akt.start)+'"></div><div style="flex:1;"><div class="fp-dp-lbl">Slutt</div><input class="fp-dp-inp" id="fpDPSlutt" type="date" value="'+fpFmtISO(akt.slutt)+'"></div></div>'+
-    '<div><div class="fp-dp-lbl">Status</div><select class="fp-sel" id="fpDPStatus"><option'+(akt.status==='Ikke startet'?' selected':'')+'>Ikke startet</option><option'+(akt.status==='I gang'?' selected':'')+'>I gang</option><option'+(akt.status==='Ferdig'?' selected':'')+'>Ferdig</option></select></div>'+
+    '<div><div class="fp-dp-lbl">Status</div><div style="font-size:12px;padding:6px 0;color:var(--tx2);">Beregnes automatisk fra datoer</div></div>'+
     '<div><div class="fp-dp-lbl">Aktør</div><div style="display:flex;flex-wrap:wrap;gap:5px;" id="fpDPAktor">'+aHtml+'</div></div>'+
     '<div><div class="fp-dp-lbl">Notat</div><textarea class="fp-dp-inp" id="fpDPNotat" rows="3">'+akt.notat+'</textarea></div>'+
     '<div style="background:var(--bg3);border-radius:6px;padding:9px;font-size:11px;color:var(--tx2);">Varighet: <strong style="color:var(--tx);">'+vd+'</strong>'+(forsinket?' &nbsp;·&nbsp; <span style="color:var(--red);">⚠ Forsinket</span>':'')+'</div>';
@@ -6166,7 +6166,7 @@ function fpLagreAkt(){
   akt.faseId=document.getElementById('fpDPFase').value;
   akt.start=fpD(document.getElementById('fpDPStart').value);
   akt.slutt=fpD(document.getElementById('fpDPSlutt').value);
-  akt.status=document.getElementById('fpDPStatus').value;
+  akt.status=fpAutoStatus(akt.start, akt.slutt);
   akt.notat=document.getElementById('fpDPNotat').value;
   if(!akt.start||!akt.slutt){toast('Fyll inn datoer','e');return;}
   // Lagre til SP
@@ -6195,6 +6195,28 @@ function fpSlettAkt(){
 // ----------------------------------------------------------------
 // NY AKTIVITET
 // ----------------------------------------------------------------
+function fpAutoStatus(start, slutt){
+  if(!start || !slutt) return 'Ikke startet';
+  var now = FP_TODAY;
+  if(slutt < now) return 'Ferdig';
+  if(start <= now) return 'I gang';
+  return 'Ikke startet';
+}
+
+function fpVelgAktorItem(el){
+  // Fjern valg fra alle
+  el.parentElement.querySelectorAll('.fp-aktor-item').forEach(function(x){
+    x.removeAttribute('data-valgt');
+    x.style.color=''; x.style.borderColor=''; x.style.background='';
+  });
+  // Sett valgt på klikket
+  var farge = el.dataset.farge;
+  el.setAttribute('data-valgt','1');
+  el.style.color = farge;
+  el.style.borderColor = farge;
+  el.style.background = farge+'22';
+}
+
 function fpNyAkt(){
   document.getElementById('fpMNavn').value='';
   document.getElementById('fpMStart').value=fpFmtISO(FP_TODAY);
@@ -6218,12 +6240,12 @@ function fpLagreNyAkt(){
   var slutt=document.getElementById('fpMSlutt').value;
   if(!start||!slutt){toast('Fyll inn datoer','e');return;}
   var type=document.getElementById('fpMType').value;
-  var status=document.getElementById('fpMStatus').value;
+  var status=fpAutoStatus(fpD(start), fpD(type==='Milepæl'?start:slutt));
   var fase=document.getElementById('fpMFase').value;
-  var valgtA=document.querySelector('#fpMAktor .fp-aktor-item[style*="15"]');
+  var valgtA=document.querySelector('#fpMAktor .fp-aktor-item[data-valgt="1"]');
   var aktorNavn=valgtA?valgtA.dataset.navn:'';
   if(!aktorNavn && fpAktorer.length > 0){toast('Velg en aktør','e');return;}
-  var body={Title:navn,ProsjektID:fpProjID,Fase:fase,Startdato:start,Sluttdato:type==='Milepæl'?start:slutt,Type:type,Status:status,AktorNavn:aktorNavn,Notat:''};
+  var body={Title:navn,ProsjektID:fpProjID,Fase:fase,Startdato:start,Sluttdato:type==='Milepæl'?start:slutt,Type:type,AktorNavn:aktorNavn,Notat:''};
   spPost(SP+"/_api/lists('"+FP_AKTIVITETER_GUID+"')/items", body).then(function(res){
     var nyID=(res&&(res.id||res.Id||(res.d&&(res.d.Id||res.d.id))))||fpNextId++;
     fpAktiviteter.push({id:nyID,spID:nyID,faseId:fase,navn:navn,start:fpD(start),slutt:fpD(type==='Milepæl'?start:slutt),type:type,aktorNavn:aktorNavn,status:status,notat:'',nr:nyID});
@@ -6341,8 +6363,8 @@ function fpLukkModal(id){ document.getElementById(id).classList.remove('open'); 
     <button class="btn sm pri" onclick="fpNyAkt()">+ Ny aktivitet</button>
     <button class="btn sm" onclick="fpNyFase()">+ Ny fase</button>
     <div style="width:1px;height:18px;background:var(--br);"></div>
-    <button class="btn sm" id="fpZUke" onclick="fpSetZoom('uke')">Uke</button>
-    <button class="btn sm active" id="fpZMnd" onclick="fpSetZoom('maaned')">Måned</button>
+    <button class="btn sm active" id="fpZUke" onclick="fpSetZoom('uke')">Uke</button>
+    <button class="btn sm" id="fpZMnd" onclick="fpSetZoom('maaned')">Måned</button>
     <div style="width:1px;height:18px;background:var(--br);"></div>
     <button class="btn sm" onclick="fpScrollIdag()">⬦ I dag</button>
     <div style="width:1px;height:18px;background:var(--br);"></div>
@@ -6396,7 +6418,7 @@ function fpLukkModal(id){ document.getElementById(id).classList.remove('open'); 
         <div style="flex:1;"><div class="fp-lbl">Slutt</div><input class="fp-inp" type="date" id="fpMSlutt"></div>
       </div>
       <div><div class="fp-lbl">Type</div><select class="fp-sel" id="fpMType"><option value="Aktivitet">Aktivitet</option><option value="Milepæl">Milepæl</option></select></div>
-      <div><div class="fp-lbl">Status</div><select class="fp-sel" id="fpMStatus"><option value="Ikke startet">Ikke startet</option><option value="I gang">I gang</option><option value="Ferdig">Ferdig</option></select></div>
+      <!-- Status settes automatisk til Ikke startet -->
       <div><div class="fp-lbl">Aktør</div><div style="display:flex;flex-wrap:wrap;gap:5px;" id="fpMAktor"></div></div>
     </div>
     <div class="fp-modal-foot">
