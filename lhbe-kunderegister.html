@@ -520,6 +520,77 @@ tr.erow td{padding:0;background:var(--bg2);border-bottom:1px solid var(--br2);}
   /* Innstillingspanel full bredde */
   .sp{width:100vw !important;}
 }
+
+/* ===== FREMDRIFTSPLAN ===== */
+.fp-kort-uke-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+.fp-kort-uke-lbl{font-size:11px;font-weight:700;color:var(--acc);}
+.fp-kort-uke-dato{font-size:10px;color:var(--tx3);}
+.fp-akt-rad{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid rgba(46,53,80,0.4);}
+.fp-akt-rad:last-child{border-bottom:none;}
+.fp-akt-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.fp-akt-navn{flex:1;font-size:11px;color:var(--tx);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.fp-akt-fase{font-size:10px;color:var(--tx3);white-space:nowrap;}
+.fp-status{font-size:10px;font-weight:600;padding:2px 7px;border-radius:10px;white-space:nowrap;}
+.fp-status.igang{background:rgba(74,158,255,.15);color:var(--blu);}
+.fp-status.ferdig{background:rgba(52,201,122,.15);color:var(--grn);}
+.fp-status.ikkestartet{background:rgba(92,100,128,.15);color:var(--tx3);}
+.fp-status.forsinket{background:rgba(232,85,85,.15);color:var(--red);}
+.fp-mg-hdr{display:flex;background:var(--bg3);border-bottom:1px solid var(--br);border-radius:5px 5px 0 0;}
+.fp-mg-dag{flex:1;text-align:center;padding:3px 1px;font-size:9px;color:var(--tx3);border-right:1px solid var(--br);display:flex;flex-direction:column;align-items:center;gap:1px;}
+.fp-mg-dag:last-child{border-right:none;}
+.fp-mg-dag.idag{color:var(--acc);font-weight:700;background:rgba(232,184,75,.08);}
+.fp-mg-dag.helg{opacity:.4;}
+.fp-mg-rad{display:flex;height:22px;border-bottom:1px solid rgba(46,53,80,.3);position:relative;align-items:center;}
+.fp-mg-rad:last-child{border-bottom:none;}
+.fp-mg-kol{flex:1;border-right:1px solid rgba(46,53,80,.2);height:100%;}
+.fp-mg-kol:last-child{border-right:none;}
+.fp-mg-kol.idag{background:rgba(232,184,75,.05);}
+.fp-mg-bar{position:absolute;height:13px;top:4px;border-radius:3px;display:flex;align-items:center;padding:0 4px;font-size:8px;font-weight:700;overflow:hidden;white-space:nowrap;pointer-events:none;}
+.fp-overlay{position:fixed;inset:0;background:var(--bg);z-index:500;display:flex;flex-direction:column;transform:translateY(100%);transition:transform .3s cubic-bezier(.4,0,.2,1);}
+.fp-overlay.open{transform:translateY(0);}
+.fp-ov-hdr{background:var(--bg2);border-bottom:1px solid var(--br);padding:10px 16px;display:flex;align-items:center;gap:10px;flex-shrink:0;}
+.fp-ov-toolbar{padding:7px 16px;background:var(--bg2);border-bottom:1px solid var(--br);display:flex;align-items:center;gap:7px;flex-wrap:wrap;flex-shrink:0;}
+.fp-aktor-legend{padding:6px 16px;background:var(--bg3);border-bottom:1px solid var(--br);display:flex;flex-wrap:wrap;gap:5px;align-items:center;flex-shrink:0;}
+.fp-aktor-pill{display:flex;align-items:center;gap:4px;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:600;cursor:pointer;}
+.fp-ov-main{flex:1;overflow:hidden;display:flex;flex-direction:column;}
+.fp-ov-scroll{flex:1;overflow-y:auto;overflow-x:auto;display:flex;flex-direction:column;}
+.fp-sticky-hdr{display:flex;position:sticky;top:0;z-index:20;background:var(--bg2);border-bottom:2px solid var(--br);flex-shrink:0;overflow:hidden;}
+.fp-sticky-tbl{width:460px;min-width:460px;flex-shrink:0;border-right:2px solid var(--br);background:var(--bg3);display:flex;flex-direction:column;position:sticky;left:0;z-index:15;}
+.fp-sticky-tbl-row{display:flex;border-bottom:1px solid var(--br);}
+.fp-sticky-tbl-row>div{font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.6px;border-right:1px solid var(--br);padding:6px 8px;}
+.fp-gantt-hdr{flex:1;overflow:hidden;}
+.fp-gantt-mnd-row{display:flex;border-bottom:1px solid var(--br);}
+.fp-gantt-mnd{padding:3px 6px;font-size:10px;font-weight:700;color:var(--acc);border-right:1px solid var(--br);white-space:nowrap;text-transform:uppercase;}
+.fp-gantt-uke-row,.fp-gantt-dag-row{display:flex;}
+.fp-gantt-uke{font-size:9px;color:var(--tx3);border-right:1px solid var(--br);text-align:center;padding:3px 0;flex-shrink:0;}
+.fp-gantt-uke.fp-idag-uke{color:var(--acc);font-weight:700;background:rgba(232,184,75,.06);}
+.fp-gantt-dag{font-size:9px;color:var(--tx3);border-right:1px solid rgba(46,53,80,.4);text-align:center;padding:2px 0;flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;}
+.fp-gantt-dag.fp-idag{color:var(--acc);font-weight:700;background:rgba(232,184,75,.08);}
+.fp-gantt-dag.fp-helg{opacity:.4;}
+.fp-rad-wrap{display:flex;flex-direction:column;flex:1;position:relative;overflow-x:auto;}
+.fp-g-bar{position:absolute;height:18px;border-radius:4px;display:flex;align-items:center;padding:0 5px;font-size:9px;font-weight:700;white-space:nowrap;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.4);cursor:pointer;transition:filter .12s;}
+.fp-g-bar:hover{filter:brightness(1.15);}
+.fp-lukk-btn{position:fixed;bottom:22px;right:22px;z-index:600;width:46px;height:46px;border-radius:50%;background:var(--bg3);border:1px solid var(--br);color:var(--tx2);font-size:18px;cursor:pointer;display:none;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(0,0,0,.5);}
+.fp-lukk-btn.vis{display:flex;}
+.fp-lukk-btn:hover{background:var(--red);border-color:var(--red);color:#fff;}
+.fp-modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:1000;display:none;align-items:center;justify-content:center;padding:16px;}
+.fp-modal-bg.open{display:flex;}
+.fp-modal{background:var(--bg2);border:1px solid var(--br);border-radius:10px;width:100%;max-width:420px;box-shadow:0 8px 32px rgba(0,0,0,.6);}
+.fp-modal-hdr{padding:14px 16px;border-bottom:1px solid var(--br);background:var(--bg3);border-radius:10px 10px 0 0;display:flex;align-items:center;}
+.fp-modal-body{padding:16px;display:flex;flex-direction:column;gap:12px;}
+.fp-modal-foot{padding:12px 16px;border-top:1px solid var(--br);display:flex;gap:8px;justify-content:flex-end;}
+.fp-lbl{font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.6px;font-weight:600;margin-bottom:4px;}
+.fp-inp{width:100%;padding:7px 10px;background:var(--bg4);border:1px solid var(--br);border-radius:6px;color:var(--tx);font-size:12px;font-family:inherit;}
+.fp-inp:focus{outline:none;border-color:var(--acc);}
+.fp-sel{width:100%;padding:7px 10px;background:var(--bg4);border:1px solid var(--br);border-radius:6px;color:var(--tx);font-size:12px;font-family:inherit;}
+.fp-dp-lbl{font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.6px;font-weight:600;}
+.fp-dp-inp{width:100%;padding:7px 10px;background:var(--bg4);border:1px solid var(--br);border-radius:6px;color:var(--tx);font-size:12px;font-family:inherit;}
+.fp-dp-inp:focus{outline:none;border-color:var(--acc);}
+.fp-aktor-item{display:flex;align-items:center;gap:5px;padding:4px 9px;border:1px solid var(--br);border-radius:20px;font-size:11px;cursor:pointer;transition:all .12s;background:var(--bg4);}
+.fp-fase-forslag{padding:7px 10px;border-radius:6px;border:1px solid var(--br);background:var(--bg4);font-size:11px;cursor:pointer;display:flex;align-items:center;gap:6px;transition:all .12s;}
+.fp-fase-forslag:hover{border-color:var(--acc);color:var(--acc);}
+.fp-fase-forslag.valgt{border-color:var(--acc);background:rgba(232,184,75,.1);color:var(--acc);}
+.fp-fase-forslag.brukt{opacity:.4;cursor:default;}
 </style>
 </head>
 <body>
@@ -1110,6 +1181,8 @@ var MSAL_CONFIG = {
   cache: { cacheLocation: 'localStorage', storeAuthStateInCookie: false }
 };
 var SP = 'https://lhbent.sharepoint.com/sites/Industriveien1ASLHBygg';
+var FP_AKTIVITETER_GUID = 'e9cfdabf-2f36-493d-92e5-899e22dd1e1e';
+var FP_AKTORER_GUID     = '6e6f1607-362a-48d3-9a2f-d50837785edb';
 var CL = 'D702DBE2-269F-41A0-8107-55C681AEC5BF';
 var PL = '3DB9CF64-778C-48D8-8F32-044AC6EE249C';
 var UEL = 'b1df2e07-72a1-4b44-bc2d-d0193dd6a03c';
@@ -2113,6 +2186,10 @@ function openPD(pid) {
   var notHtml = '<div id="pdmNotater_' + p.ID + '"><div class="sdk-load"><div class="sdk-spin"></div>Laster...</div></div>';
   notHtml += '<textarea class="pdm-note-input" id="pdmNoteInput" rows="2" placeholder="Skriv notat og trykk Enter..."></textarea>';
   b.push(cardWrap('notater', 'Notater', notHtml, null));
+
+  // Fremdrift-kort (full bredde)
+  var fpKortHtml = '<div id="fpKortInnhold_' + p.ID + '"><div class="sdk-load"><div class="sdk-spin"></div>Laster fremdriftsplan...</div></div>';
+  b.push(cardWrap('fremdrift', 'Fremdriftsplan <button class="pdm-card-act" onclick="fpApne(' + p.ID + ',\'' + encodeURIComponent(p.Title||'') + '\',\'' + encodeURIComponent((p.Prosjektnummer||'') + ' – ' + (p.Kundenavn||'') + ' – ' + (p.Title||'')) + '\')">Åpne full plan →</button>', fpKortHtml, null));
 
   // Mapper-kort
   var mapLbl = 'Mapper' + (s === 'Under kalkyle' ? ' <span style="font-weight:400;letter-spacing:0;text-transform:none;font-size:10px;color:var(--tx3);">(Kun Kalkyler/Korrespondanse)</span>' : '');
@@ -5724,6 +5801,646 @@ function slettProjUE(id, pid) {
 }
 
 
+
+// ===== FREMDRIFTSPLAN JS =====
+// ===================================================================
+// FREMDRIFTSPLAN – JavaScript
+// ===================================================================
+var fpProjID = null;
+var fpProjNavn = '';
+var fpAktorer = [];
+var fpFaser = [];
+var fpAktiviteter = [];
+var fpValgtId = null;
+var fpZoom = 'maaned';
+var fpCOL_W = 26;
+var fpPeriodeStart = null;
+var fpPeriodeSlutt = null;
+var fpAktorFilter = null;
+var fpNextId = 9000;
+var fpSaving = false;
+
+var FP_FASE_FORSLAG = [
+  'Rigg og etablering','Grunnarbeid','Betong og forskaling',
+  'Stål og bæresystem','Bygningskropp / råbygg','Tak og tetting',
+  'Fasade og utvendig','Tekniske installasjoner','Innvendige arbeider',
+  'Overflatebehandling','Utomhusarbeider','Ferdigstillelse og overlevering'
+];
+
+var FP_TODAY = new Date(); FP_TODAY.setHours(0,0,0,0);
+
+function fpFmtISO(dt){ var y=dt.getFullYear(),m=String(dt.getMonth()+1).padStart(2,'0'),d=String(dt.getDate()).padStart(2,'0'); return y+'-'+m+'-'+d; }
+function fpFmt(dt){ return String(dt.getDate()).padStart(2,'0')+'.'+String(dt.getMonth()+1).padStart(2,'0')+'.'+String(dt.getFullYear()).slice(2); }
+function fpD(s){ if(!s)return null; var x=new Date(s); x.setHours(0,0,0,0); return x; }
+function fpAddD(dt,n){ var r=new Date(dt); r.setDate(r.getDate()+n); return r; }
+function fpMandag(dt){ var d=new Date(dt),dy=d.getDay(),df=dy===0?-6:1-dy; d.setDate(d.getDate()+df); d.setHours(0,0,0,0); return d; }
+function fpSondag(dt){ var d=new Date(dt),dy=d.getDay(),df=dy===0?0:7-dy; d.setDate(d.getDate()+df); d.setHours(0,0,0,0); return d; }
+function fpLys(hex){ var r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16); return (r*299+g*587+b*114)/1000>145; }
+function fpAktorFarge(navn){ var a=fpAktorer.find(function(x){return x.navn===navn;}); return a?a.farge:'#5c6480'; }
+function fpVarighet(a,b){ var n=0,c=new Date(a); while(c<=b){var g=c.getDay();if(g!==0&&g!==6)n++;c.setDate(c.getDate()+1);} return n; }
+
+function fpGetPeriode(){
+  if(fpPeriodeStart&&fpPeriodeSlutt){ return {s:fpMandag(fpPeriodeStart),e:fpSondag(fpPeriodeSlutt)}; }
+  var s=fpMandag(new Date(FP_TODAY.getFullYear(),0,1));
+  var e=fpSondag(new Date(FP_TODAY.getFullYear()+1,FP_TODAY.getMonth(),FP_TODAY.getDate()));
+  return {s:s,e:e};
+}
+function fpGetUker(s,e){ var u=[],c=new Date(s); while(c<=e){u.push(new Date(c));c.setDate(c.getDate()+7);} return u; }
+function fpGetDager(s,e){ var d=[],c=new Date(s); while(c<=e){d.push(new Date(c));c.setDate(c.getDate()+1);} return d; }
+function fpXPos(dato,ps){ return fpZoom==='maaned'?((dato-ps)/(1000*60*60*24*7))*fpCOL_W:Math.round((dato-ps)/(1000*60*60*24))*fpCOL_W; }
+function fpIsoWeek(dt){ var d=new Date(dt); d.setHours(0,0,0,0); d.setDate(d.getDate()+3-(d.getDay()+6)%7); var w=new Date(d.getFullYear(),0,4); return 1+Math.round(((d-w)/86400000-3+(w.getDay()+6)%7)/7); }
+
+// ----------------------------------------------------------------
+// LAST KORT (ukesvisning)
+// ----------------------------------------------------------------
+function fpLastKort(projID, planStart, planSlutt){
+  var el = document.getElementById('fpKortInnhold_' + projID);
+  if(!el) return;
+  if(planStart) fpPeriodeStart = fpD(planStart);
+  if(planSlutt) fpPeriodeSlutt = fpD(planSlutt);
+
+  // Hent aktører og aktiviteter parallelt
+  Promise.all([
+    spGet(SP + "/_api/lists('" + FP_AKTORER_GUID + "')/items?$filter=ProsjektID eq " + projID + "&$orderby=Title&$top=50"),
+    spGet(SP + "/_api/lists('" + FP_AKTIVITETER_GUID + "')/items?$filter=ProsjektID eq " + projID + "&$orderby=ID&$top=500")
+  ]).then(function(res){
+    fpAktorer = (res[0].d.results||[]).map(function(a){ return {id:a.ID,navn:a.Title,farge:a.Farge||'#5c6480',projID:projID}; });
+    fpAktiviteter = (res[1].d.results||[]).map(function(a){ return {
+      id:a.ID, spID:a.ID, faseId:a.Fase, navn:a.Title,
+      start:fpD(a.Startdato), slutt:fpD(a.Sluttdato),
+      type:a.Type||'Aktivitet', aktorNavn:a.AktorNavn||'',
+      status:a.Status||'Ikke startet', notat:a.Notat||'',
+      nr:a.ID
+    }; });
+    fpFaser = [];
+    fpAktiviteter.forEach(function(a){
+      if(a.faseId && !fpFaser.find(function(f){return f.navn===a.faseId;})){
+        fpFaser.push({navn:a.faseId,aapen:true});
+      }
+    });
+    fpRendreKort(projID, el);
+  }).catch(function(e){
+    el.innerHTML = '<div style="font-size:11px;color:var(--red);">Feil ved lasting: '+e.message+'</div>';
+  });
+}
+
+function fpRendreKort(projID, el){
+  var ukeStart = fpMandag(FP_TODAY);
+  var ukeSlut = fpSondag(ukeStart);
+  var MND=['jan','feb','mar','apr','mai','jun','jul','aug','sep','okt','nov','des'];
+  var DAGNAVN=['Sø','Ma','Ti','On','To','Fr','Lø'];
+  var dager=[];
+  for(var i=0;i<7;i++) dager.push(fpAddD(ukeStart,i));
+
+  var aktiveAkts = fpAktiviteter.filter(function(a){
+    return a.type!=='Milepæl' && a.start && a.slutt && a.start<=ukeSlut && a.slutt>=ukeStart;
+  });
+
+  var hdr = dager.map(function(d){
+    var idag=d.getTime()===FP_TODAY.getTime(), helg=d.getDay()===0||d.getDay()===6;
+    return '<div class="fp-mg-dag'+(idag?' idag':'')+(helg?' helg':'')+'"><span style="font-size:8px;">'+DAGNAVN[d.getDay()]+'</span><span style="font-size:9px;font-weight:600;">'+d.getDate()+'</span></div>';
+  }).join('');
+
+  var rader = '';
+  if(aktiveAkts.length === 0){
+    rader = '<div style="padding:10px;font-size:11px;color:var(--tx3);text-align:center;">Ingen aktive aktiviteter denne uken</div>';
+  } else {
+    var mgRader = aktiveAkts.map(function(akt){
+      var farge=fpAktorFarge(akt.aktorNavn);
+      var sk=akt.start<ukeStart?ukeStart:akt.start;
+      var sl=akt.slutt>ukeSlut?ukeSlut:akt.slutt;
+      var si=dager.findIndex(function(d){return d.getTime()===sk.getTime();});
+      var ei=dager.findIndex(function(d){return d.getTime()===sl.getTime();});
+      if(si<0)si=0; if(ei<0)ei=6;
+      var left=(si/7)*100, width=((ei-si+1)/7)*100;
+      var kols=dager.map(function(d,i){
+        var idag=d.getTime()===FP_TODAY.getTime();
+        return '<div class="fp-mg-kol'+(idag?' idag':'')+'"></div>';
+      }).join('');
+      return '<div class="fp-mg-rad">'+kols+'<div class="fp-mg-bar" style="left:'+left+'%;width:'+width+'%;background:'+farge+';color:'+(fpLys(farge)?'#000':'#fff')+';">'+akt.navn+'</div></div>';
+    }).join('');
+
+    var STATUS_LBL={Ferdig:'Ferdig','I gang':'I gang','Ikke startet':'Ikke startet',Forsinket:'Forsinket'};
+    var STATUS_CLS={'I gang':'igang','Ferdig':'ferdig','Ikke startet':'ikkestartet','Forsinket':'forsinket'};
+    var liste = aktiveAkts.map(function(akt){
+      var farge=fpAktorFarge(akt.aktorNavn);
+      var forsinket=akt.status==='I gang'&&akt.slutt<FP_TODAY;
+      var st=forsinket?'Forsinket':akt.status;
+      return '<div class="fp-akt-rad"><div class="fp-akt-dot" style="background:'+farge+';"></div><div class="fp-akt-navn">'+akt.navn+'</div><div class="fp-akt-fase">'+akt.faseId+'</div><div class="fp-status '+(STATUS_CLS[st]||'ikkestartet')+'">'+(STATUS_LBL[st]||st)+'</div></div>';
+    }).join('');
+
+    rader = '<div style="border:1px solid var(--br);border-radius:6px;overflow:hidden;margin-bottom:10px;">'
+      +'<div class="fp-mg-hdr">'+hdr+'</div>'
+      +mgRader+'</div>'
+      +liste;
+  }
+
+  el.innerHTML = '<div class="fp-kort-uke-hdr">'
+    +'<div class="fp-kort-uke-lbl">Denne uken</div>'
+    +'<div class="fp-kort-uke-dato">'+fpFmt(ukeStart)+' – '+fpFmt(ukeSlut)+'</div>'
+    +'</div>'+rader;
+}
+
+// ----------------------------------------------------------------
+// ÅPNE FULLSKJERM
+// ----------------------------------------------------------------
+function fpApne(projID, navnEnc, fulltNavn){
+  fpProjID = projID;
+  fpProjNavn = decodeURIComponent(fulltNavn||'');
+  document.getElementById('fpOvProjNavn').textContent = fpProjNavn;
+  document.getElementById('fpOvDato').textContent = fpFmt(FP_TODAY);
+  document.getElementById('fpOverlay').classList.add('open');
+  document.getElementById('fpLukkBtn').classList.add('vis');
+
+  if(!fpPeriodeStart){
+    fpSettPeriode(12);
+    fpVisPeriodeModal();
+  } else {
+    fpRender();
+    setTimeout(fpScrollIdag, 100);
+  }
+}
+
+function fpLukk(){
+  document.getElementById('fpOverlay').classList.remove('open');
+  document.getElementById('fpLukkBtn').classList.remove('vis');
+  fpCloseDP();
+}
+
+// ----------------------------------------------------------------
+// ZOOM
+// ----------------------------------------------------------------
+function fpSetZoom(z){
+  fpZoom=z; fpCOL_W=z==='uke'?28:26;
+  document.getElementById('fpZUke').classList.toggle('active',z==='uke');
+  document.getElementById('fpZMnd').classList.toggle('active',z==='maaned');
+  fpRender(); setTimeout(fpScrollIdag,50);
+}
+
+// ----------------------------------------------------------------
+// RENDER
+// ----------------------------------------------------------------
+function fpRender(){
+  var p=fpGetPeriode();
+  var dager=fpGetDager(p.s,p.e);
+  var uker=fpGetUker(p.s,p.e);
+  var W=fpZoom==='maaned'?uker.length*fpCOL_W:dager.length*fpCOL_W;
+  fpRendreLegend();
+  fpRendreHeader(dager,uker,W);
+  fpRendreRader(dager,uker,p,W);
+}
+
+function fpRendreLegend(){
+  document.getElementById('fpAktorLegend').innerHTML =
+    '<span style="font-size:10px;color:var(--tx3);font-weight:600;text-transform:uppercase;letter-spacing:.6px;margin-right:4px;">Aktører:</span>'+
+    fpAktorer.map(function(a){
+      var aktiv=fpAktorFilter===a.navn;
+      return '<div class="fp-aktor-pill" style="background:'+(aktiv?a.farge:a.farge+'18')+';border:1px solid '+a.farge+(aktiv?'':'50')+';color:'+(aktiv?'#000':a.farge)+';" onclick="fpToggleAktorFilter(\''+a.navn+'\')">'
+        +'<div style="width:8px;height:8px;border-radius:50%;background:'+(aktiv?'#000':a.farge)+';"></div>'+a.navn+(aktiv?' ✕':'')+'</div>';
+    }).join('');
+}
+
+function fpToggleAktorFilter(navn){
+  fpAktorFilter = fpAktorFilter===navn ? null : navn;
+  fpRender();
+}
+
+function fpRendreHeader(dager,uker,W){
+  var MND=['Jan','Feb','Mar','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Des'];
+  var kols=fpZoom==='maaned'?uker:dager;
+  var mgrp=[],cur=null,cnt=0;
+  kols.forEach(function(k,i){
+    var key=k.getFullYear()+'-'+k.getMonth();
+    if(key!==cur){if(cur!==null)mgrp.push({d:kols[i-cnt],cnt:cnt});cur=key;cnt=1;}else cnt++;
+  });
+  mgrp.push({d:kols[kols.length-cnt],cnt:cnt});
+  var mHtml=mgrp.map(function(m){return '<div class="fp-gantt-mnd" style="width:'+(m.cnt*fpCOL_W)+'px;min-width:'+(m.cnt*fpCOL_W)+'px;">'+MND[m.d.getMonth()]+' '+m.d.getFullYear()+'</div>';}).join('');
+  var rad2='';
+  if(fpZoom==='maaned'){
+    rad2='<div class="fp-gantt-uke-row" style="width:'+W+'px;">'+uker.map(function(u){var id=u<=FP_TODAY&&fpAddD(u,6)>=FP_TODAY;return '<div class="fp-gantt-uke'+(id?' fp-idag-uke':'')+'" style="width:'+fpCOL_W+'px;min-width:'+fpCOL_W+'px;">U'+fpIsoWeek(u)+'</div>';}).join('')+'</div>';
+  } else {
+    var DN=['Sø','Ma','Ti','On','To','Fr','Lø'];
+    rad2='<div class="fp-gantt-dag-row" style="width:'+W+'px;">'+dager.map(function(d){var idag=d.getTime()===FP_TODAY.getTime(),helg=d.getDay()===0||d.getDay()===6;return '<div class="fp-gantt-dag'+(idag?' fp-idag':'')+(helg?' fp-helg':'')+'" style="width:'+fpCOL_W+'px;min-width:'+fpCOL_W+'px;"><span style="font-size:8px;opacity:'+(helg?.4:1)+';">'+DN[d.getDay()]+'</span><span style="font-size:9px;font-weight:600;opacity:'+(helg?.4:1)+';">'+d.getDate()+'</span></div>';}).join('')+'</div>';
+  }
+  document.getElementById('fpGanttHdr').innerHTML='<div class="fp-gantt-mnd-row" style="width:'+W+'px;">'+mHtml+'</div>'+rad2;
+
+  // Match tbl spacer til gantt-hdr høyde
+  requestAnimationFrame(function(){
+    var gh=document.getElementById('fpGanttHdr');
+    var sp=document.getElementById('fpTblHdrSpacer');
+    var tbl=document.querySelector('.fp-sticky-tbl-row');
+    if(gh&&sp&&tbl){ var spacer=Math.max(0,gh.offsetHeight-tbl.offsetHeight); sp.style.height=spacer+'px'; }
+  });
+}
+
+function fpRendreRader(dager,uker,p,W){
+  var kols=fpZoom==='maaned'?uker:dager;
+  var FASE_H=30, AKT_H=34, TBL_W=460, TOTAL_W=TBL_W+W;
+  var grid=kols.map(function(k){
+    var idag=fpZoom==='maaned'?(k<=FP_TODAY&&fpAddD(k,6)>=FP_TODAY):k.getTime()===FP_TODAY.getTime();
+    return '<div style="width:'+fpCOL_W+'px;min-width:'+fpCOL_W+'px;height:100%;border-right:1px solid rgba(46,53,80,.3);flex-shrink:0;'+(idag?'background:rgba(232,184,75,.04);border-right-color:rgba(232,184,75,.2);':'')+'"></div>';
+  }).join('');
+
+  var html='';
+  fpFaser.forEach(function(fase){
+    var akts=fpAktiviteter.filter(function(a){
+      return a.faseId===fase.navn && (fpAktorFilter===null||a.aktorNavn===fpAktorFilter);
+    });
+    var ferdig=akts.filter(function(a){return a.status==='Ferdig';}).length;
+    html+='<div style="display:flex;height:'+FASE_H+'px;min-height:'+FASE_H+'px;width:'+TOTAL_W+'px;min-width:'+TOTAL_W+'px;background:var(--bg3);border-bottom:1px solid var(--br);cursor:pointer;flex-shrink:0;" onclick="fpToggleFase(\''+fase.navn+'\')"><div style="width:'+TBL_W+'px;min-width:'+TBL_W+'px;display:flex;align-items:center;border-right:2px solid var(--br);padding:0 8px;gap:8px;position:sticky;left:0;z-index:6;background:var(--bg3);flex-shrink:0;"><span style="font-size:10px;color:var(--tx3);">▶</span><span style="font-size:10px;font-weight:700;color:var(--tx2);text-transform:uppercase;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+fase.navn+'</span><span style="font-size:10px;color:var(--tx3);flex-shrink:0;">'+ferdig+'/'+akts.length+'</span></div><div style="width:'+W+'px;min-width:'+W+'px;display:flex;flex-shrink:0;">'+grid+'</div></div>';
+
+    if(fase.aapen){
+      akts.forEach(function(akt){
+        var sel=akt.id===fpValgtId;
+        var farge=fpAktorFarge(akt.aktorNavn);
+        var vd=fpVarighet(akt.start,akt.slutt);
+        var forsinket=akt.status==='I gang'&&akt.slutt<FP_TODAY;
+        var barTop=Math.floor((AKT_H-18)/2);
+        var barHtml='';
+        if(akt.type==='Milepæl'){
+          var mx=fpXPos(akt.start,p.s);
+          barHtml='<div style="position:absolute;left:'+mx+'px;top:'+Math.floor(AKT_H/2-6)+'px;width:12px;height:12px;background:'+farge+';transform:rotate(45deg);box-shadow:0 1px 3px rgba(0,0,0,.5);" title="'+akt.navn+'"></div>';
+        } else {
+          var bx=fpXPos(akt.start,p.s);
+          var bw=Math.max(fpXPos(fpAddD(akt.slutt,1),p.s)-bx,fpCOL_W);
+          var txt=fpLys(farge)?'#000':'#fff';
+          var progW=akt.status==='Ferdig'?bw:akt.status==='I gang'?bw*.5:0;
+          barHtml='<div class="fp-g-bar'+(forsinket?' fp-forsinket':'')+'" style="left:'+bx+'px;width:'+bw+'px;top:'+barTop+'px;background:'+farge+';color:'+txt+';" title="'+akt.navn+'" onclick="event.stopPropagation();fpVelgAkt('+akt.id+')">'+
+            (bw>40?akt.navn:'')+
+            (progW>0?'<div style="position:absolute;left:0;top:0;height:100%;width:'+progW+'px;background:rgba(0,0,0,.18);border-radius:4px;pointer-events:none;"></div>':'')+
+            '</div>';
+        }
+        html+='<div data-fpaktid="'+akt.id+'" style="display:flex;height:'+AKT_H+'px;min-height:'+AKT_H+'px;width:'+TOTAL_W+'px;min-width:'+TOTAL_W+'px;border-bottom:1px solid rgba(46,53,80,.4);cursor:pointer;flex-shrink:0;'+(sel?'background:rgba(232,184,75,.07);':'')+'" onclick="fpVelgAkt('+akt.id+')">'
+          +'<div style="width:'+TBL_W+'px;min-width:'+TBL_W+'px;display:flex;align-items:center;border-right:2px solid var(--br);flex-shrink:0;position:sticky;left:0;z-index:6;background:var(--bg);">'
+          +'<div style="width:34px;min-width:34px;text-align:center;font-size:10px;color:var(--tx3);flex-shrink:0;">'+akt.nr+'</div>'
+          +'<div style="flex:1;display:flex;align-items:center;gap:6px;overflow:hidden;padding:0 8px;"><div style="width:10px;height:10px;border-radius:2px;background:'+farge+';flex-shrink:0;'+(akt.type==='Milepæl'?'transform:rotate(45deg);':'')+'"></div><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px;">'+akt.navn+'</span></div>'
+          +'<div style="width:64px;min-width:64px;font-size:10px;color:var(--tx2);text-align:center;flex-shrink:0;">'+(akt.type==='Milepæl'?'–':vd+' d')+'</div>'
+          +'<div style="width:68px;min-width:68px;font-size:10px;color:var(--tx2);text-align:center;flex-shrink:0;">'+fpFmt(akt.start)+'</div>'
+          +'<div style="width:82px;min-width:82px;font-size:10px;color:var(--tx2);text-align:center;flex-shrink:0;">'+(akt.type==='Milepæl'?'–':fpFmt(akt.slutt))+'</div>'
+          +'</div>'
+          +'<div style="width:'+W+'px;min-width:'+W+'px;position:relative;display:flex;flex-shrink:0;">'+grid+barHtml+'</div>'
+          +'</div>';
+      });
+    }
+  });
+
+  // Today line
+  var xl=fpXPos(FP_TODAY,p.s)+fpCOL_W/2;
+  html+='<div style="position:absolute;left:'+(TBL_W+xl)+'px;top:0;width:2px;background:var(--acc);pointer-events:none;z-index:7;" id="fpTodayLine"><span style="position:sticky;top:0;display:block;font-size:8px;font-weight:700;color:var(--acc);padding-left:4px;white-space:nowrap;">I DAG</span></div>';
+
+  var rw=document.getElementById('fpRadWrap');
+  rw.style.position='relative';
+  rw.innerHTML=html;
+
+  // Sett today-line høyde
+  requestAnimationFrame(function(){
+    var tl=document.getElementById('fpTodayLine');
+    if(tl) tl.style.height=rw.scrollHeight+'px';
+  });
+
+  // Scroll sync header
+  rw.onscroll=function(){
+    var gh=document.getElementById('fpGanttHdr');
+    if(gh) gh.style.marginLeft='-'+rw.scrollLeft+'px';
+  };
+}
+
+function fpToggleFase(navn){ var f=fpFaser.find(function(x){return x.navn===navn;}); if(f)f.aapen=!f.aapen; fpRender(); }
+
+// ----------------------------------------------------------------
+// VELG / DETALJ
+// ----------------------------------------------------------------
+function fpVelgAkt(id){
+  fpValgtId=id===fpValgtId?null:id;
+  document.querySelectorAll('[data-fpaktid]').forEach(function(el){
+    el.style.background=el.dataset.fpaktid==fpValgtId?'rgba(232,184,75,.07)':'';
+  });
+  if(fpValgtId) fpVisDP(fpValgtId);
+  else fpCloseDP();
+}
+
+function fpVisDP(id){
+  var akt=fpAktiviteter.find(function(a){return a.id===id;}); if(!akt)return;
+  document.getElementById('fpDPTittel').textContent=akt.navn;
+  document.getElementById('fpDP').style.right='0';
+  var vd=akt.type==='Milepæl'?'Milepæl':fpVarighet(akt.start,akt.slutt)+' arbeidsdager';
+  var forsinket=akt.status==='I gang'&&akt.slutt<FP_TODAY;
+  var aHtml=fpAktorer.map(function(a){var v=a.navn===akt.aktorNavn;return '<div class="fp-aktor-item'+(v?' valgt':'')+'" style="'+(v?'color:'+a.farge+';border-color:'+a.farge+';background:'+a.farge+'15;':'')+'" onclick="fpSetAktor('+id+',\''+a.navn+'\')"><div style="width:8px;height:8px;border-radius:50%;background:'+a.farge+';"></div>'+a.navn+'</div>';}).join('');
+  document.getElementById('fpDPBody').innerHTML=
+    '<div><div class="fp-dp-lbl">Navn</div><input class="fp-dp-inp" id="fpDPNavn" type="text" value="'+akt.navn+'"></div>'+
+    '<div><div class="fp-dp-lbl">Fase</div><select class="fp-sel" id="fpDPFase">'+fpFaser.map(function(f){return '<option value="'+f.navn+'"'+(f.navn===akt.faseId?' selected':'')+'>'+f.navn+'</option>';}).join('')+'</select></div>'+
+    '<div style="display:flex;gap:8px;"><div style="flex:1;"><div class="fp-dp-lbl">Start</div><input class="fp-dp-inp" id="fpDPStart" type="date" value="'+fpFmtISO(akt.start)+'"></div><div style="flex:1;"><div class="fp-dp-lbl">Slutt</div><input class="fp-dp-inp" id="fpDPSlutt" type="date" value="'+fpFmtISO(akt.slutt)+'"></div></div>'+
+    '<div><div class="fp-dp-lbl">Status</div><select class="fp-sel" id="fpDPStatus"><option'+(akt.status==='Ikke startet'?' selected':'')+'>Ikke startet</option><option'+(akt.status==='I gang'?' selected':'')+'>I gang</option><option'+(akt.status==='Ferdig'?' selected':'')+'>Ferdig</option></select></div>'+
+    '<div><div class="fp-dp-lbl">Aktør</div><div style="display:flex;flex-wrap:wrap;gap:5px;" id="fpDPAktor">'+aHtml+'</div></div>'+
+    '<div><div class="fp-dp-lbl">Notat</div><textarea class="fp-dp-inp" id="fpDPNotat" rows="3">'+akt.notat+'</textarea></div>'+
+    '<div style="background:var(--bg3);border-radius:6px;padding:9px;font-size:11px;color:var(--tx2);">Varighet: <strong style="color:var(--tx);">'+vd+'</strong>'+(forsinket?' &nbsp;·&nbsp; <span style="color:var(--red);">⚠ Forsinket</span>':'')+'</div>';
+}
+
+function fpSetAktor(aktId,navn){ var a=fpAktiviteter.find(function(x){return x.id===aktId;}); if(a){a.aktorNavn=navn;fpVisDP(aktId);fpRender();} }
+
+function fpCloseDP(){
+  document.getElementById('fpDP').style.right='-300px';
+  document.querySelectorAll('[data-fpaktid]').forEach(function(el){el.style.background='';});
+  fpValgtId=null;
+}
+
+function fpLagreAkt(){
+  var akt=fpAktiviteter.find(function(a){return a.id===fpValgtId;}); if(!akt)return;
+  akt.navn=document.getElementById('fpDPNavn').value;
+  akt.faseId=document.getElementById('fpDPFase').value;
+  akt.start=fpD(document.getElementById('fpDPStart').value);
+  akt.slutt=fpD(document.getElementById('fpDPSlutt').value);
+  akt.status=document.getElementById('fpDPStatus').value;
+  akt.notat=document.getElementById('fpDPNotat').value;
+  if(!akt.start||!akt.slutt){toast('Fyll inn datoer','e');return;}
+  // Lagre til SP
+  var body={Title:akt.navn,Fase:akt.faseId,Startdato:fpFmtISO(akt.start),Sluttdato:fpFmtISO(akt.slutt),Status:akt.status,AktorNavn:akt.aktorNavn,Notat:akt.notat};
+  spPatch(SP+"/_api/lists('"+FP_AKTIVITETER_GUID+"')/items("+akt.spID+")", body).then(function(){
+    toast('Lagret','s');
+    fpRender();
+    fpVisDP(akt.id);
+    fpLastKort(fpProjID, null, null);
+  }).catch(function(e){toast('Feil: '+e.message,'e');});
+}
+
+function fpSlettAkt(){
+  if(!fpValgtId)return;
+  var akt=fpAktiviteter.find(function(a){return a.id===fpValgtId;});
+  if(!akt||!confirm('Slett "'+akt.navn+'"?'))return;
+  spDel(SP+"/_api/lists('"+FP_AKTIVITETER_GUID+"')/items("+akt.spID+")").then(function(){
+    fpAktiviteter=fpAktiviteter.filter(function(a){return a.id!==fpValgtId;});
+    fpCloseDP();
+    toast('Slettet','s');
+    fpRender();
+    fpLastKort(fpProjID, null, null);
+  }).catch(function(e){toast('Feil: '+e.message,'e');});
+}
+
+// ----------------------------------------------------------------
+// NY AKTIVITET
+// ----------------------------------------------------------------
+function fpNyAkt(){
+  document.getElementById('fpMNavn').value='';
+  document.getElementById('fpMStart').value=fpFmtISO(FP_TODAY);
+  document.getElementById('fpMSlutt').value=fpFmtISO(fpAddD(FP_TODAY,6));
+  document.getElementById('fpMFase').innerHTML=fpFaser.map(function(f){return '<option>'+f.navn+'</option>';}).join('');
+  document.getElementById('fpMAktor').innerHTML=fpAktorer.map(function(a){
+    return '<div class="fp-aktor-item" onclick="this.parentElement.querySelectorAll(\'.fp-aktor-item\').forEach(function(x){x.style.color=\'\';x.style.borderColor=\'\';x.style.background=\'var(--bg4)\';});this.style.color=\''+a.farge+'\';this.style.borderColor=\''+a.farge+'\';this.style.background=\''+a.farge+'15\';" data-navn="'+a.navn+'"><div style="width:8px;height:8px;border-radius:50%;background:'+a.farge+';"></div>'+a.navn+'</div>';
+  }).join('');
+  document.getElementById('fpNyAktMbg').classList.add('open');
+  setTimeout(function(){document.getElementById('fpMNavn').focus();},50);
+}
+
+function fpLagreNyAkt(){
+  var navn=document.getElementById('fpMNavn').value.trim();
+  if(!navn){toast('Fyll inn navn','e');return;}
+  var start=document.getElementById('fpMStart').value;
+  var slutt=document.getElementById('fpMSlutt').value;
+  if(!start||!slutt){toast('Fyll inn datoer','e');return;}
+  var type=document.getElementById('fpMType').value;
+  var status=document.getElementById('fpMStatus').value;
+  var fase=document.getElementById('fpMFase').value;
+  var valgtA=document.querySelector('#fpMAktor .fp-aktor-item[style*="15"]');
+  var aktorNavn=valgtA?valgtA.dataset.navn:'';
+  var body={Title:navn,ProsjektID:fpProjID,Fase:fase,Startdato:start,Sluttdato:type==='Milepæl'?start:slutt,Type:type,Status:status,AktorNavn:aktorNavn,Notat:''};
+  spPost(SP+"/_api/lists('"+FP_AKTIVITETER_GUID+"')/items", body).then(function(res){
+    var nyID=res.d.Id||res.d.id||fpNextId++;
+    fpAktiviteter.push({id:nyID,spID:nyID,faseId:fase,navn:navn,start:fpD(start),slutt:fpD(type==='Milepæl'?start:slutt),type:type,aktorNavn:aktorNavn,status:status,notat:'',nr:nyID});
+    if(!fpFaser.find(function(f){return f.navn===fase;})) fpFaser.push({navn:fase,aapen:true});
+    fpLukkModal('fpNyAktMbg');
+    fpRender();
+    fpLastKort(fpProjID,null,null);
+    toast('"'+navn+'" lagt til','s');
+  }).catch(function(e){toast('Feil: '+e.message,'e');});
+}
+
+// ----------------------------------------------------------------
+// NY FASE
+// ----------------------------------------------------------------
+function fpNyFase(){
+  var ekst=fpFaser.map(function(f){return f.navn;});
+  document.getElementById('fpFaseForslagListe').innerHTML=FP_FASE_FORSLAG.map(function(navn){
+    var brukt=ekst.includes(navn);
+    return '<div class="fp-fase-forslag'+(brukt?' brukt':'')+'" onclick="'+(brukt?'':('fpVelgFaseForslag(this,\''+navn.replace(/'/g,"\\'")+'\')'))+'">'+(brukt?'<span style="color:var(--grn);">✓</span>':'<span style="color:var(--tx3);">＋</span>')+' '+navn+'</div>';
+  }).join('');
+  document.getElementById('fpFaseEget').value='';
+  document.getElementById('fpNyFaseMbg').classList.add('open');
+}
+function fpVelgFaseForslag(el,navn){ document.querySelectorAll('.fp-fase-forslag').forEach(function(d){d.classList.remove('valgt');}); el.classList.add('valgt'); document.getElementById('fpFaseEget').value=navn; }
+function fpLagreNyFase(){ var navn=document.getElementById('fpFaseEget').value.trim(); if(!navn){toast('Velg eller skriv fasenavn','e');return;} if(!fpFaser.find(function(f){return f.navn===navn;})) fpFaser.push({navn:navn,aapen:true}); fpLukkModal('fpNyFaseMbg'); fpRender(); toast('"'+navn+'" lagt til','s'); }
+
+// ----------------------------------------------------------------
+// AKTØRADMIN
+// ----------------------------------------------------------------
+function fpAktorAdmin(){
+  fpRendreAktorListe();
+  document.getElementById('fpAktorMbg').classList.add('open');
+}
+function fpRendreAktorListe(){
+  document.getElementById('fpAktorAdminListe').innerHTML=fpAktorer.map(function(a){
+    return '<div style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--bg4);border:1px solid var(--br);border-radius:6px;">'
+      +'<input type="color" value="'+a.farge+'" onchange="fpEndreAktorFarge('+a.id+',this.value)" style="width:28px;height:26px;border:none;border-radius:4px;cursor:pointer;padding:1px;background:none;">'
+      +'<span style="flex:1;font-size:12px;">'+a.navn+'</span>'
+      +'<button class="btn sm" style="color:var(--red);border-color:var(--red);" onclick="fpFjernAktor('+a.id+')">Fjern</button>'
+      +'</div>';
+  }).join('');
+}
+function fpLeggTilAktor(){
+  var navn=document.getElementById('fpNyAktorNavn').value.trim();
+  var farge=document.getElementById('fpNyAktorFarge').value;
+  if(!navn){toast('Fyll inn navn','e');return;}
+  var body={Title:navn,Farge:farge,ProsjektID:fpProjID};
+  spPost(SP+"/_api/lists('"+FP_AKTORER_GUID+"')/items", body).then(function(res){
+    var nyID=res.d.Id||fpNextId++;
+    fpAktorer.push({id:nyID,navn:navn,farge:farge});
+    document.getElementById('fpNyAktorNavn').value='';
+    fpRendreAktorListe(); fpRender(); fpRendreLegend();
+    toast('"'+navn+'" lagt til','s');
+  }).catch(function(e){toast('Feil: '+e.message,'e');});
+}
+function fpFjernAktor(id){
+  if(!confirm('Fjern aktør?'))return;
+  var a=fpAktorer.find(function(x){return x.id===id;}); if(!a)return;
+  spDel(SP+"/_api/lists('"+FP_AKTORER_GUID+"')/items("+id+")").then(function(){
+    fpAktorer=fpAktorer.filter(function(x){return x.id!==id;});
+    fpRendreAktorListe(); fpRender(); fpRendreLegend();
+  }).catch(function(e){toast('Feil: '+e.message,'e');});
+}
+function fpEndreAktorFarge(id,farge){ var a=fpAktorer.find(function(x){return x.id===id;}); if(a){a.farge=farge;fpRender();fpRendreLegend();} }
+
+// ----------------------------------------------------------------
+// PERIODE
+// ----------------------------------------------------------------
+function fpPeriodeModal(){
+  if(fpPeriodeStart) document.getElementById('fpPStart').value=fpFmtISO(fpPeriodeStart);
+  if(fpPeriodeSlutt) document.getElementById('fpPSlutt').value=fpFmtISO(fpPeriodeSlutt);
+  fpVisPeriodeModal();
+}
+function fpVisPeriodeModal(){ document.getElementById('fpPeriodeMbg').classList.add('open'); }
+function fpSettPeriode(mnd){
+  var s=new Date(FP_TODAY.getFullYear(),FP_TODAY.getMonth(),1);
+  var e=new Date(s); e.setMonth(e.getMonth()+mnd); e.setDate(e.getDate()-1);
+  document.getElementById('fpPStart').value=fpFmtISO(s);
+  document.getElementById('fpPSlutt').value=fpFmtISO(e);
+}
+function fpBekreftPeriode(){
+  var ps=document.getElementById('fpPStart').value;
+  var pe=document.getElementById('fpPSlutt').value;
+  if(!ps||!pe){toast('Velg start- og sluttdato','e');return;}
+  fpPeriodeStart=fpD(ps); fpPeriodeSlutt=fpD(pe);
+  // Lagre på prosjektet
+  spPatch(SP+"/_api/lists('3DB9CF64-778C-48D8-8F32-044AC6EE249C')/items("+fpProjID+")", {PlanStart:ps,PlanSlutt:pe}).catch(function(){});
+  fpLukkModal('fpPeriodeMbg');
+  fpRender();
+  setTimeout(fpScrollIdag,100);
+  toast('Periode lagret','s');
+}
+
+// ----------------------------------------------------------------
+// UTILS
+// ----------------------------------------------------------------
+function fpScrollIdag(){
+  var p=fpGetPeriode();
+  var rw=document.getElementById('fpRadWrap');
+  if(rw){ var target=fpXPos(FP_TODAY,p.s)-(rw.clientWidth-460)/2; rw.scrollLeft=Math.max(0,target); }
+}
+function fpLukkModal(id){ document.getElementById(id).classList.remove('open'); }
+
 </script>
+
+<!-- ===== FREMDRIFT OVERLAY ===== -->
+<div class="fp-overlay" id="fpOverlay">
+  <div class="fp-ov-hdr">
+    <span style="font-size:13px;font-weight:700;color:var(--acc);">LH Bygg</span>
+    <span style="color:var(--tx3);">/</span>
+    <span style="font-size:12px;color:var(--tx2);" id="fpOvProjNavn">–</span>
+    <div style="margin-left:auto;font-size:10px;color:var(--tx3);">Fremdriftsplan pr. <span id="fpOvDato"></span></div>
+  </div>
+  <div class="fp-ov-toolbar">
+    <button class="btn sm pri" onclick="fpNyAkt()">+ Ny aktivitet</button>
+    <button class="btn sm" onclick="fpNyFase()">+ Ny fase</button>
+    <div style="width:1px;height:18px;background:var(--br);"></div>
+    <button class="btn sm" id="fpZUke" onclick="fpSetZoom('uke')">Uke</button>
+    <button class="btn sm active" id="fpZMnd" onclick="fpSetZoom('maaned')">Måned</button>
+    <div style="width:1px;height:18px;background:var(--br);"></div>
+    <button class="btn sm" onclick="fpScrollIdag()">⬦ I dag</button>
+    <div style="width:1px;height:18px;background:var(--br);"></div>
+    <button class="btn sm" onclick="fpAktorAdmin()">⚙ Aktører</button>
+    <button class="btn sm" onclick="fpPeriodeModal()">📅 Periode</button>
+  </div>
+  <div class="fp-aktor-legend" id="fpAktorLegend"></div>
+  <div class="fp-ov-main">
+    <div class="fp-ov-scroll" id="fpOvScroll">
+      <div class="fp-sticky-hdr">
+        <div class="fp-sticky-tbl">
+          <div class="fp-sticky-tbl-row">
+            <div style="width:34px;min-width:34px;">#</div>
+            <div style="flex:1;">Aktivitetsnavn</div>
+            <div style="width:64px;min-width:64px;text-align:center;">Arb.dager</div>
+            <div style="width:68px;min-width:68px;text-align:center;">Start</div>
+            <div style="width:82px;min-width:82px;text-align:center;">Slutt</div>
+          </div>
+          <div id="fpTblHdrSpacer" style="height:0;"></div>
+        </div>
+        <div class="fp-gantt-hdr" id="fpGanttHdr"></div>
+      </div>
+      <div class="fp-rad-wrap" id="fpRadWrap"></div>
+    </div>
+  </div>
+</div>
+<button class="fp-lukk-btn" id="fpLukkBtn" onclick="fpLukk()">✕</button>
+
+<!-- DETALJ PANEL -->
+<div style="position:fixed;top:0;right:-300px;width:290px;height:100vh;background:var(--bg2);border-left:1px solid var(--br);z-index:700;display:flex;flex-direction:column;transition:right .22s;box-shadow:-4px 0 20px rgba(0,0,0,.4);" id="fpDP">
+  <div style="padding:12px 14px;border-bottom:1px solid var(--br);background:var(--bg3);display:flex;align-items:center;gap:10px;">
+    <div style="font-size:12px;font-weight:700;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" id="fpDPTittel">–</div>
+    <button class="btn sm" onclick="fpCloseDP()">✕</button>
+  </div>
+  <div style="flex:1;overflow-y:auto;padding:13px 14px;display:flex;flex-direction:column;gap:12px;" id="fpDPBody"></div>
+  <div style="padding:10px 14px;border-top:1px solid var(--br);display:flex;gap:8px;">
+    <button class="btn" style="flex:1;color:var(--red);border-color:var(--red);" onclick="fpSlettAkt()">Slett</button>
+    <button class="btn pri" style="flex:1;" onclick="fpLagreAkt()">Lagre</button>
+  </div>
+</div>
+
+<!-- NY AKTIVITET MODAL -->
+<div class="fp-modal-bg" id="fpNyAktMbg">
+  <div class="fp-modal" style="max-width:400px;">
+    <div class="fp-modal-hdr"><div style="font-size:13px;font-weight:700;flex:1;">Ny aktivitet</div><button class="btn sm" onclick="fpLukkModal('fpNyAktMbg')">✕</button></div>
+    <div class="fp-modal-body">
+      <div><div class="fp-lbl">Aktivitetsnavn</div><input class="fp-inp" type="text" id="fpMNavn" placeholder="f.eks. Støping fundament"></div>
+      <div><div class="fp-lbl">Fase</div><select class="fp-sel" id="fpMFase"></select></div>
+      <div style="display:flex;gap:10px;">
+        <div style="flex:1;"><div class="fp-lbl">Start</div><input class="fp-inp" type="date" id="fpMStart"></div>
+        <div style="flex:1;"><div class="fp-lbl">Slutt</div><input class="fp-inp" type="date" id="fpMSlutt"></div>
+      </div>
+      <div><div class="fp-lbl">Type</div><select class="fp-sel" id="fpMType"><option value="Aktivitet">Aktivitet</option><option value="Milepæl">Milepæl</option></select></div>
+      <div><div class="fp-lbl">Status</div><select class="fp-sel" id="fpMStatus"><option value="Ikke startet">Ikke startet</option><option value="I gang">I gang</option><option value="Ferdig">Ferdig</option></select></div>
+      <div><div class="fp-lbl">Aktør</div><div style="display:flex;flex-wrap:wrap;gap:5px;" id="fpMAktor"></div></div>
+    </div>
+    <div class="fp-modal-foot">
+      <button class="btn" onclick="fpLukkModal('fpNyAktMbg')">Avbryt</button>
+      <button class="btn pri" onclick="fpLagreNyAkt()">Legg til</button>
+    </div>
+  </div>
+</div>
+
+<!-- NY FASE MODAL -->
+<div class="fp-modal-bg" id="fpNyFaseMbg">
+  <div class="fp-modal" style="max-width:400px;">
+    <div class="fp-modal-hdr"><div style="font-size:13px;font-weight:700;flex:1;">+ Ny fase</div><button class="btn sm" onclick="fpLukkModal('fpNyFaseMbg')">✕</button></div>
+    <div class="fp-modal-body">
+      <div style="font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.6px;font-weight:600;">Velg standardfase</div>
+      <div id="fpFaseForslagListe" style="display:flex;flex-direction:column;gap:5px;max-height:240px;overflow-y:auto;"></div>
+      <div style="display:flex;align-items:center;gap:8px;color:var(--tx3);font-size:11px;"><div style="flex:1;height:1px;background:var(--br);"></div>eller skriv eget<div style="flex:1;height:1px;background:var(--br);"></div></div>
+      <input class="fp-inp" type="text" id="fpFaseEget" placeholder="Egendefinert fasenavn...">
+    </div>
+    <div class="fp-modal-foot">
+      <button class="btn" onclick="fpLukkModal('fpNyFaseMbg')">Avbryt</button>
+      <button class="btn pri" onclick="fpLagreNyFase()">Legg til</button>
+    </div>
+  </div>
+</div>
+
+<!-- AKTØR ADMIN MODAL -->
+<div class="fp-modal-bg" id="fpAktorMbg">
+  <div class="fp-modal" style="max-width:380px;">
+    <div class="fp-modal-hdr"><div style="font-size:13px;font-weight:700;flex:1;">⚙ Aktører</div><button class="btn sm" onclick="fpLukkModal('fpAktorMbg')">✕</button></div>
+    <div style="padding:14px;display:flex;flex-direction:column;gap:7px;max-height:300px;overflow-y:auto;" id="fpAktorAdminListe"></div>
+    <div style="padding:10px 14px;border-top:1px solid var(--br);display:flex;gap:7px;">
+      <input class="fp-inp" type="text" id="fpNyAktorNavn" placeholder="Firmanavn..." style="flex:1;">
+      <input type="color" id="fpNyAktorFarge" value="#4a9eff" style="width:34px;height:34px;border:1px solid var(--br);border-radius:6px;background:var(--bg4);cursor:pointer;padding:2px;">
+      <button class="btn pri sm" onclick="fpLeggTilAktor()">+</button>
+    </div>
+    <div class="fp-modal-foot"><button class="btn pri" onclick="fpLukkModal('fpAktorMbg')">Ferdig</button></div>
+  </div>
+</div>
+
+<!-- PERIODE MODAL -->
+<div class="fp-modal-bg" id="fpPeriodeMbg">
+  <div class="fp-modal" style="max-width:420px;">
+    <div class="fp-modal-hdr"><div style="font-size:13px;font-weight:700;flex:1;">📅 Periode for fremdriftsplanen</div><button class="btn sm" onclick="fpLukkModal('fpPeriodeMbg')">✕</button></div>
+    <div class="fp-modal-body">
+      <div style="display:flex;gap:10px;">
+        <div style="flex:1;"><div class="fp-lbl">Startdato</div><input class="fp-inp" type="date" id="fpPStart"></div>
+        <div style="flex:1;"><div class="fp-lbl">Sluttdato</div><input class="fp-inp" type="date" id="fpPSlutt"></div>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;">
+        <div style="font-size:10px;color:var(--tx3);font-weight:600;width:100%;">Hurtigvalg:</div>
+        <button class="btn sm" onclick="fpSettPeriode(1)">1 mnd</button>
+        <button class="btn sm" onclick="fpSettPeriode(3)">3 mnd</button>
+        <button class="btn sm" onclick="fpSettPeriode(6)">6 mnd</button>
+        <button class="btn sm" onclick="fpSettPeriode(12)">1 år</button>
+        <button class="btn sm" onclick="fpSettPeriode(18)">18 mnd</button>
+        <button class="btn sm" onclick="fpSettPeriode(24)">2 år</button>
+      </div>
+    </div>
+    <div class="fp-modal-foot">
+      <button class="btn" onclick="fpLukkModal('fpPeriodeMbg')">Avbryt</button>
+      <button class="btn pri" onclick="fpBekreftPeriode()">Bekreft</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
