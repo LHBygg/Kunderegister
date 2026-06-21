@@ -5870,13 +5870,15 @@ function fpLastKort(projID, planStart, planSlutt){
     spGet(SP + "/_api/lists('" + FP_AKTORER_GUID + "')/items?$filter=ProsjektID eq " + projID + "&$orderby=Title&$top=50"),
     spGet(SP + "/_api/lists('" + FP_AKTIVITETER_GUID + "')/items?$filter=ProsjektID eq " + projID + "&$orderby=ID&$top=500")
   ]).then(function(res){
-    fpAktorer = (res[0].d.results||[]).map(function(a){ return {id:a.ID,navn:a.Title,farge:a.Farge||'#5c6480',projID:projID}; });
-    fpAktiviteter = (res[1].d.results||[]).map(function(a){ return {
-      id:a.ID, spID:a.ID, faseId:a.Fase, navn:a.Title,
+    var aktorRaw = (res[0].value||res[0].d&&res[0].d.results||[]);
+    var aktRaw   = (res[1].value||res[1].d&&res[1].d.results||[]);
+    fpAktorer = aktorRaw.map(function(a){ return {id:a.ID||a.id,navn:a.Title,farge:a.Farge||'#5c6480',projID:projID}; });
+    fpAktiviteter = aktRaw.map(function(a){ return {
+      id:a.ID||a.id, spID:a.ID||a.id, faseId:a.Fase, navn:a.Title,
       start:fpD(a.Startdato), slutt:fpD(a.Sluttdato),
       type:a.Type||'Aktivitet', aktorNavn:a.AktorNavn||'',
       status:a.Status||'Ikke startet', notat:a.Notat||'',
-      nr:a.ID
+      nr:a.ID||a.id
     }; });
     fpFaser = [];
     fpAktiviteter.forEach(function(a){
@@ -6210,7 +6212,7 @@ function fpLagreNyAkt(){
   var aktorNavn=valgtA?valgtA.dataset.navn:'';
   var body={Title:navn,ProsjektID:fpProjID,Fase:fase,Startdato:start,Sluttdato:type==='Milepæl'?start:slutt,Type:type,Status:status,AktorNavn:aktorNavn,Notat:''};
   spPost(SP+"/_api/lists('"+FP_AKTIVITETER_GUID+"')/items", body).then(function(res){
-    var nyID=(res&&res.d&&(res.d.Id||res.d.id))||fpNextId++;
+    var nyID=(res&&(res.id||res.Id||(res.d&&(res.d.Id||res.d.id))))||fpNextId++;
     fpAktiviteter.push({id:nyID,spID:nyID,faseId:fase,navn:navn,start:fpD(start),slutt:fpD(type==='Milepæl'?start:slutt),type:type,aktorNavn:aktorNavn,status:status,notat:'',nr:nyID});
     if(!fpFaser.find(function(f){return f.navn===fase;})) fpFaser.push({navn:fase,aapen:true});
     fpLukkModal('fpNyAktMbg');
@@ -6257,7 +6259,7 @@ function fpLeggTilAktor(){
   if(!navn){toast('Fyll inn navn','e');return;}
   var body={Title:navn,Farge:farge,ProsjektID:fpProjID};
   spPost(SP+"/_api/lists('"+FP_AKTORER_GUID+"')/items", body).then(function(res){
-    var nyID=(res&&res.d&&(res.d.Id||res.d.id))||fpNextId++;
+    var nyID=(res&&(res.id||res.Id||(res.d&&(res.d.Id||res.d.id))))||fpNextId++;
     fpAktorer.push({id:nyID,navn:navn,farge:farge});
     document.getElementById('fpNyAktorNavn').value='';
     fpRendreAktorListe(); fpRender(); fpRendreLegend();
