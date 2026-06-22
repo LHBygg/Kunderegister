@@ -588,6 +588,14 @@ tr.erow td{padding:0;background:var(--bg2);border-bottom:1px solid var(--br2);}
 .fp-dp-inp:focus{outline:none;border-color:var(--acc);}
 .fp-aktor-item{display:flex;align-items:center;gap:5px;padding:4px 9px;border:1px solid var(--br);border-radius:20px;font-size:11px;cursor:pointer;transition:all .12s;background:var(--bg4);}
 .fp-fase-forslag{padding:7px 10px;border-radius:6px;border:1px solid var(--br);background:var(--bg4);font-size:11px;cursor:pointer;display:flex;align-items:center;gap:6px;transition:all .12s;}
+.fp-drag-handle{cursor:grab;padding:0 6px;color:var(--tx3);font-size:15px;line-height:1;flex-shrink:0;user-select:none;}
+.fp-drag-handle:active{cursor:grabbing;}
+.fp-fase-drag-over{outline:2px dashed var(--acc);outline-offset:-2px;}
+.fp-ctx-menu{position:fixed;z-index:9999;background:var(--bg2);border:1px solid var(--br);border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,.4);padding:4px;min-width:160px;}
+.fp-ctx-item{padding:8px 14px;font-size:12px;border-radius:5px;cursor:pointer;color:var(--tx);display:flex;align-items:center;gap:8px;}
+.fp-ctx-item:hover{background:var(--bg4);}
+.fp-ctx-item.danger{color:var(--red);}
+.fp-ctx-item.danger:hover{background:rgba(239,68,68,.1);}
 .fp-fase-forslag:hover{border-color:var(--acc);color:var(--acc);}
 .fp-fase-forslag.valgt{border-color:var(--acc);background:rgba(232,184,75,.1);color:var(--acc);}
 .fp-fase-forslag.brukt{opacity:.4;cursor:default;}
@@ -6123,20 +6131,12 @@ function fpRendreRader(dager,uker,p,W){
     });
     var ferdig=akts.filter(function(a){return a.status==='Ferdig';}).length;
     var faseNavn=fase.navn.replace(/'/g,"\\'");
-    var erForste=fpFaser.indexOf(fase)===0;
-    var erSiste=fpFaser.indexOf(fase)===fpFaser.length-1;
-    var knapper=
-      '<button onclick="event.stopPropagation();fpFlyttFase(\''+faseNavn+'\',−1)" title="Flytt opp"'
-      +' style="background:none;border:none;cursor:pointer;padding:2px 4px;color:var(--tx3);font-size:12px;line-height:1;opacity:'+(erForste?'0.2':'0.8')+';pointer-events:'+(erForste?'none':'auto')+';">&#9650;</button>'
-      +'<button onclick="event.stopPropagation();fpFlyttFase(\''+faseNavn+'\',1)" title="Flytt ned"'
-      +' style="background:none;border:none;cursor:pointer;padding:2px 4px;color:var(--tx3);font-size:12px;line-height:1;opacity:'+(erSiste?'0.2':'0.8')+';pointer-events:'+(erSiste?'none':'auto')+';">&#9660;</button>'
-      +'<button onclick="event.stopPropagation();fpSlettFase(\''+faseNavn+'\')" title="Slett fase" style="background:none;border:none;cursor:pointer;padding:2px 5px;color:var(--tx3);font-size:11px;line-height:1;border-radius:3px;">&#10005;</button>';
-    html+='<div style="display:flex;height:'+FASE_H+'px;min-height:'+FASE_H+'px;width:'+TOTAL_W+'px;min-width:'+TOTAL_W+'px;background:var(--bg3);border-bottom:1px solid var(--br);cursor:pointer;flex-shrink:0;" onclick="fpToggleFase(\''+faseNavn+'\')">'
-      +'<div style="width:'+TBL_W+'px;min-width:'+TBL_W+'px;display:flex;align-items:center;border-right:2px solid var(--br);padding:0 8px;gap:6px;position:sticky;left:0;z-index:6;background:var(--bg3);flex-shrink:0;">'
-      +'<span style="font-size:10px;color:var(--tx3);">'+(fase.aapen?'&#9660;':'&#9658;')+'</span>'
-      +'<span style="font-size:10px;font-weight:700;color:var(--tx2);text-transform:uppercase;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;">'+fase.navn+'</span>'
-      +'<span style="font-size:10px;color:var(--tx3);flex-shrink:0;">'+ferdig+'/'+akts.length+'</span>'
-      +knapper
+    html+='<div class="fp-fase-row" draggable="true" data-fase="'+faseNavn+'" oncontextmenu="fpVisCtxFase(event,\''+faseNavn+'\')" style="display:flex;height:'+FASE_H+'px;min-height:'+FASE_H+'px;width:'+TOTAL_W+'px;min-width:'+TOTAL_W+'px;background:var(--bg3);border-bottom:1px solid var(--br);flex-shrink:0;">'
+      +'<div style="width:'+TBL_W+'px;min-width:'+TBL_W+'px;display:flex;align-items:center;border-right:2px solid var(--br);padding:0 4px 0 0;position:sticky;left:0;z-index:6;background:var(--bg3);flex-shrink:0;">'
+      +'<span class="fp-drag-handle" title="Dra for å endre rekkefolge">⋮</span>'
+      +'<span onclick="event.stopPropagation();fpToggleFase(\''+faseNavn+'\')" style="font-size:10px;color:var(--tx3);padding:0 4px;cursor:pointer;">'+(fase.aapen?'&#9660;':'&#9658;')+'</span>'
+      +'<span onclick="event.stopPropagation();fpToggleFase(\''+faseNavn+'\')" style="font-size:10px;font-weight:700;color:var(--tx2);text-transform:uppercase;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;cursor:pointer;">'+fase.navn+'</span>'
+      +'<span style="font-size:10px;color:var(--tx3);flex-shrink:0;padding-right:8px;">'+ferdig+'/'+akts.length+'</span>'
       +'</div>'
       +'<div style="width:'+W+'px;min-width:'+W+'px;display:flex;flex-shrink:0;">'+grid+'</div>'
       +'</div>';
@@ -6183,6 +6183,7 @@ function fpRendreRader(dager,uker,p,W){
   var rw=document.getElementById('fpRadWrap');
   rw.style.position='relative';
   rw.innerHTML=html;
+  fpInitFaseDrag();
 
   // Sett today-line høyde
   requestAnimationFrame(function(){
@@ -6231,6 +6232,60 @@ function fpFlyttFase(navn, retning){
   fpFaser[nyIdx]=tmp;
   fpLagreFaserSP(); fpRender();
 }
+
+var fpDragFase=null;
+function fpInitFaseDrag(){
+  document.querySelectorAll('.fp-fase-row').forEach(function(rad){
+    rad.addEventListener('dragstart',function(e){
+      fpDragFase=rad.dataset.fase;
+      e.dataTransfer.effectAllowed='move';
+      setTimeout(function(){rad.style.opacity='0.4';},0);
+    });
+    rad.addEventListener('dragend',function(){
+      rad.style.opacity='';
+      document.querySelectorAll('.fp-fase-drag-over').forEach(function(el){el.classList.remove('fp-fase-drag-over');});
+      fpDragFase=null;
+    });
+    rad.addEventListener('dragover',function(e){
+      e.preventDefault();
+      if(rad.dataset.fase!==fpDragFase) rad.classList.add('fp-fase-drag-over');
+    });
+    rad.addEventListener('dragleave',function(){rad.classList.remove('fp-fase-drag-over');});
+    rad.addEventListener('drop',function(e){
+      e.preventDefault();
+      rad.classList.remove('fp-fase-drag-over');
+      if(!fpDragFase||rad.dataset.fase===fpDragFase) return;
+      var fraIdx=fpFaser.findIndex(function(f){return f.navn===fpDragFase;});
+      var tilIdx=fpFaser.findIndex(function(f){return f.navn===rad.dataset.fase;});
+      if(fraIdx===-1||tilIdx===-1) return;
+      var flyttet=fpFaser.splice(fraIdx,1)[0];
+      fpFaser.splice(tilIdx,0,flyttet);
+      fpLagreFaserSP(); fpRender();
+    });
+  });
+}
+
+var fpCtxFase=null;
+document.addEventListener('click',function(){fpLukkCtx();});
+function fpLukkCtx(){
+  var m=document.getElementById('fpCtxMenu');
+  if(m) m.style.display='none';
+  fpCtxFase=null;
+}
+function fpVisCtxFase(e,navn){
+  e.preventDefault(); e.stopPropagation();
+  fpCtxFase=navn;
+  var m=document.getElementById('fpCtxMenu');
+  if(!m) return;
+  var x=e.clientX, y=e.clientY;
+  if(x+180>window.innerWidth) x=window.innerWidth-185;
+  if(y+60>window.innerHeight) y=window.innerHeight-65;
+  m.style.left=x+'px'; m.style.top=y+'px'; m.style.display='block';
+  document.getElementById('fpCtxSlett').onclick=function(){
+    fpLukkCtx(); if(fpCtxFase) fpSlettFase(fpCtxFase);
+  };
+}
+
 
 // ----------------------------------------------------------------
 // UTSKRIFT
@@ -6931,5 +6986,8 @@ function fpLukkModal(id){ document.getElementById(id).classList.remove('open'); 
   </div>
 </div>
 
+<div id="fpCtxMenu" class="fp-ctx-menu" style="display:none;">
+  <div class="fp-ctx-item danger" id="fpCtxSlett">&#128465; Slett fase</div>
+</div>
 </body>
 </html>
