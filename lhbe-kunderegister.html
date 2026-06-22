@@ -6140,6 +6140,184 @@ function fpRendreRader(dager,uker,p,W){
 function fpToggleFase(navn){ var f=fpFaser.find(function(x){return x.navn===navn;}); if(f)f.aapen=!f.aapen; fpRender(); }
 
 // ----------------------------------------------------------------
+// UTSKRIFT
+// ----------------------------------------------------------------
+function fpSkrivUt(){
+  var p=fpGetPeriode();
+  var dager=fpGetDager(p.s,p.e);
+  var uker=fpGetUker(p.s,p.e);
+  var W=fpZoom==='maaned'?uker.length*fpCOL_W:dager.length*fpCOL_W;
+  var TBL_W=460, TOTAL_W=TBL_W+W;
+  var MND=['Jan','Feb','Mar','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Des'];
+  var DN=['Sø','Ma','Ti','On','To','Fr','Lø'];
+  var FASE_H=30, AKT_H=32;
+
+  // CSS-variabler (bruker mørkt tema alltid for utskrift – men @media print kan override)
+  var isLight = document.body.classList.contains('light');
+  var bg   = isLight?'#f4f6fa':'#0d1117';
+  var bg2  = isLight?'#fff':'#161b27';
+  var bg3  = isLight?'#f0f2f7':'#1e2535';
+  var bg4  = isLight?'#e8ebf2':'#252d3f';
+  var br   = isLight?'rgba(0,0,0,.07)':'rgba(255,255,255,.07)';
+  var br2  = isLight?'rgba(0,0,0,.13)':'rgba(255,255,255,.13)';
+  var tx   = isLight?'#1a2035':'#e8ecf4';
+  var tx2  = isLight?'#5a6478':'#8b95ab';
+  var tx3  = isLight?'#9aa3b5':'#4e5a70';
+  var acc  = '#e8b84b';
+
+  // --- HEADER ---
+  var kols = fpZoom==='maaned'?uker:dager;
+  var mgrp=[],cur=null,cnt=0;
+  kols.forEach(function(k,i){
+    var key=k.getFullYear()+'-'+k.getMonth();
+    if(key!==cur){if(cur!==null)mgrp.push({d:kols[i-cnt],cnt:cnt});cur=key;cnt=1;}else cnt++;
+  });
+  mgrp.push({d:kols[kols.length-cnt],cnt:cnt});
+  var mHtml=mgrp.map(function(m){
+    return '<div style="width:'+(m.cnt*fpCOL_W)+'px;min-width:'+(m.cnt*fpCOL_W)+'px;padding:3px 6px;font-size:9px;font-weight:700;color:'+acc+';border-right:1px solid '+br+';white-space:nowrap;text-transform:uppercase;box-sizing:border-box;">'
+      +MND[m.d.getMonth()]+' '+m.d.getFullYear()+'</div>';
+  }).join('');
+
+  var rad2='';
+  if(fpZoom==='maaned'){
+    rad2='<div style="display:flex;width:'+W+'px;">'+uker.map(function(u){
+      var id=u<=FP_TODAY&&fpAddD(u,6)>=FP_TODAY;
+      return '<div style="width:'+fpCOL_W+'px;min-width:'+fpCOL_W+'px;font-size:9px;color:'+(id?acc:tx3)+';border-right:1px solid '+br+';text-align:center;padding:3px 0;font-weight:'+(id?'700':'400')+';box-sizing:border-box;">U'+fpIsoWeek(u)+'</div>';
+    }).join('')+'</div>';
+  } else {
+    rad2='<div style="display:flex;width:'+W+'px;">'+dager.map(function(d){
+      var idag=d.getTime()===FP_TODAY.getTime();
+      var helg=d.getDay()===0||d.getDay()===6;
+      return '<div style="width:'+fpCOL_W+'px;min-width:'+fpCOL_W+'px;font-size:8px;color:'+(idag?acc:tx3)+';border-right:1px solid rgba(46,53,80,.4);text-align:center;padding:2px 0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;opacity:'+(helg?'.4':'1')+';box-sizing:border-box;font-weight:'+(idag?'700':'400')+';">'
+        +'<span>'+DN[d.getDay()]+'</span><span style="font-size:9px;font-weight:600;">'+d.getDate()+'</span></div>';
+    }).join('')+'</div>';
+  }
+
+  var hdrHtml = '<div style="display:flex;border-bottom:2px solid '+br2+';background:'+bg2+';flex-shrink:0;">'
+    +'<div style="width:'+TBL_W+'px;min-width:'+TBL_W+'px;display:flex;flex-direction:column;border-right:2px solid '+br2+';background:'+bg3+';">'
+    +'<div style="display:flex;border-bottom:1px solid '+br+';padding:5px 8px;">'
+    +'<div style="width:34px;font-size:9px;font-weight:700;color:'+tx3+';text-transform:uppercase;letter-spacing:.6px;">#</div>'
+    +'<div style="flex:1;font-size:9px;font-weight:700;color:'+tx3+';text-transform:uppercase;letter-spacing:.6px;">Aktivitetsnavn</div>'
+    +'<div style="width:60px;text-align:center;font-size:9px;font-weight:700;color:'+tx3+';text-transform:uppercase;letter-spacing:.6px;">Arb.dager</div>'
+    +'<div style="width:68px;text-align:center;font-size:9px;font-weight:700;color:'+tx3+';text-transform:uppercase;letter-spacing:.6px;">Start</div>'
+    +'<div style="width:82px;text-align:center;font-size:9px;font-weight:700;color:'+tx3+';text-transform:uppercase;letter-spacing:.6px;">Slutt</div>'
+    +'</div></div>'
+    +'<div style="overflow:hidden;display:flex;flex-direction:column;">'
+    +'<div style="display:flex;border-bottom:1px solid '+br+';">'+mHtml+'</div>'
+    +rad2
+    +'</div></div>';
+
+  // --- RADER ---
+  var grid=kols.map(function(k){
+    var idag=fpZoom==='maaned'?(k<=FP_TODAY&&fpAddD(k,6)>=FP_TODAY):k.getTime()===FP_TODAY.getTime();
+    return '<div style="width:'+fpCOL_W+'px;min-width:'+fpCOL_W+'px;height:100%;border-right:1px solid rgba(46,53,80,.25);flex-shrink:0;box-sizing:border-box;'+(idag?'background:rgba(232,184,75,.04);':'')+'"></div>';
+  }).join('');
+
+  var raderHtml='';
+  var totalHoyde=0;
+  fpFaser.forEach(function(fase){
+    var akts=fpAktiviteter.filter(function(a){
+      return a.faseId===fase.navn && (fpAktorFilter===null||a.aktorNavn===fpAktorFilter);
+    });
+    var ferdig=akts.filter(function(a){return a.status==='Ferdig';}).length;
+    raderHtml+='<div style="display:flex;height:'+FASE_H+'px;width:'+TOTAL_W+'px;background:'+bg3+';border-bottom:1px solid '+br+';flex-shrink:0;">'
+      +'<div style="width:'+TBL_W+'px;display:flex;align-items:center;border-right:2px solid '+br2+';padding:0 8px;gap:8px;">'
+      +'<span style="font-size:10px;color:'+tx3+';">▶</span>'
+      +'<span style="font-size:10px;font-weight:700;color:'+tx2+';text-transform:uppercase;">'+fase.navn+'</span>'
+      +'<span style="font-size:10px;color:'+tx3+';">'+ferdig+'/'+akts.length+'</span>'
+      +'</div>'
+      +'<div style="width:'+W+'px;display:flex;flex-shrink:0;">'+grid+'</div>'
+      +'</div>';
+    totalHoyde+=FASE_H;
+
+    if(fase.aapen){
+      akts.forEach(function(akt){
+        var farge=fpAktorFarge(akt.aktorNavn);
+        var vd=fpVarighet(akt.start,akt.slutt);
+        var barTop=Math.floor((AKT_H-16)/2);
+        var barHtml='';
+        if(akt.type==='Milepæl'){
+          var mx=fpXPos(akt.start,p.s);
+          barHtml='<div style="position:absolute;left:'+mx+'px;top:'+Math.floor(AKT_H/2-5)+'px;width:10px;height:10px;background:'+farge+';transform:rotate(45deg);"></div>';
+        } else {
+          var bx=fpXPos(akt.start,p.s);
+          var bw=Math.max(fpXPos(fpAddD(akt.slutt,1),p.s)-bx,fpCOL_W);
+          var txt=fpLys(farge)?'#000':'#fff';
+          barHtml='<div style="position:absolute;left:'+bx+'px;top:'+barTop+'px;height:16px;width:'+bw+'px;background:'+farge+';border-radius:3px;display:flex;align-items:center;padding:0 4px;font-size:8px;font-weight:700;color:'+txt+';overflow:hidden;white-space:nowrap;box-shadow:0 1px 3px rgba(0,0,0,.4);">'+(bw>36?akt.navn:'')+'</div>';
+        }
+        raderHtml+='<div style="display:flex;height:'+AKT_H+'px;width:'+TOTAL_W+'px;border-bottom:1px solid rgba(46,53,80,.35);flex-shrink:0;">'
+          +'<div style="width:'+TBL_W+'px;display:flex;align-items:center;border-right:2px solid '+br2+';background:'+bg+';flex-shrink:0;">'
+          +'<div style="width:34px;text-align:center;font-size:10px;color:'+tx3+';">'+akt.nr+'</div>'
+          +'<div style="flex:1;display:flex;align-items:center;gap:5px;overflow:hidden;padding:0 6px;">'
+          +'<div style="width:8px;height:8px;border-radius:2px;background:'+farge+';flex-shrink:0;'+(akt.type==='Milepæl'?'transform:rotate(45deg);':'')+'"></div>'
+          +'<span style="font-size:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:'+tx+';">'+akt.navn+'</span></div>'
+          +'<div style="width:60px;font-size:9px;color:'+tx2+';text-align:center;flex-shrink:0;">'+(akt.type==='Milepæl'?'–':vd+' d')+'</div>'
+          +'<div style="width:68px;font-size:9px;color:'+tx2+';text-align:center;flex-shrink:0;">'+fpFmt(akt.start)+'</div>'
+          +'<div style="width:82px;font-size:9px;color:'+tx2+';text-align:center;flex-shrink:0;">'+(akt.type==='Milepæl'?'–':fpFmt(akt.slutt))+'</div>'
+          +'</div>'
+          +'<div style="width:'+W+'px;position:relative;display:flex;flex-shrink:0;">'+grid+barHtml+'</div>'
+          +'</div>';
+        totalHoyde+=AKT_H;
+      });
+    }
+  });
+
+  // Today-linje
+  var xl=fpXPos(FP_TODAY,p.s)+fpCOL_W/2;
+  var todayHtml='<div style="position:absolute;left:'+(TBL_W+xl)+'px;top:0;width:2px;height:'+totalHoyde+'px;background:'+acc+';pointer-events:none;z-index:7;">'
+    +'<span style="display:block;font-size:7px;font-weight:700;color:'+acc+';padding-left:3px;white-space:nowrap;">I DAG</span></div>';
+
+  // --- Aktørlegende ---
+  var legendHtml='<div style="padding:6px 12px;background:'+bg3+';border-bottom:1px solid '+br+';display:flex;flex-wrap:wrap;gap:6px;align-items:center;">'
+    +'<span style="font-size:9px;color:'+tx3+';font-weight:600;text-transform:uppercase;letter-spacing:.6px;margin-right:2px;">Aktører:</span>'
+    +fpAktorer.map(function(a){
+      return '<div style="display:flex;align-items:center;gap:4px;padding:2px 8px;border-radius:10px;background:'+a.farge+'18;border:1px solid '+a.farge+'50;font-size:9px;font-weight:600;color:'+a.farge+';">'
+        +'<div style="width:7px;height:7px;border-radius:50%;background:'+a.farge+';"></div>'+a.navn+'</div>';
+    }).join('')
+    +'</div>';
+
+  var zoomTekst = fpZoom==='maaned' ? 'Månedvisning' : 'Ukevisning';
+  var datoNaa = fpFmt(FP_TODAY);
+  var periodeStr = fpFmt(p.s)+' – '+fpFmt(p.e);
+
+  var html = '<!DOCTYPE html><html><head><meta charset="UTF-8">'
+    +'<title>Fremdriftsplan – '+fpProjNavn+'</title>'
+    +'<style>'
+    +'*{box-sizing:border-box;margin:0;padding:0;}'
+    +'body{font-family:Arial,sans-serif;background:'+bg+';color:'+tx+';font-size:12px;}'
+    +'@media print{'
+    +'body{-webkit-print-color-adjust:exact;print-color-adjust:exact;}'
+    +'@page{size:A3 landscape;margin:10mm;}'
+    +'}'
+    +'</style>'
+    +'<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">'
+    +'</head><body>'
+    // Topplinje
+    +'<div style="padding:8px 12px;background:'+bg2+';border-bottom:1px solid '+br+';display:flex;align-items:center;gap:10px;">'
+    +'<span style="font-size:14px;font-weight:700;color:'+acc+';">LH Bygg</span>'
+    +'<span style="color:'+tx3+';">/</span>'
+    +'<span style="font-size:13px;font-weight:600;color:'+tx+';">'+fpProjNavn+'</span>'
+    +'<span style="margin-left:auto;font-size:10px;color:'+tx3+';">Fremdriftsplan · '+zoomTekst+' · '+periodeStr+'</span>'
+    +'<span style="font-size:10px;color:'+tx3+';margin-left:12px;">Skrevet ut: '+datoNaa+'</span>'
+    +'</div>'
+    +legendHtml
+    // Gantt-wrapper
+    +'<div style="overflow-x:auto;">'
+    +'<div style="width:'+TOTAL_W+'px;display:flex;flex-direction:column;">'
+    +hdrHtml
+    +'<div style="position:relative;">'
+    +raderHtml
+    +todayHtml
+    +'</div></div></div>'
+    +'</body></html>';
+
+  var win=window.open('','_blank');
+  win.document.write(html);
+  win.document.close();
+  win.onload=function(){ win.print(); };
+}
+
+// ----------------------------------------------------------------
 // VELG / DETALJ
 // ----------------------------------------------------------------
 function fpVelgAkt(id){
@@ -6465,6 +6643,8 @@ function fpLukkModal(id){ document.getElementById(id).classList.remove('open'); 
     <div style="width:1px;height:18px;background:var(--br);"></div>
     <button class="btn sm" onclick="fpAktorAdmin()">⚙ Aktører</button>
     <button class="btn sm" onclick="fpPeriodeModal()">📅 Periode</button>
+    <div style="flex:1;"></div>
+    <button class="btn sm" onclick="fpSkrivUt()" title="Skriv ut fremdriftsplan">🖨 Skriv ut</button>
   </div>
   <div class="fp-aktor-legend" id="fpAktorLegend"></div>
   <div class="fp-ov-main">
