@@ -591,6 +591,10 @@ tr.erow td{padding:0;background:var(--bg2);border-bottom:1px solid var(--br2);}
 .fp-drag-handle{cursor:grab;padding:0 6px;color:var(--tx3);font-size:15px;line-height:1;flex-shrink:0;user-select:none;}
 .fp-drag-handle:active{cursor:grabbing;}
 .fp-fase-drag-over{outline:2px dashed var(--acc);outline-offset:-2px;}
+.fp-draw-sel{position:absolute;background:rgba(232,184,75,.18);border:2px solid var(--acc);border-radius:3px;pointer-events:none;z-index:15;}
+.fp-g-bar{cursor:grab;}
+.fp-g-bar:active{cursor:grabbing;}
+.fp-g-bar.fp-dragging{opacity:0.5;}
 .fp-ctx-menu{position:fixed;z-index:9999;background:var(--bg2);border:1px solid var(--br);border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,.4);padding:4px;min-width:160px;}
 .fp-ctx-item{padding:8px 14px;font-size:12px;border-radius:5px;cursor:pointer;color:var(--tx);display:flex;align-items:center;gap:8px;}
 .fp-ctx-item:hover{background:var(--bg4);}
@@ -5891,7 +5895,6 @@ var FP_AKTOR_FARGER = [
 ];
 var FP_TODAY = new Date(); FP_TODAY.setHours(0,0,0,0);
 
-function fpFmtISO(dt){ var y=dt.getFullYear(),m=String(dt.getMonth()+1).padStart(2,'0'),d=String(dt.getDate()).padStart(2,'0'); return y+'-'+m+'-'+d; }
 function fpFmt(dt){ return String(dt.getDate()).padStart(2,'0')+'.'+String(dt.getMonth()+1).padStart(2,'0')+'.'+String(dt.getFullYear()).slice(2); }
 function fpD(s){ if(!s)return null; var x=new Date(s); x.setHours(0,0,0,0); return x; }
 function fpAddD(dt,n){ var r=new Date(dt); r.setDate(r.getDate()+n); return r; }
@@ -5910,6 +5913,11 @@ function fpGetPeriode(){
 function fpGetUker(s,e){ var u=[],c=new Date(s); while(c<=e){u.push(new Date(c));c.setDate(c.getDate()+7);} return u; }
 function fpGetDager(s,e){ var d=[],c=new Date(s); while(c<=e){d.push(new Date(c));c.setDate(c.getDate()+1);} return d; }
 function fpXPos(dato,ps){ return fpZoom==='maaned'?((dato-ps)/(1000*60*60*24*7))*fpCOL_W:Math.round((dato-ps)/(1000*60*60*24))*fpCOL_W; }
+function fpXToDato(x,ps){
+  var dager = fpZoom==='maaned' ? Math.round(x/fpCOL_W*7) : Math.round(x/fpCOL_W);
+  var d=new Date(ps); d.setDate(d.getDate()+dager); d.setHours(0,0,0,0); return d;
+}
+function fpFmtISO(dt){ return dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0'); }
 function fpIsoWeek(dt){ var d=new Date(dt); d.setHours(0,0,0,0); d.setDate(d.getDate()+3-(d.getDay()+6)%7); var w=new Date(d.getFullYear(),0,4); return 1+Math.round(((d-w)/86400000-3+(w.getDay()+6)%7)/7); }
 
 // ----------------------------------------------------------------
@@ -6184,6 +6192,7 @@ function fpRendreRader(dager,uker,p,W){
   rw.style.position='relative';
   rw.innerHTML=html;
   fpInitFaseDrag();
+  fpInitGanttInteract();
 
   // Sett today-line høyde
   requestAnimationFrame(function(){
@@ -6262,6 +6271,152 @@ function fpInitFaseDrag(){
       fpFaser.splice(tilIdx,0,flyttet);
       fpLagreFaserSP(); fpRender();
     });
+  });
+}
+
+// ----------------------------------------------------------------
+// GANTT-INTERAKSJON: tegn ny aktivitet + flytt eksisterende
+// ----------------------------------------------------------------
+function fpInitGanttInteract(){
+  var p=fpGetPeriode();
+  var TBL_W=460;
+
+  // --- TEGN NY AKTIVITET (mousedown på tom grid-celle) ---
+  var rw=document.getElementById('fpRadWrap');
+  if(!rw) return;
+
+  var drawEl=null, drawStartX=0, drawFaseNavn='', drawRowY=0;
+
+  rw.addEventListener('mousedown', function(e){
+    // Bare venstre museknapp
+    if(e.button!==0) return;
+    // Ikke start drag på bar, fase-rad, knapp eller handle
+    var t=e.target;
+    if(t.closest('.fp-g-bar')||t.closest('.fp-fase-row')||t.closest('button')||t.closest('.fp-drag-handle')) return;
+
+    // Finn aktivitetsrad (data-fpaktid) og fase
+    var aktRad=t.closest('[data-fpaktid]');
+    var faseRad=t.closest('[data-fase]');
+    var faseNavn='';
+    if(aktRad){
+      var aktId=parseInt(aktRad.dataset.fpaktid);
+      var akt=fpAktiviteter.find(function(a){return a.id===aktId;});
+      if(akt) faseNavn=akt.faseId;
+    } else if(faseRad){
+      return; // ikke tegn på fase-header
+    } else {
+      // Finn fase fra y-posisjon
+      var faser=rw.querySelectorAll('.fp-fase-row');
+      faser.forEach(function(fr){
+        var rect=fr.getBoundingClientRect();
+        if(e.clientY>rect.bottom) faseNavn=fr.dataset.fase||faseNavn;
+      });
+    }
+
+    // Beregn x relativt til gantt-kolonnen
+    var rwRect=rw.getBoundingClientRect();
+    var xRel=e.clientX-rwRect.left+rw.scrollLeft-TBL_W;
+    if(xRel<0) return;
+
+    drawStartX=xRel;
+    drawFaseNavn=faseNavn;
+
+    // Lag overlay-element
+    drawEl=document.createElement('div');
+    drawEl.className='fp-draw-sel';
+    drawEl.style.top=(e.clientY-rwRect.top+rw.scrollTop)+'px';
+    drawEl.style.height='28px';
+    drawEl.style.left=(TBL_W+xRel)+'px';
+    drawEl.style.width='0px';
+    rw.appendChild(drawEl);
+
+    e.preventDefault();
+  });
+
+  document.addEventListener('mousemove', function(e){
+    if(!drawEl) return;
+    var rwRect=rw.getBoundingClientRect();
+    var xNaa=e.clientX-rwRect.left+rw.scrollLeft-TBL_W;
+    var x1=Math.min(drawStartX,xNaa), x2=Math.max(drawStartX,xNaa);
+    drawEl.style.left=(TBL_W+x1)+'px';
+    drawEl.style.width=Math.max(x2-x1,fpCOL_W)+'px';
+  });
+
+  document.addEventListener('mouseup', function(e){
+    if(!drawEl) return;
+    var rwRect=rw.getBoundingClientRect();
+    var xNaa=e.clientX-rwRect.left+rw.scrollLeft-TBL_W;
+    var x1=Math.min(drawStartX,xNaa), x2=Math.max(drawStartX,xNaa);
+    // Fjern overlay
+    if(drawEl.parentNode) drawEl.parentNode.removeChild(drawEl);
+    drawEl=null;
+    // Krev minimum 4px drag (ikke klikk)
+    if(x2-x1<4) return;
+    // Snap til kolonnebredde
+    var colW=fpCOL_W;
+    var snappedX1=Math.round(x1/colW)*colW;
+    var snappedX2=Math.round(x2/colW)*colW;
+    if(snappedX2<=snappedX1) snappedX2=snappedX1+colW;
+    var startDato=fpXToDato(snappedX1,p.s);
+    var sluttDato=fpXToDato(snappedX2,p.s);
+    sluttDato.setDate(sluttDato.getDate()-1);
+    // Åpne modal med fase og datoer
+    fpVisNyAkt(startDato, sluttDato);
+    if(drawFaseNavn){
+      var sel=document.getElementById('fpMFase');
+      if(sel) for(var i=0;i<sel.options.length;i++){
+        if(sel.options[i].value===drawFaseNavn){ sel.selectedIndex=i; break; }
+      }
+    }
+  });
+
+  // --- FLYTT EKSISTERENDE AKTIVITET (drag bar) ---
+  var barDrag=null; // {akt, startX, origStart, origSlutt, barEl}
+
+  rw.addEventListener('mousedown', function(e){
+    if(e.button!==0) return;
+    var bar=e.target.closest('.fp-g-bar');
+    if(!bar) return;
+    var aktId=parseInt(bar.closest('[data-fpaktid]').dataset.fpaktid);
+    var akt=fpAktiviteter.find(function(a){return a.id===aktId;});
+    if(!akt||akt.type==='Milepæl') return;
+    barDrag={akt:akt, startX:e.clientX, origStart:new Date(akt.start), origSlutt:new Date(akt.slutt), barEl:bar};
+    bar.classList.add('fp-dragging');
+    e.preventDefault(); e.stopPropagation();
+  });
+
+  document.addEventListener('mousemove', function(e){
+    if(!barDrag) return;
+    var dx=e.clientX-barDrag.startX;
+    var colW=fpCOL_W;
+    var dagsDiff=fpZoom==='maaned'?Math.round(dx/colW*7):Math.round(dx/colW);
+    if(dagsDiff===0) return;
+    var nyStart=new Date(barDrag.origStart); nyStart.setDate(nyStart.getDate()+dagsDiff);
+    var nySlutt=new Date(barDrag.origSlutt); nySlutt.setDate(nySlutt.getDate()+dagsDiff);
+    // Vis preview
+    var newLeft=fpXPos(nyStart,p.s);
+    barDrag.barEl.style.left=newLeft+'px';
+    barDrag.barEl.title=fpFmt(nyStart)+' – '+fpFmt(nySlutt);
+  });
+
+  document.addEventListener('mouseup', function(e){
+    if(!barDrag) return;
+    var dx=e.clientX-barDrag.startX;
+    var colW=fpCOL_W;
+    var dagsDiff=fpZoom==='maaned'?Math.round(dx/colW*7):Math.round(dx/colW);
+    barDrag.barEl.classList.remove('fp-dragging');
+    if(dagsDiff!==0){
+      var akt=barDrag.akt;
+      var nyStart=new Date(barDrag.origStart); nyStart.setDate(nyStart.getDate()+dagsDiff);
+      var nySlutt=new Date(barDrag.origSlutt); nySlutt.setDate(nySlutt.getDate()+dagsDiff);
+      akt.start=nyStart; akt.slutt=nySlutt;
+      // Lagre til SP
+      spPatch(SP+"/_api/lists('"+FP_AKTIVITETER_GUID+"')/items("+akt.spID+")",
+        {Startdato:fpFmtISO(nyStart), Sluttdato:fpFmtISO(nySlutt)})
+        .then(function(){ fpRender(); })
+        .catch(function(err){ toast('Feil ved lagring: '+err.message,'e'); fpRender(); });
+    }
+    barDrag=null;
   });
 }
 
@@ -6638,8 +6793,8 @@ function fpVelgAktorItem(el){
 
 function fpNyAkt(){
   document.getElementById('fpMNavn').value='';
-  document.getElementById('fpMStart').value=fpFmtISO(FP_TODAY);
-  document.getElementById('fpMSlutt').value=fpFmtISO(fpAddD(FP_TODAY,6));
+  document.getElementById('fpMStart').value=fpFmtISO(startDato||FP_TODAY);
+  document.getElementById('fpMSlutt').value=fpFmtISO(sluttDato||fpAddD(FP_TODAY,6));
   document.getElementById('fpMFase').innerHTML=fpFaser.map(function(f){return '<option>'+f.navn+'</option>';}).join('');
   if(fpAktorer.length === 0){
     document.getElementById('fpMAktor').innerHTML = '<div style="font-size:11px;color:var(--red);">Legg til aktører via ⚙ Aktører først.</div>';
