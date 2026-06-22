@@ -6177,7 +6177,7 @@ function fpRendreRader(dager,uker,p,W){
           var bw=Math.max(fpXPos(fpAddD(akt.slutt,1),p.s)-bx,fpCOL_W);
           var txt=fpLys(farge)?'#000':'#fff';
           var progW=akt.status==='Ferdig'?bw:akt.status==='I gang'?bw*.5:0;
-          barHtml='<div class="fp-g-bar'+(forsinket?' fp-forsinket':'')+'" style="left:'+bx+'px;width:'+bw+'px;top:'+barTop+'px;background:'+farge+';color:'+txt+';" title="'+akt.navn+'" onclick="event.stopPropagation();fpVelgAkt('+akt.id+')">'+
+          barHtml='<div class="fp-g-bar'+(forsinket?' fp-forsinket':'')+'" style="left:'+bx+'px;width:'+bw+'px;top:'+barTop+'px;background:'+farge+';color:'+txt+';" title="'+akt.navn+'" onclick="if(!this.dataset.dragBlock){event.stopPropagation();fpVelgAkt('+akt.id+')"}>'+
             (bw>40?akt.navn:'')+
             (progW>0?'<div style="position:absolute;left:0;top:0;height:100%;width:'+progW+'px;background:rgba(0,0,0,.18);border-radius:4px;pointer-events:none;"></div>':'')+
             '</div>';
@@ -6405,7 +6405,6 @@ function fpInitGanttInteract(){
     barDrag={akt:akt, startX:e.clientX, origStart:new Date(akt.start), origSlutt:new Date(akt.slutt), barEl:bar};
     barDragMoved=false;
     bar.classList.add('fp-dragging');
-    e.preventDefault();
   });
 
   document.addEventListener('mousemove', function(e){
@@ -6428,11 +6427,12 @@ function fpInitGanttInteract(){
     barDrag=null;
     bd.barEl.classList.remove('fp-dragging');
     if(!barDragMoved) {
-      // Var et klikk – åpne detaljpanel
-      fpVelgAkt(bd.akt.id);
+      // Var et klikk – click-event på baren håndterer fpVelgAkt
       return;
     }
-    // Var et drag – lagre, IKKE åpne panel
+    // Var et drag – blokker påfølgende click-event og lagre
+    bd.barEl.dataset.dragBlock='1';
+    setTimeout(function(){ delete bd.barEl.dataset.dragBlock; }, 300);
     var dx=e.clientX-bd.startX;
     var dagsDiff=fpZoom==='maaned'?Math.round(dx/fpCOL_W*7):Math.round(dx/fpCOL_W);
     if(dagsDiff===0) return;
