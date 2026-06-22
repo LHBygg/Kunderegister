@@ -6150,7 +6150,7 @@ function fpRendreRader(dager,uker,p,W){
       +'<span onclick="event.stopPropagation();fpToggleFase(\''+faseNavn+'\')" style="font-size:10px;color:var(--tx3);padding:0 4px;cursor:pointer;">'+(fase.aapen?'&#9660;':'&#9658;')+'</span>'
       +'<span onclick="event.stopPropagation();fpToggleFase(\''+faseNavn+'\')" style="font-size:10px;font-weight:700;color:var(--tx2);text-transform:uppercase;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;cursor:pointer;">'+fase.navn+'</span>'
       +'<span style="font-size:10px;color:var(--tx3);flex-shrink:0;padding-right:4px;">'+ferdig+'/'+akts.length+'</span>'
-      +'<button class="fp-fase-legg-til no-print" onclick="event.stopPropagation();fpNyAktFase(\''+faseNavn+'\')" title="Legg til aktivitet i denne fasen" style="flex-shrink:0;margin-right:6px;width:20px;height:20px;border-radius:50%;border:1px solid var(--acc);background:transparent;color:var(--acc);font-size:14px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;">+</button>'
+      +'<button class="fp-fase-legg-til no-print" onclick="event.stopPropagation();fpLeggTilTomRad(\''+faseNavn+'\')" title="Legg til rad for å tegne aktivitet" style="flex-shrink:0;margin-right:6px;width:20px;height:20px;border-radius:50%;border:1px solid var(--acc);background:transparent;color:var(--acc);font-size:14px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;">+</button>'
       +'</div>'
       +'<div style="width:'+W+'px;min-width:'+W+'px;display:flex;flex-shrink:0;">'+grid+'</div>'
       +'</div>';
@@ -6187,6 +6187,16 @@ function fpRendreRader(dager,uker,p,W){
           +'<div style="width:'+W+'px;min-width:'+W+'px;position:relative;display:flex;flex-shrink:0;">'+grid+barHtml+'</div>'
           +'</div>';
       });
+      // Ekstra tomme drag-rader lagt til via + knappen
+      var ekstra=fpEkstraRader[fase.navn]||0;
+      for(var ei=0;ei<ekstra;ei++){
+        html+='<div data-fpfase="'+faseNavn+'" style="display:flex;height:'+AKT_H+'px;min-height:'+AKT_H+'px;width:'+TOTAL_W+'px;min-width:'+TOTAL_W+'px;border-bottom:1px dashed rgba(46,53,80,.25);flex-shrink:0;opacity:0.5;">'
+          +'<div style="width:'+TBL_W+'px;min-width:'+TBL_W+'px;border-right:2px solid var(--br);position:sticky;left:0;z-index:6;background:var(--bg);display:flex;align-items:center;padding:0 12px;flex-shrink:0;">'
+          +'<span style="font-size:10px;color:var(--tx3);font-style:italic;">Dra her for å legge til aktivitet</span>'
+          +'</div>'
+          +'<div style="width:'+W+'px;min-width:'+W+'px;position:relative;display:flex;flex-shrink:0;">'+grid+'</div>'
+          +'</div>';
+      }
     }
   });
 
@@ -6820,10 +6830,11 @@ function fpVelgAktorItem(el){
   el.style.background = farge+'22';
 }
 
-function fpNyAktFase(faseNavn){
-  fpNyAkt(null, null);
-  var sel=document.getElementById('fpMFase');
-  if(sel){ for(var i=0;i<sel.options.length;i++){ if(sel.options[i].value===faseNavn){sel.selectedIndex=i;break;} } }
+var fpEkstraRader={};
+function fpLeggTilTomRad(faseNavn){
+  if(!fpEkstraRader[faseNavn]) fpEkstraRader[faseNavn]=0;
+  fpEkstraRader[faseNavn]++;
+  fpRender();
 }
 
 function fpNyAkt(startDato, sluttDato){
@@ -6860,6 +6871,7 @@ function fpLagreNyAkt(){
     fpAktiviteter.push({id:nyID,spID:nyID,faseId:fase,navn:navn,start:fpD(start),slutt:fpD(type==='Milepæl'?start:slutt),type:type,aktorNavn:aktorNavn,status:status,notat:'',nr:nyID});
     if(!fpFaser.find(function(f){return f.navn===fase;})) fpFaser.push({navn:fase,aapen:true});
     fpLukkModal('fpNyAktMbg');
+    if(fpEkstraRader[fase]>0) fpEkstraRader[fase]--;
     fpRender();
     fpLastKort(fpProjID,null,null);
     toast('"'+navn+'" lagt til','s');
