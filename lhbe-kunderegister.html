@@ -6290,41 +6290,37 @@ function fpInitFaseDrag(){
 // Registreres én gang (ikke per render) for å unngå dupliserte lyttere
 // ----------------------------------------------------------------
 var fpGanttInteractInit=false;
+var fpGanttInteractInit=false;
 function fpInitGanttInteract(){
   if(fpGanttInteractInit) return;
   fpGanttInteractInit=true;
   var TBL_W=460;
 
-  // Hjelpefunksjoner – henter DOM og periode dynamisk ved hvert kall
   function getRW(){ return document.getElementById('fpRadWrap'); }
   function getSC(){ return document.getElementById('fpOvScroll'); }
+
   function clientXToGanttX(clientX){
     var rw=getRW(), sc=getSC();
-    if(!rw||!sc) return 0;
+    if(!rw||!sc) return -1;
     return clientX - rw.getBoundingClientRect().left + sc.scrollLeft - TBL_W;
   }
 
-  // --- TEGN NY AKTIVITET ---
+  // ---- TEGN NY AKTIVITET ----
   var drawEl=null, drawStartX=0, drawFaseNavn='';
 
-  rw.addEventListener('mousedown', function(e){
+  document.addEventListener('mousedown', function(e){
     if(e.button!==0) return;
+    var rw=getRW(); if(!rw||!rw.contains(e.target)) return;
     var t=e.target;
+    // Ikke start tegning på bar, fase-header, knapp eller håndtak
     if(t.closest('.fp-g-bar')||t.closest('.fp-fase-row')||t.closest('button')||t.closest('.fp-drag-handle')) return;
 
-    var aktRad=t.closest('[data-fpaktid]');
     var faseNavn='';
+    var aktRad=t.closest('[data-fpaktid]');
     if(aktRad){
       var aktId=parseInt(aktRad.dataset.fpaktid);
       var akt=fpAktiviteter.find(function(a){return a.id===aktId;});
       if(akt) faseNavn=akt.faseId;
-    } else if(t.closest('[data-fase]')){
-      return;
-    } else {
-      getRW().querySelectorAll('.fp-fase-row').forEach(function(fr){
-        var rect=fr.getBoundingClientRect();
-        if(e.clientY>rect.bottom) faseNavn=fr.dataset.fase||faseNavn;
-      });
     }
 
     var xRel=clientXToGanttX(e.clientX);
@@ -6333,15 +6329,15 @@ function fpInitGanttInteract(){
     drawStartX=xRel;
     drawFaseNavn=faseNavn;
 
-    var rw2=getRW(); var sc2=getSC();
+    var sc=getSC();
     drawEl=document.createElement('div');
     drawEl.className='fp-draw-sel';
-    var rwRect=rw2.getBoundingClientRect();
-    drawEl.style.top=(e.clientY-rwRect.top+sc2.scrollTop)+'px';
+    var rwRect=rw.getBoundingClientRect();
+    drawEl.style.top=(e.clientY-rwRect.top+(sc?sc.scrollTop:0))+'px';
     drawEl.style.height='28px';
     drawEl.style.left=(TBL_W+xRel)+'px';
     drawEl.style.width='0px';
-    getRW().appendChild(drawEl);
+    rw.appendChild(drawEl);
     e.preventDefault();
   });
 
@@ -6357,21 +6353,16 @@ function fpInitGanttInteract(){
     if(!drawEl) return;
     var xNaa=clientXToGanttX(e.clientX);
     var x1=Math.min(drawStartX,xNaa), x2=Math.max(drawStartX,xNaa);
-    var p=fpGetPeriode();
-    // Fjern overlay
     if(drawEl.parentNode) drawEl.parentNode.removeChild(drawEl);
     drawEl=null;
-    // Krev minimum 4px drag (ikke klikk)
     if(x2-x1<4) return;
-    // Snap til kolonnebredde
-    var colW=fpCOL_W;
-    var snappedX1=Math.round(x1/colW)*colW;
-    var snappedX2=Math.round(x2/colW)*colW;
-    if(snappedX2<=snappedX1) snappedX2=snappedX1+colW;
+    var p=fpGetPeriode();
+    var snappedX1=Math.round(x1/fpCOL_W)*fpCOL_W;
+    var snappedX2=Math.round(x2/fpCOL_W)*fpCOL_W;
+    if(snappedX2<=snappedX1) snappedX2=snappedX1+fpCOL_W;
     var startDato=fpXToDato(snappedX1,p.s);
     var sluttDato=fpXToDato(snappedX2,p.s);
     sluttDato.setDate(sluttDato.getDate()-1);
-    // Åpne modal med fase og datoer
     fpNyAkt(startDato, sluttDato);
     if(drawFaseNavn){
       var sel=document.getElementById('fpMFase');
@@ -6381,15 +6372,17 @@ function fpInitGanttInteract(){
     }
   });
 
-  // --- FLYTT EKSISTERENDE AKTIVITET (drag bar) ---
-  var barDrag=null; // {akt, startX, origStart, origSlutt, barEl}
+  // ---- FLYTT EKSISTERENDE BAR ----
+  var barDrag=null;
 
   document.addEventListener('mousedown', function(e){
     if(e.button!==0) return;
     var rw=getRW(); if(!rw||!rw.contains(e.target)) return;
     var bar=e.target.closest('.fp-g-bar');
     if(!bar) return;
-    var aktId=parseInt(bar.closest('[data-fpaktid]').dataset.fpaktid);
+    var aktRad=bar.closest('[data-fpaktid]');
+    if(!aktRad) return;
+    var aktId=parseInt(aktRad.dataset.fpaktid);
     var akt=fpAktiviteter.find(function(a){return a.id===aktId;});
     if(!akt||akt.type==='Milepæl') return;
     barDrag={akt:akt, startX:e.clientX, origStart:new Date(akt.start), origSlutt:new Date(akt.slutt), barEl:bar};
@@ -6404,8 +6397,7 @@ function fpInitGanttInteract(){
     if(dagsDiff===0) return;
     var nyStart=new Date(barDrag.origStart); nyStart.setDate(nyStart.getDate()+dagsDiff);
     var nySlutt=new Date(barDrag.origSlutt); nySlutt.setDate(nySlutt.getDate()+dagsDiff);
-    var newLeft=fpXPos(nyStart,fpGetPeriode().s);
-    barDrag.barEl.style.left=newLeft+'px';
+    barDrag.barEl.style.left=fpXPos(nyStart,fpGetPeriode().s)+'px';
     barDrag.barEl.title=fpFmt(nyStart)+' – '+fpFmt(nySlutt);
   });
 
@@ -6419,11 +6411,10 @@ function fpInitGanttInteract(){
       var nyStart=new Date(barDrag.origStart); nyStart.setDate(nyStart.getDate()+dagsDiff);
       var nySlutt=new Date(barDrag.origSlutt); nySlutt.setDate(nySlutt.getDate()+dagsDiff);
       akt.start=nyStart; akt.slutt=nySlutt;
-      // Lagre til SP
       spPatch(SP+"/_api/lists('"+FP_AKTIVITETER_GUID+"')/items("+akt.spID+")",
-        {Startdato:fpFmtISO(nyStart), Sluttdato:fpFmtISO(nySlutt)})
+        {Startdato:fpFmtISO(nyStart),Sluttdato:fpFmtISO(nySlutt)})
         .then(function(){ fpRender(); })
-        .catch(function(err){ toast('Feil ved lagring: '+err.message,'e'); fpRender(); });
+        .catch(function(err){ toast('Feil: '+err.message,'e'); fpRender(); });
     }
     barDrag=null;
   });
