@@ -3669,6 +3669,13 @@ function saveProj() {
       spPatch(url, body).then(function() {
         toast('Prosjekt oppdatert', 's');
         closeMov('confMov'); closeMov('projMov');
+        // Oppdater projects-arrayen lokalt med én gang så kort og SDK-bar reflekterer endringen umiddelbart
+        var lok = projects.filter(function(x){ return x.ID == id; })[0];
+        if (lok) {
+          Object.keys(body).forEach(function(k){ lok[k] = body[k]; });
+          // Re-render SDK-baren hvis vi er inne på dette prosjektet
+          if (activePID == id && sdkCurrProjId) reloadSDK();
+        }
         loadData();
         // SmartDok auto-opprett DEAKTIVERT – prosjekter opprettes i Tripletex og synkes til SmartDok
         // Reaktiver ved å fjerne kommentar: sdkOpprettProsjektDialog(body.Prosjektnummer, body.Title, id, body.Prosjektleder, body.Oppstartsdato, body.Sluttdato)
