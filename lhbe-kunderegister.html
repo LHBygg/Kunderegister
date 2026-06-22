@@ -6332,9 +6332,12 @@ function fpInitGanttInteract(){
     var sc=getSC();
     drawEl=document.createElement('div');
     drawEl.className='fp-draw-sel';
-    var rwRect=rw.getBoundingClientRect();
-    drawEl.style.top=(e.clientY-rwRect.top+(sc?sc.scrollTop:0))+'px';
-    drawEl.style.height='28px';
+    // Bruk toppen av raden som ble klikket på, ikke musepekerens y-posisjon
+    var rad=t.closest('[data-fpaktid]')||t.closest('[data-fpfase]')||t.closest('.fp-fase-row');
+    var radTop=rad ? rad.offsetTop : (e.clientY - rw.getBoundingClientRect().top + (sc?sc.scrollTop:0));
+    var radH=rad ? rad.offsetHeight : 28;
+    drawEl.style.top=radTop+'px';
+    drawEl.style.height=radH+'px';
     drawEl.style.left=(TBL_W+drawStartX)+'px';
     drawEl.style.width=fpCOL_W+'px';
     rw.appendChild(drawEl);
