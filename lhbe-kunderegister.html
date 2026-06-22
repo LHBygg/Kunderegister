@@ -6177,7 +6177,7 @@ function fpRendreRader(dager,uker,p,W){
           var bw=Math.max(fpXPos(fpAddD(akt.slutt,1),p.s)-bx,fpCOL_W);
           var txt=fpLys(farge)?'#000':'#fff';
           var progW=akt.status==='Ferdig'?bw:akt.status==='I gang'?bw*.5:0;
-          barHtml='<div class="fp-g-bar'+(forsinket?' fp-forsinket':'')+'" style="left:'+bx+'px;width:'+bw+'px;top:'+barTop+'px;background:'+farge+';color:'+txt+';" title="'+akt.navn+'" onclick="if(!this.dataset.dragBlock){event.stopPropagation();fpVelgAkt('+akt.id+')"}>'+
+          barHtml='<div class="fp-g-bar'+(forsinket?' fp-forsinket':'')+'" style="left:'+bx+'px;width:'+bw+'px;top:'+barTop+'px;background:'+farge+';color:'+txt+';" title="'+akt.navn+'" onclick="event.stopPropagation();fpVelgAkt(\'+akt.id+\')">'+
             (bw>40?akt.navn:'')+
             (progW>0?'<div style="position:absolute;left:0;top:0;height:100%;width:'+progW+'px;background:rgba(0,0,0,.18);border-radius:4px;pointer-events:none;"></div>':'')+
             '</div>';
@@ -6776,8 +6776,8 @@ function fpLagreAkt(){
   var body={Title:akt.navn,Fase:akt.faseId,Startdato:fpFmtISO(akt.start),Sluttdato:fpFmtISO(akt.slutt),Status:akt.status,AktorNavn:akt.aktorNavn,Notat:akt.notat};
   spPatch(SP+"/_api/lists('"+FP_AKTIVITETER_GUID+"')/items("+akt.spID+")", body).then(function(){
     toast('Lagret','s');
+    fpCloseDP();
     fpRender();
-    fpVisDP(akt.id);
     fpLastKort(fpProjID, null, null);
   }).catch(function(e){toast('Feil: '+e.message,'e');});
 }
