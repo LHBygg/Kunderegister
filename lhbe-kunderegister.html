@@ -5815,6 +5815,7 @@ function slettProjUE(id, pid) {
 var fpProjID = null;
 var fpProjNavn = '';
 var fpAktorer = [];
+var fpGlobaleAktorer = []; // ProsjektID=0
 var fpFaser = [];
 var fpAktiviteter = [];
 var fpValgtId = null;
@@ -5953,12 +5954,15 @@ function fpHentData(projID, callback){
   Promise.all([
     spGet(SP + "/_api/lists('" + FP_AKTORER_GUID + "')/items?$filter=ProsjektID eq " + projID + "&$orderby=Title&$top=50"),
     spGet(SP + "/_api/lists('" + FP_AKTIVITETER_GUID + "')/items?$filter=ProsjektID eq " + projID + "&$orderby=ID&$top=500"),
-    spGet(SP + "/_api/lists('3DB9CF64-778C-48D8-8F32-044AC6EE249C')/items(" + projID + ")?$select=PlanStart,PlanSlutt")
+    spGet(SP + "/_api/lists('3DB9CF64-778C-48D8-8F32-044AC6EE249C')/items(" + projID + ")?$select=PlanStart,PlanSlutt"),
+    spGet(SP + "/_api/lists('" + FP_AKTORER_GUID + "')/items?$filter=ProsjektID eq 0&$orderby=Title&$top=100")
   ]).then(function(res){
     var aktorRaw = res[0].value||[];
     var aktRaw   = res[1].value||[];
     var proj     = res[2]||{};
+    var globalRaw = res[3].value||[];
     fpAktorer = aktorRaw.map(function(a){ return {id:a.ID,navn:a.Title,farge:a.Farge||'#5c6480'}; });
+    fpGlobaleAktorer = globalRaw.map(function(a){ return {id:a.ID,navn:a.Title,farge:a.Farge||'#5c6480'}; });
     fpAktiviteter = aktRaw.map(function(a){ return {
       id:a.ID, spID:a.ID, faseId:a.Fase, navn:a.Title,
       start:fpD(a.Startdato), slutt:fpD(a.Sluttdato),
@@ -6280,23 +6284,73 @@ function fpAktorAdmin(){
   document.getElementById('fpAktorMbg').classList.add('open');
 }
 function fpRendreAktorListe(){
-  document.getElementById('fpAktorAdminListe').innerHTML=fpAktorer.map(function(a){
-    return '<div style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--bg4);border:1px solid var(--br);border-radius:6px;">'
-      +'<input type="color" value="'+a.farge+'" onchange="fpEndreAktorFarge('+a.id+',this.value)" style="width:28px;height:26px;border:none;border-radius:4px;cursor:pointer;padding:1px;background:none;">'
-      +'<span style="flex:1;font-size:12px;">'+a.navn+'</span>'
-      +'<button class="btn sm" style="color:var(--red);border-color:var(--red);" onclick="fpFjernAktor('+a.id+')">Fjern</button>'
+  // Prosjektets egne aktører
+  var prosjektHtml = fpAktorer.length === 0
+    ? '<div style="font-size:11px;color:var(--tx3);padding:4px 2px;">Ingen aktører lagt til ennå.</div>'
+    : fpAktorer.map(function(a){
+        return '<div style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--bg4);border:1px solid var(--br);border-radius:6px;">'
+          +'<input type="color" value="'+a.farge+'" onchange="fpEndreAktorFarge('+a.id+',this.value)" style="width:28px;height:26px;border:none;border-radius:4px;cursor:pointer;padding:1px;background:none;">'
+          +'<span style="flex:1;font-size:12px;">'+a.navn+'</span>'
+          +'<button class="btn sm" style="color:var(--red);border-color:var(--red);" onclick="fpFjernAktor('+a.id+')">Fjern</button>'
+          +'</div>';
+      }).join('');
+
+  // Importer-seksjon (globale aktører)
+  var importHtml = '';
+  if(fpGlobaleAktorer.length > 0){
+    var eksisterendeNavn = fpAktorer.map(function(a){return a.navn.toLowerCase();});
+    var importRader = fpGlobaleAktorer.map(function(g){
+      var alleredeImportert = eksisterendeNavn.indexOf(g.navn.toLowerCase()) !== -1;
+      return '<div style="display:flex;align-items:center;gap:8px;padding:6px 10px;background:'+(alleredeImportert?'var(--bg3)':'var(--bg4)')+';border:1px solid var(--br);border-radius:6px;opacity:'+(alleredeImportert?'0.5':'1')+';">'
+        +'<div style="width:10px;height:10px;border-radius:50%;background:'+g.farge+';flex-shrink:0;"></div>'
+        +'<span style="flex:1;font-size:12px;color:'+(alleredeImportert?'var(--tx3)':'var(--tx)')+';">'+g.navn+'</span>'
+        +(alleredeImportert
+          ? '<span style="font-size:11px;color:var(--tx3);">✓ Lagt til</span>'
+          : '<button class="btn sm" onclick="fpImporterAktor('+g.id+')">+ Importer</button>')
+        +'</div>';
+    }).join('');
+    importHtml = '<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--br);">'
+      +'<div style="font-size:10px;color:var(--tx3);font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:7px;">Gjenbrukbare aktører</div>'
+      +importRader
       +'</div>';
-  }).join('');
+  }
+
+  document.getElementById('fpAktorAdminListe').innerHTML = prosjektHtml + importHtml;
+}
+
+function fpImporterAktor(globalId){
+  var g = fpGlobaleAktorer.find(function(x){return x.id===globalId;});
+  if(!g)return;
+  var body={Title:g.navn,Farge:g.farge,ProsjektID:fpProjID};
+  spPost(SP+"/_api/lists('"+FP_AKTORER_GUID+"')/items", body).then(function(res){
+    var nyID=(res&&(res.id||res.Id||(res.d&&(res.d.Id||res.d.id))))||fpNextId++;
+    fpAktorer.push({id:nyID,navn:g.navn,farge:g.farge});
+    fpRendreAktorListe(); fpRender(); fpRendreLegend();
+    toast('"'+g.navn+'" importert','s');
+  }).catch(function(e){toast('Feil: '+e.message,'e');});
 }
 function fpLeggTilAktor(){
   var navn=document.getElementById('fpNyAktorNavn').value.trim();
   var farge=document.getElementById('fpNyAktorFarge').value;
+  var gjenbrukbar=document.getElementById('fpNyAktorGjenbrukbar').checked;
   if(!navn){toast('Fyll inn navn','e');return;}
   var body={Title:navn,Farge:farge,ProsjektID:fpProjID};
   spPost(SP+"/_api/lists('"+FP_AKTORER_GUID+"')/items", body).then(function(res){
     var nyID=(res&&(res.id||res.Id||(res.d&&(res.d.Id||res.d.id))))||fpNextId++;
     fpAktorer.push({id:nyID,navn:navn,farge:farge});
     document.getElementById('fpNyAktorNavn').value='';
+    document.getElementById('fpNyAktorGjenbrukbar').checked=false;
+    // Lagre også som global (ProsjektID=0) hvis hake er satt
+    var gPromise = Promise.resolve();
+    if(gjenbrukbar){
+      var gBody={Title:navn,Farge:farge,ProsjektID:0};
+      gPromise = spPost(SP+"/_api/lists('"+FP_AKTORER_GUID+"')/items", gBody).then(function(gRes){
+        var gID=(gRes&&(gRes.id||gRes.Id||(gRes.d&&(gRes.d.Id||gRes.d.id))))||0;
+        fpGlobaleAktorer.push({id:gID,navn:navn,farge:farge});
+      });
+    }
+    return gPromise;
+  }).then(function(){
     fpRendreAktorListe(); fpRender(); fpRendreLegend();
     toast('"'+navn+'" lagt til','s');
   }).catch(function(e){toast('Feil: '+e.message,'e');});
@@ -6447,13 +6501,19 @@ function fpLukkModal(id){ document.getElementById(id).classList.remove('open'); 
 
 <!-- AKTØR ADMIN MODAL -->
 <div class="fp-modal-bg" id="fpAktorMbg">
-  <div class="fp-modal" style="max-width:380px;">
+  <div class="fp-modal" style="max-width:400px;">
     <div class="fp-modal-hdr"><div style="font-size:13px;font-weight:700;flex:1;">⚙ Aktører</div><button class="btn sm" onclick="fpLukkModal('fpAktorMbg')">✕</button></div>
-    <div style="padding:14px;display:flex;flex-direction:column;gap:7px;max-height:300px;overflow-y:auto;" id="fpAktorAdminListe"></div>
-    <div style="padding:10px 14px;border-top:1px solid var(--br);display:flex;gap:7px;">
-      <input class="fp-inp" type="text" id="fpNyAktorNavn" placeholder="Firmanavn..." style="flex:1;">
-      <input type="color" id="fpNyAktorFarge" value="#4a9eff" style="width:34px;height:34px;border:1px solid var(--br);border-radius:6px;background:var(--bg4);cursor:pointer;padding:2px;">
-      <button class="btn pri sm" onclick="fpLeggTilAktor()">+</button>
+    <div style="padding:14px;display:flex;flex-direction:column;gap:7px;max-height:380px;overflow-y:auto;" id="fpAktorAdminListe"></div>
+    <div style="padding:10px 14px;border-top:1px solid var(--br);display:flex;flex-direction:column;gap:7px;">
+      <div style="display:flex;gap:7px;">
+        <input class="fp-inp" type="text" id="fpNyAktorNavn" placeholder="Firmanavn..." style="flex:1;">
+        <input type="color" id="fpNyAktorFarge" value="#4a9eff" style="width:34px;height:34px;border:1px solid var(--br);border-radius:6px;background:var(--bg4);cursor:pointer;padding:2px;">
+        <button class="btn pri sm" onclick="fpLeggTilAktor()">+</button>
+      </div>
+      <label style="display:flex;align-items:center;gap:7px;font-size:11px;color:var(--tx2);cursor:pointer;">
+        <input type="checkbox" id="fpNyAktorGjenbrukbar" style="width:14px;height:14px;accent-color:var(--acc);">
+        Lagre som gjenbrukbar (tilgjengelig på alle prosjekter)
+      </label>
     </div>
     <div class="fp-modal-foot"><button class="btn pri" onclick="fpLukkModal('fpAktorMbg')">Ferdig</button></div>
   </div>
