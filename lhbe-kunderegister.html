@@ -6266,7 +6266,10 @@ function fpInitFaseDrag(){
 }
 
 var fpCtxFase=null;
-document.addEventListener('click',function(){fpLukkCtx();});
+document.addEventListener('click',function(e){
+  var m=document.getElementById('fpCtxMenu');
+  if(m && !m.contains(e.target)) fpLukkCtx();
+});
 function fpLukkCtx(){
   var m=document.getElementById('fpCtxMenu');
   if(m) m.style.display='none';
@@ -6281,8 +6284,11 @@ function fpVisCtxFase(e,navn){
   if(x+180>window.innerWidth) x=window.innerWidth-185;
   if(y+60>window.innerHeight) y=window.innerHeight-65;
   m.style.left=x+'px'; m.style.top=y+'px'; m.style.display='block';
-  document.getElementById('fpCtxSlett').onclick=function(){
-    fpLukkCtx(); if(fpCtxFase) fpSlettFase(fpCtxFase);
+  document.getElementById('fpCtxSlett').onclick=function(ev){
+    ev.stopPropagation();
+    var navn=fpCtxFase;  // ta kopi før fpLukkCtx nullstiller
+    fpLukkCtx();
+    if(navn) fpSlettFase(navn);
   };
 }
 
