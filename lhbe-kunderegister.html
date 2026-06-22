@@ -6150,6 +6150,15 @@ function fpRendreRader(dager,uker,p,W){
       +'</div>';
 
     if(fase.aapen){
+      if(akts.length===0){
+        // Tom fase: vis en klikk/drag-rad slik at man kan tegne aktiviteter
+        html+='<div data-fpfase="'+faseNavn+'" style="display:flex;height:'+AKT_H+'px;min-height:'+AKT_H+'px;width:'+TOTAL_W+'px;min-width:'+TOTAL_W+'px;border-bottom:1px dashed rgba(46,53,80,.25);flex-shrink:0;opacity:0.5;">'
+          +'<div style="width:'+TBL_W+'px;min-width:'+TBL_W+'px;border-right:2px solid var(--br);position:sticky;left:0;z-index:6;background:var(--bg);display:flex;align-items:center;padding:0 12px;flex-shrink:0;">'
+          +'<span style="font-size:10px;color:var(--tx3);font-style:italic;">Dra her for å legge til aktivitet</span>'
+          +'</div>'
+          +'<div style="width:'+W+'px;min-width:'+W+'px;position:relative;display:flex;flex-shrink:0;">'+grid+'</div>'
+          +'</div>';
+      }
       akts.forEach(function(akt){
         var sel=akt.id===fpValgtId;
         var farge=fpAktorFarge(akt.aktorNavn);
@@ -6361,7 +6370,7 @@ function fpInitGanttInteract(){
     var sluttDato=fpXToDato(snappedX2,p.s);
     sluttDato.setDate(sluttDato.getDate()-1);
     // Åpne modal med fase og datoer
-    fpVisNyAkt(startDato, sluttDato);
+    fpNyAkt(startDato, sluttDato);
     if(drawFaseNavn){
       var sel=document.getElementById('fpMFase');
       if(sel) for(var i=0;i<sel.options.length;i++){
@@ -6791,7 +6800,7 @@ function fpVelgAktorItem(el){
   el.style.background = farge+'22';
 }
 
-function fpNyAkt(){
+function fpNyAkt(startDato, sluttDato){
   document.getElementById('fpMNavn').value='';
   document.getElementById('fpMStart').value=fpFmtISO(startDato||FP_TODAY);
   document.getElementById('fpMSlutt').value=fpFmtISO(sluttDato||fpAddD(FP_TODAY,6));
