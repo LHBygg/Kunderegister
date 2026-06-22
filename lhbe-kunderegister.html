@@ -6335,9 +6335,12 @@ function fpInitGanttInteract(){
 
     var xRel=clientXToGanttX(e.clientX);
     if(xRel<0) return;
-    // Krev at klikket er i et aktivitetsrad eller tom-fase-rad (ikke utenfor Gantt)
-    var erIRad=t.closest('[data-fpaktid]')||t.closest('[data-fpfase]');
-    if(!erIRad) return;
+    // Krev at klikket er i en tom-fase-rad eller en aktivitetsrad UTEN bar
+    var erIAktRad=t.closest('[data-fpaktid]');
+    var erITomFase=t.closest('[data-fpfase]');
+    if(!erIAktRad && !erITomFase) return;
+    // Ikke tegn på aktivitetsrader som allerede har en bar
+    if(erIAktRad) return;
 
     // Snap til venstre kant av kolonnen
     drawStartX=snapX(xRel);
