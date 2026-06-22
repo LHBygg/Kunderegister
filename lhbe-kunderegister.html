@@ -996,7 +996,7 @@ tr.erow td{padding:0;background:var(--bg2);border-bottom:1px solid var(--br2);}
       </div>
       <div class="fg2">
         <div class="fg"><label class="fl">Sluttdato</label><input class="fi2" id="pSluttdato" type="date"></div>
-        <div class="fg"></div>
+        <div class="fg"><label class="fl">Timebudsjett (SmartDok)</label><input class="fi2" id="pTimerBudsjett" type="number" placeholder="t" min="0" style="max-width:120px;"></div>
       </div>
       <div class="fg2">
         <div class="fg"><label class="fl">Status</label>
@@ -3529,6 +3529,7 @@ function openNP(kn) {
   document.getElementById('pStat').value = 'Under kalkyle';
   document.getElementById('pLeder').value = '';
   document.getElementById('pProsjekttype').value = '';
+  if(document.getElementById('pTimerBudsjett')) document.getElementById('pTimerBudsjett').value = '';
   document.getElementById('pNrWarn').style.display = 'none';
   document.getElementById('pKalkWarn').style.display = 'none';
   // Nullstill underprosjekt-valg
@@ -3564,6 +3565,7 @@ function openEditP(id) {
   document.getElementById('pLeder').value = p.Prosjektleder || '';
   document.getElementById('pProsjekttype').value = p.Prosjekttype || '';
   document.getElementById('pNotat').value = p.Notat || '';
+  document.getElementById('pTimerBudsjett').value = p.TimerBudsjett || '';
   document.getElementById('pKontakt').value = p.Kontaktperson || '';
   document.getElementById('pEpost').value = p.Epost || '';
   document.getElementById('pTelefon').value = p.Telefon || '';
@@ -3645,7 +3647,8 @@ function saveProj() {
     Adresse: document.getElementById('pAdresse').value,
     S_x00f8_knadspliktig: document.getElementById('pSoknadspliktig').checked,
     Tiltaksklasse: (function() { var r = document.querySelector('input[name="pTiltaksklasse"]:checked'); return r ? parseInt(r.value) : null; })(),
-    Prosjekttype: document.getElementById('pProsjekttype').value || null
+    Prosjekttype: document.getElementById('pProsjekttype').value || null,
+    TimerBudsjett: parseFloat(document.getElementById('pTimerBudsjett').value) || null
   };
   if (isUnder) {
     body.Underprosjekt = true;
@@ -4495,6 +4498,10 @@ function renderSDK(resources, plans, hours, fromStr, toStr) {
     });
     } // slutt på filtPlans.length-blokken
   }
+  // Hent timebudsjett fra aktivt prosjekt
+  var aktivtProsjekt = activePID ? projects.filter(function(x){ return x.ID === activePID; })[0] : null;
+  var timerBudsjett = aktivtProsjekt ? (parseFloat(aktivtProsjekt.TimerBudsjett) || 0) : 0;
+
   html.push('<div style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--tx3);margin-bottom:8px;margin-top:14px;font-weight:500">Timer brukt</div>');
   if (!hours.length) {
     html.push('<div style="font-size:12px;color:var(--tx3);padding:8px 0">Ingen registrerte timer</div>');
@@ -4528,6 +4535,24 @@ function renderSDK(resources, plans, hours, fromStr, toStr) {
       ? '<span style="font-size:10px;color:var(--tx3);font-weight:400;margin-left:6px;">' + sdkCurrUnderNavn + '</span>'
       : '';
     html.push('<div class="wh-sum"><div class="wh-sum-lbl">Totalt registrert' + filterInfo + '</div><div class="wh-sum-val">' + totalTimer.toFixed(1) + ' t</div></div>');
+    // Timebudsjett-bar
+    if (timerBudsjett > 0) {
+      var pst = Math.min(totalTimer / timerBudsjett * 100, 100);
+      var barFarge = pst < 70 ? '#22c55e' : pst < 90 ? '#f97316' : '#ef4444';
+      var overskudd = totalTimer > timerBudsjett;
+      html.push(
+        '<div style="margin:8px 0 12px;">'
+        + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">'
+        +   '<span style="font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.4px;font-weight:600;">Timebudsjett</span>'
+        +   '<span style="font-size:11px;font-weight:700;color:' + barFarge + ';">' + totalTimer.toFixed(1) + ' / ' + timerBudsjett + ' t'
+        +     (overskudd ? ' <span style=\'color:#ef4444;font-size:10px;\'>▲ ' + (totalTimer - timerBudsjett).toFixed(1) + ' t over</span>' : '') + '</span>'
+        + '</div>'
+        + '<div style="height:8px;background:var(--bg3);border-radius:4px;overflow:hidden;border:1px solid var(--br);">'
+        +   '<div style="height:100%;width:' + pst.toFixed(1) + '%;background:' + barFarge + ';border-radius:4px;transition:width .4s;"></div>'
+        + '</div>'
+        + '</div>'
+      );
+    }
     var byUser = {};
     filtrerteTimer.forEach(function(h) {
       var wageName = h.WageName || '';
