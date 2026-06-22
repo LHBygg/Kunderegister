@@ -6291,20 +6291,52 @@ function fpSkrivUt(){
   // @page margin 8mm. Vi regner printbar bredde i mm for A3/A4 som JS-hint,
   // men selve skaleringen gjøres dynamisk i det genererte vinduet via JS.
 
+  var zoomTekst = fpZoom==='maaned' ? 'M\u00e5nedvisning' : 'Ukevisning';
+  var datoNaa = fpFmt(FP_TODAY);
+  var periodeStr = fpFmt(p.s)+' \u2013 '+fpFmt(p.e);
+
   var html = '<!DOCTYPE html><html><head><meta charset="UTF-8">'
     +'<title>Fremdriftsplan \u2013 '+fpProjNavn+'</title>'
     +'<style>'
     +'*{box-sizing:border-box;margin:0;padding:0;}'
-    +'html,body{width:100%;}'
-    +'body{font-family:Arial,sans-serif;background:'+bg+';color:'+tx+';font-size:12px;}'
+    +'html,body{font-family:Arial,sans-serif;background:'+bg+';color:'+tx+';font-size:12px;}'
+    // Kontrollpanel (skjules ved utskrift)
+    +'#fp-ctrl{'
+    +'  position:fixed;bottom:0;left:0;right:0;'
+    +'  background:'+bg2+';border-top:2px solid '+acc+';'
+    +'  padding:10px 20px;display:flex;align-items:center;gap:16px;z-index:9999;'
+    +'  box-shadow:0 -4px 20px rgba(0,0,0,.4);'
+    +'}'
+    +'#fp-ctrl label{font-size:11px;color:'+tx2+';font-weight:600;white-space:nowrap;}'
+    +'#fp-slider{-webkit-appearance:none;width:220px;height:4px;border-radius:2px;background:#444;outline:none;cursor:pointer;}'
+    +'#fp-slider::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:'+acc+';cursor:pointer;}'
+    +'#fp-slider::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:'+acc+';cursor:pointer;border:none;}'
+    +'#fp-pct{font-size:13px;font-weight:700;color:'+acc+';width:40px;}'
+    +'#fp-print-btn{margin-left:auto;padding:8px 22px;background:'+acc+';color:#000;border:none;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;}'
+    +'#fp-print-btn:hover{background:#d4a43e;}'
+    +'#fp-hint{font-size:10px;color:'+tx3+';}'
+    // Innhold
+    +'#fp-content{padding-bottom:70px;}'
     +'#fp-scale-wrap{transform-origin:top left;width:'+TOTAL_W+'px;}'
     +'@media print{'
+    +'#fp-ctrl{display:none!important;}'
+    +'#fp-content{padding-bottom:0;}'
     +'html,body{-webkit-print-color-adjust:exact;print-color-adjust:exact;}'
     +'@page{margin:8mm;}'
     +'}'
     +'</style>'
     +'</head>'
     +'<body>'
+    // Kontrollpanel
+    +'<div id="fp-ctrl">'
+    +'  <label>Skalering:</label>'
+    +'  <input id="fp-slider" type="range" min="20" max="100" value="100">'
+    +'  <span id="fp-pct">100%</span>'
+    +'  <span id="fp-hint">Juster til du er forn\u00f8yd, trykk deretter Skriv ut</span>'
+    +'  <button id="fp-print-btn" onclick="window.print()">&#128438; Skriv ut</button>'
+    +'</div>'
+    // Innhold
+    +'<div id="fp-content">'
     +'<div style="padding:8px 12px;background:'+bg2+';border-bottom:1px solid '+br+';display:flex;align-items:center;gap:10px;">'
     +'<span style="font-size:14px;font-weight:700;color:'+acc+';">LH Bygg</span>'
     +'<span style="color:'+tx3+';">/</span>'
@@ -6320,26 +6352,36 @@ function fpSkrivUt(){
     +todayHtml
     +'</div>'
     +'</div>'
-    // Script som skalerer innholdet til å fylle papirbredden
+    +'</div>'
     +'<script>'
-    +'function skaler(){'
+    +'var INN='+TOTAL_W+';'
+    +'var manSkala=null;'
+    // Beregn auto-skala basert på vindusbredde
+    +'function autoSkala(){ return Math.min(1, (document.documentElement.clientWidth-40)/INN); }'
+    // Anvend skala
+    +'function anvendSkala(s){'
     +'  var wrap=document.getElementById("fp-scale-wrap");'
-    +'  if(!wrap)return;'
-    +'  var tilgjengelig=document.documentElement.clientWidth;'
-    +'  var innhold='+TOTAL_W+';'
-    +'  var skala=Math.min(1, tilgjengelig/innhold);'
-    +'  wrap.style.transform="scale("+skala+")";'
-    +'  wrap.style.height=(wrap.scrollHeight*skala)+"px";'
-    +'  document.body.style.width=(innhold*skala)+"px";'
+    +'  wrap.style.transform="scale("+s+")";'
+    +'  var h=wrap.scrollHeight;'
+    +'  wrap.style.height=(h*s)+"px";'
     +'}'
-    +'skaler();'
-    +'window.addEventListener("resize",skaler);'
+    // Oppdater slider + visning
+    +'function oppdater(s){'
+    +'  anvendSkala(s);'
+    +'  document.getElementById("fp-pct").textContent=Math.round(s*100)+"%";'
+    +'  document.getElementById("fp-slider").value=Math.round(s*100);'
+    +'}'
+    // Slider-hendelse
+    +'document.getElementById("fp-slider").addEventListener("input",function(){'
+    +'  manSkala=parseInt(this.value)/100;'
+    +'  oppdater(manSkala);'
+    +'});'
+    // Init: start med auto-skala
+    +'var initS=autoSkala(); oppdater(initS);'
+    +'window.addEventListener("resize",function(){ if(!manSkala){ var s=autoSkala(); oppdater(s); } });'
+    // Ved utskrift: bruk gjeldende skala
     +'window.addEventListener("beforeprint",function(){'
-    +'  var wrap=document.getElementById("fp-scale-wrap");'
-    +'  var tilgjengelig=document.documentElement.clientWidth;'
-    +'  var skala=Math.min(1,tilgjengelig/'+TOTAL_W+');'
-    +'  wrap.style.transform="scale("+skala+")";'
-    +'  wrap.style.height=(wrap.scrollHeight*skala)+"px";'
+    +'  var s=manSkala||autoSkala(); anvendSkala(s);'
     +'});'
     +'<\/script>'
     +'</body></html>';
@@ -6347,7 +6389,7 @@ function fpSkrivUt(){
   var win=window.open('','_blank');
   win.document.write(html);
   win.document.close();
-  win.onload=function(){ setTimeout(function(){ win.print(); }, 300); };
+
 
 }
 
