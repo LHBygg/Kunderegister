@@ -6122,7 +6122,24 @@ function fpRendreRader(dager,uker,p,W){
       return a.faseId===fase.navn && (fpAktorFilter===null||a.aktorNavn===fpAktorFilter);
     });
     var ferdig=akts.filter(function(a){return a.status==='Ferdig';}).length;
-    html+='<div style="display:flex;height:'+FASE_H+'px;min-height:'+FASE_H+'px;width:'+TOTAL_W+'px;min-width:'+TOTAL_W+'px;background:var(--bg3);border-bottom:1px solid var(--br);cursor:pointer;flex-shrink:0;" onclick="fpToggleFase(\''+fase.navn+'\')"><div style="width:'+TBL_W+'px;min-width:'+TBL_W+'px;display:flex;align-items:center;border-right:2px solid var(--br);padding:0 8px;gap:8px;position:sticky;left:0;z-index:6;background:var(--bg3);flex-shrink:0;"><span style="font-size:10px;color:var(--tx3);">▶</span><span style="font-size:10px;font-weight:700;color:var(--tx2);text-transform:uppercase;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+fase.navn+'</span><span style="font-size:10px;color:var(--tx3);flex-shrink:0;">'+ferdig+'/'+akts.length+'</span></div><div style="width:'+W+'px;min-width:'+W+'px;display:flex;flex-shrink:0;">'+grid+'</div></div>';
+    var faseNavn=fase.navn.replace(/'/g,"\\'");
+    var erForste=fpFaser.indexOf(fase)===0;
+    var erSiste=fpFaser.indexOf(fase)===fpFaser.length-1;
+    var knapper=
+      '<button onclick="event.stopPropagation();fpFlyttFase(\''+faseNavn+'\',−1)" title="Flytt opp"'
+      +' style="background:none;border:none;cursor:pointer;padding:2px 4px;color:var(--tx3);font-size:12px;line-height:1;opacity:'+(erForste?'0.2':'0.8')+';pointer-events:'+(erForste?'none':'auto')+';">&#9650;</button>'
+      +'<button onclick="event.stopPropagation();fpFlyttFase(\''+faseNavn+'\',1)" title="Flytt ned"'
+      +' style="background:none;border:none;cursor:pointer;padding:2px 4px;color:var(--tx3);font-size:12px;line-height:1;opacity:'+(erSiste?'0.2':'0.8')+';pointer-events:'+(erSiste?'none':'auto')+';">&#9660;</button>'
+      +'<button onclick="event.stopPropagation();fpSlettFase(\''+faseNavn+'\')" title="Slett fase" style="background:none;border:none;cursor:pointer;padding:2px 5px;color:var(--tx3);font-size:11px;line-height:1;border-radius:3px;">&#10005;</button>';
+    html+='<div style="display:flex;height:'+FASE_H+'px;min-height:'+FASE_H+'px;width:'+TOTAL_W+'px;min-width:'+TOTAL_W+'px;background:var(--bg3);border-bottom:1px solid var(--br);cursor:pointer;flex-shrink:0;" onclick="fpToggleFase(\''+faseNavn+'\')">'
+      +'<div style="width:'+TBL_W+'px;min-width:'+TBL_W+'px;display:flex;align-items:center;border-right:2px solid var(--br);padding:0 8px;gap:6px;position:sticky;left:0;z-index:6;background:var(--bg3);flex-shrink:0;">'
+      +'<span style="font-size:10px;color:var(--tx3);">'+(fase.aapen?'&#9660;':'&#9658;')+'</span>'
+      +'<span style="font-size:10px;font-weight:700;color:var(--tx2);text-transform:uppercase;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;">'+fase.navn+'</span>'
+      +'<span style="font-size:10px;color:var(--tx3);flex-shrink:0;">'+ferdig+'/'+akts.length+'</span>'
+      +knapper
+      +'</div>'
+      +'<div style="width:'+W+'px;min-width:'+W+'px;display:flex;flex-shrink:0;">'+grid+'</div>'
+      +'</div>';
 
     if(fase.aapen){
       akts.forEach(function(akt){
