@@ -6280,41 +6280,75 @@ function fpSkrivUt(){
   var datoNaa = fpFmt(FP_TODAY);
   var periodeStr = fpFmt(p.s)+' – '+fpFmt(p.e);
 
+  var zoomTekst = fpZoom==='maaned' ? 'Månedvisning' : 'Ukevisning';
+  var datoNaa = fpFmt(FP_TODAY);
+  var periodeStr = fpFmt(p.s)+' – '+fpFmt(p.e);
+
+  // Skaleringslogikk:
+  // Gantt-innholdet er TOTAL_W px bredt.
+  // Vi lar nettleseren/skriveren velge papirstørrelse, og CSS skalerer innholdet
+  // til å fylle tilgjengelig bredde. transform-origin: top left + width=100vw.
+  // @page margin 8mm. Vi regner printbar bredde i mm for A3/A4 som JS-hint,
+  // men selve skaleringen gjøres dynamisk i det genererte vinduet via JS.
+
   var html = '<!DOCTYPE html><html><head><meta charset="UTF-8">'
-    +'<title>Fremdriftsplan – '+fpProjNavn+'</title>'
+    +'<title>Fremdriftsplan \u2013 '+fpProjNavn+'</title>'
     +'<style>'
     +'*{box-sizing:border-box;margin:0;padding:0;}'
+    +'html,body{width:100%;}'
     +'body{font-family:Arial,sans-serif;background:'+bg+';color:'+tx+';font-size:12px;}'
+    +'#fp-scale-wrap{transform-origin:top left;width:'+TOTAL_W+'px;}'
     +'@media print{'
-    +'body{-webkit-print-color-adjust:exact;print-color-adjust:exact;}'
-    +'@page{size:A3 landscape;margin:10mm;}'
+    +'html,body{-webkit-print-color-adjust:exact;print-color-adjust:exact;}'
+    +'@page{margin:8mm;}'
     +'}'
     +'</style>'
-    +'<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">'
-    +'</head><body>'
-    // Topplinje
+    +'</head>'
+    +'<body>'
     +'<div style="padding:8px 12px;background:'+bg2+';border-bottom:1px solid '+br+';display:flex;align-items:center;gap:10px;">'
     +'<span style="font-size:14px;font-weight:700;color:'+acc+';">LH Bygg</span>'
     +'<span style="color:'+tx3+';">/</span>'
     +'<span style="font-size:13px;font-weight:600;color:'+tx+';">'+fpProjNavn+'</span>'
-    +'<span style="margin-left:auto;font-size:10px;color:'+tx3+';">Fremdriftsplan · '+zoomTekst+' · '+periodeStr+'</span>'
+    +'<span style="margin-left:auto;font-size:10px;color:'+tx3+';">Fremdriftsplan \u00b7 '+zoomTekst+' \u00b7 '+periodeStr+'</span>'
     +'<span style="font-size:10px;color:'+tx3+';margin-left:12px;">Skrevet ut: '+datoNaa+'</span>'
     +'</div>'
     +legendHtml
-    // Gantt-wrapper
-    +'<div style="overflow-x:auto;">'
-    +'<div style="width:'+TOTAL_W+'px;display:flex;flex-direction:column;">'
+    +'<div id="fp-scale-wrap">'
     +hdrHtml
     +'<div style="position:relative;">'
     +raderHtml
     +todayHtml
-    +'</div></div></div>'
+    +'</div>'
+    +'</div>'
+    // Script som skalerer innholdet til å fylle papirbredden
+    +'<script>'
+    +'function skaler(){'
+    +'  var wrap=document.getElementById("fp-scale-wrap");'
+    +'  if(!wrap)return;'
+    +'  var tilgjengelig=document.documentElement.clientWidth;'
+    +'  var innhold='+TOTAL_W+';'
+    +'  var skala=Math.min(1, tilgjengelig/innhold);'
+    +'  wrap.style.transform="scale("+skala+")";'
+    +'  wrap.style.height=(wrap.scrollHeight*skala)+"px";'
+    +'  document.body.style.width=(innhold*skala)+"px";'
+    +'}'
+    +'skaler();'
+    +'window.addEventListener("resize",skaler);'
+    +'window.addEventListener("beforeprint",function(){'
+    +'  var wrap=document.getElementById("fp-scale-wrap");'
+    +'  var tilgjengelig=document.documentElement.clientWidth;'
+    +'  var skala=Math.min(1,tilgjengelig/'+TOTAL_W+');'
+    +'  wrap.style.transform="scale("+skala+")";'
+    +'  wrap.style.height=(wrap.scrollHeight*skala)+"px";'
+    +'});'
+    +'<\/script>'
     +'</body></html>';
 
   var win=window.open('','_blank');
   win.document.write(html);
   win.document.close();
-  win.onload=function(){ win.print(); };
+  win.onload=function(){ setTimeout(function(){ win.print(); }, 300); };
+
 }
 
 // ----------------------------------------------------------------
