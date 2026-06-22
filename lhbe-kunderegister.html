@@ -5834,6 +5834,11 @@ var FP_FASE_FORSLAG = [
   'Overflatebehandling','Utomhusarbeider','Ferdigstillelse og overlevering'
 ];
 
+var FP_AKTOR_FARGER = [
+  '#4a9eff','#f97316','#22c55e','#ef4444','#a855f7',
+  '#eab308','#06b6d4','#ec4899','#14b8a6','#f43f5e',
+  '#8b5cf6','#84cc16','#fb923c','#38bdf8','#34d399'
+];
 var FP_TODAY = new Date(); FP_TODAY.setHours(0,0,0,0);
 
 function fpFmtISO(dt){ var y=dt.getFullYear(),m=String(dt.getMonth()+1).padStart(2,'0'),d=String(dt.getDate()).padStart(2,'0'); return y+'-'+m+'-'+d; }
@@ -5954,7 +5959,7 @@ function fpHentData(projID, callback){
   Promise.all([
     spGet(SP + "/_api/lists('" + FP_AKTORER_GUID + "')/items?$filter=ProsjektID eq " + projID + "&$orderby=Title&$top=50"),
     spGet(SP + "/_api/lists('" + FP_AKTIVITETER_GUID + "')/items?$filter=ProsjektID eq " + projID + "&$orderby=ID&$top=500"),
-    spGet(SP + "/_api/lists('3DB9CF64-778C-48D8-8F32-044AC6EE249C')/items(" + projID + ")?$select=PlanStart,PlanSlutt"),
+    spGet(SP + "/_api/lists('3DB9CF64-778C-48D8-8F32-044AC6EE249C')/items(" + projID + ")?$select=PlanStart,PlanSlutt,PlanFaser"),
     spGet(SP + "/_api/lists('" + FP_AKTORER_GUID + "')/items?$filter=ProsjektID eq 0&$orderby=Title&$top=100")
   ]).then(function(res){
     var aktorRaw = res[0].value||[];
@@ -5969,7 +5974,14 @@ function fpHentData(projID, callback){
       type:a.Type||'Aktivitet', aktorNavn:a.AktorNavn||'',
       status:fpAutoStatus(fpD(a.Startdato), fpD(a.Sluttdato)), notat:a.Notat||'', nr:a.ID
     }; });
+    // Bygg faseliste: start med lagrede faser fra SP, legg til eventuelle fra aktiviteter
     fpFaser = [];
+    if(proj.PlanFaser){
+      try {
+        var lagredeFaser = JSON.parse(proj.PlanFaser);
+        lagredeFaser.forEach(function(n){ fpFaser.push({navn:n, aapen:true}); });
+      } catch(e){}
+    }
     fpAktiviteter.forEach(function(a){
       if(a.faseId && !fpFaser.find(function(f){return f.navn===a.faseId;}))
         fpFaser.push({navn:a.faseId, aapen:true});
@@ -6274,13 +6286,22 @@ function fpNyFase(){
   document.getElementById('fpNyFaseMbg').classList.add('open');
 }
 function fpVelgFaseForslag(el,navn){ document.querySelectorAll('.fp-fase-forslag').forEach(function(d){d.classList.remove('valgt');}); el.classList.add('valgt'); document.getElementById('fpFaseEget').value=navn; }
-function fpLagreNyFase(){ var navn=document.getElementById('fpFaseEget').value.trim(); if(!navn){toast('Velg eller skriv fasenavn','e');return;} if(!fpFaser.find(function(f){return f.navn===navn;})) fpFaser.push({navn:navn,aapen:true}); fpLukkModal('fpNyFaseMbg'); fpRender(); toast('"'+navn+'" lagt til','s'); }
+function fpLagreNyFase(){ var navn=document.getElementById('fpFaseEget').value.trim(); if(!navn){toast('Velg eller skriv fasenavn','e');return;} if(!fpFaser.find(function(f){return f.navn===navn;})) fpFaser.push({navn:navn,aapen:true}); fpLukkModal('fpNyFaseMbg'); fpLagreFaserSP(); fpRender(); toast('"'+navn+'" lagt til','s'); }
+function fpLagreFaserSP(){
+  var navn=fpFaser.map(function(f){return f.navn;});
+  spPatch(SP+"/_api/lists('3DB9CF64-778C-48D8-8F32-044AC6EE249C')/items("+fpProjID+")", {PlanFaser:JSON.stringify(navn)}).catch(function(){});
+}
 
 // ----------------------------------------------------------------
 // AKTØRADMIN
 // ----------------------------------------------------------------
 function fpAktorAdmin(){
+  // Sett første ledige farge som default valg
+  var brukteFarger = fpAktorer.map(function(a){return a.farge.toLowerCase();});
+  var ledig = FP_AKTOR_FARGER.find(function(f){return brukteFarger.indexOf(f.toLowerCase())===-1;})||FP_AKTOR_FARGER[0];
+  document.getElementById('fpNyAktorFargeValgt').value = ledig;
   fpRendreAktorListe();
+  fpRenderFargePallett();
   document.getElementById('fpAktorMbg').classList.add('open');
 }
 function fpRendreAktorListe(){
@@ -6318,6 +6339,26 @@ function fpRendreAktorListe(){
   document.getElementById('fpAktorAdminListe').innerHTML = prosjektHtml + importHtml;
 }
 
+function fpRenderFargePallett(){
+  var brukteFarger = fpAktorer.map(function(a){return a.farge.toLowerCase();});
+  var valgt = document.getElementById('fpNyAktorFargeValgt').value;
+  var html = FP_AKTOR_FARGER.map(function(f){
+    var erBrukt = brukteFarger.indexOf(f.toLowerCase()) !== -1;
+    var erValgt = valgt.toLowerCase() === f.toLowerCase();
+    var stil = 'width:22px;height:22px;border-radius:5px;background:'+f
+      +';cursor:'+(erBrukt?'not-allowed':'pointer')
+      +';opacity:'+(erBrukt?'0.25':'1')
+      +';outline:'+(erValgt?'2px solid #fff':'none')
+      +';outline-offset:2px;box-sizing:border-box;flex-shrink:0;';
+    var klikk = erBrukt ? '' : ' onclick="fpVelgAktorFarge(\'' + f + '\')"';
+    return '<div'+klikk+' title="'+f+'" style="'+stil+'"></div>';
+  }).join('');
+  document.getElementById('fpFargePallett').innerHTML = html;
+}
+function fpVelgAktorFarge(farge){
+  document.getElementById('fpNyAktorFargeValgt').value = farge;
+  fpRenderFargePallett();
+}
 function fpImporterAktor(globalId){
   var g = fpGlobaleAktorer.find(function(x){return x.id===globalId;});
   if(!g)return;
@@ -6325,13 +6366,13 @@ function fpImporterAktor(globalId){
   spPost(SP+"/_api/lists('"+FP_AKTORER_GUID+"')/items", body).then(function(res){
     var nyID=(res&&(res.id||res.Id||(res.d&&(res.d.Id||res.d.id))))||fpNextId++;
     fpAktorer.push({id:nyID,navn:g.navn,farge:g.farge});
-    fpRendreAktorListe(); fpRender(); fpRendreLegend();
+    fpRendreAktorListe(); fpRenderFargePallett(); fpRender(); fpRendreLegend();
     toast('"'+g.navn+'" importert','s');
   }).catch(function(e){toast('Feil: '+e.message,'e');});
 }
 function fpLeggTilAktor(){
   var navn=document.getElementById('fpNyAktorNavn').value.trim();
-  var farge=document.getElementById('fpNyAktorFarge').value;
+  var farge=document.getElementById('fpNyAktorFargeValgt').value||FP_AKTOR_FARGER[0];
   var gjenbrukbar=document.getElementById('fpNyAktorGjenbrukbar').checked;
   if(!navn){toast('Fyll inn navn','e');return;}
   var body={Title:navn,Farge:farge,ProsjektID:fpProjID};
@@ -6351,7 +6392,7 @@ function fpLeggTilAktor(){
     }
     return gPromise;
   }).then(function(){
-    fpRendreAktorListe(); fpRender(); fpRendreLegend();
+    fpRendreAktorListe(); fpRenderFargePallett(); fpRender(); fpRendreLegend();
     toast('"'+navn+'" lagt til','s');
   }).catch(function(e){toast('Feil: '+e.message,'e');});
 }
@@ -6360,7 +6401,7 @@ function fpFjernAktor(id){
   var a=fpAktorer.find(function(x){return x.id===id;}); if(!a)return;
   spDel(SP+"/_api/lists('"+FP_AKTORER_GUID+"')/items("+id+")").then(function(){
     fpAktorer=fpAktorer.filter(function(x){return x.id!==id;});
-    fpRendreAktorListe(); fpRender(); fpRendreLegend();
+    fpRendreAktorListe(); fpRenderFargePallett(); fpRender(); fpRendreLegend();
   }).catch(function(e){toast('Feil: '+e.message,'e');});
 }
 function fpEndreAktorFarge(id,farge){ var a=fpAktorer.find(function(x){return x.id===id;}); if(a){a.farge=farge;fpRender();fpRendreLegend();} }
@@ -6504,12 +6545,13 @@ function fpLukkModal(id){ document.getElementById(id).classList.remove('open'); 
   <div class="fp-modal" style="max-width:400px;">
     <div class="fp-modal-hdr"><div style="font-size:13px;font-weight:700;flex:1;">⚙ Aktører</div><button class="btn sm" onclick="fpLukkModal('fpAktorMbg')">✕</button></div>
     <div style="padding:14px;display:flex;flex-direction:column;gap:7px;max-height:380px;overflow-y:auto;" id="fpAktorAdminListe"></div>
-    <div style="padding:10px 14px;border-top:1px solid var(--br);display:flex;flex-direction:column;gap:7px;">
+    <div style="padding:10px 14px;border-top:1px solid var(--br);display:flex;flex-direction:column;gap:8px;">
       <div style="display:flex;gap:7px;">
         <input class="fp-inp" type="text" id="fpNyAktorNavn" placeholder="Firmanavn..." style="flex:1;">
-        <input type="color" id="fpNyAktorFarge" value="#4a9eff" style="width:34px;height:34px;border:1px solid var(--br);border-radius:6px;background:var(--bg4);cursor:pointer;padding:2px;">
         <button class="btn pri sm" onclick="fpLeggTilAktor()">+</button>
       </div>
+      <input type="hidden" id="fpNyAktorFargeValgt" value="#4a9eff">
+      <div id="fpFargePallett" style="display:flex;flex-wrap:wrap;gap:5px;"></div>
       <label style="display:flex;align-items:center;gap:7px;font-size:11px;color:var(--tx2);cursor:pointer;">
         <input type="checkbox" id="fpNyAktorGjenbrukbar" style="width:14px;height:14px;accent-color:var(--acc);">
         Lagre som gjenbrukbar (tilgjengelig på alle prosjekter)
