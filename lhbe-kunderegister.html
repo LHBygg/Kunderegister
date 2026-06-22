@@ -6182,6 +6182,39 @@ function fpRendreRader(dager,uker,p,W){
 
 function fpToggleFase(navn){ var f=fpFaser.find(function(x){return x.navn===navn;}); if(f)f.aapen=!f.aapen; fpRender(); }
 
+function fpSlettFase(navn){
+  var akts=fpAktiviteter.filter(function(a){return a.faseId===navn;});
+  if(akts.length){
+    if(!confirm('Fasen "'+navn+'" har '+akts.length+' aktivitet(er). Slett fasen og alle aktivitetene?')) return;
+    // Slett alle aktiviteter i SP
+    var slettePromiser=akts.map(function(a){
+      return spDel(SP+"/_api/lists('"+FP_AKTIVITETER_GUID+"')/items("+a.spID+")").catch(function(){});
+    });
+    Promise.all(slettePromiser).then(function(){
+      fpAktiviteter=fpAktiviteter.filter(function(a){return a.faseId!==navn;});
+      fpFaser=fpFaser.filter(function(f){return f.navn!==navn;});
+      fpLagreFaserSP(); fpRender();
+      toast('"'+navn+'" slettet','s');
+    });
+  } else {
+    fpFaser=fpFaser.filter(function(f){return f.navn!==navn;});
+    fpLagreFaserSP(); fpRender();
+    toast('"'+navn+'" slettet','s');
+  }
+}
+
+function fpFlyttFase(navn, retning){
+  var idx=fpFaser.findIndex(function(f){return f.navn===navn;});
+  if(idx===-1) return;
+  var nyIdx=idx+retning;
+  if(nyIdx<0||nyIdx>=fpFaser.length) return;
+  // Bytt plass i fpFaser
+  var tmp=fpFaser[idx];
+  fpFaser[idx]=fpFaser[nyIdx];
+  fpFaser[nyIdx]=tmp;
+  fpLagreFaserSP(); fpRender();
+}
+
 // ----------------------------------------------------------------
 // UTSKRIFT
 // ----------------------------------------------------------------
