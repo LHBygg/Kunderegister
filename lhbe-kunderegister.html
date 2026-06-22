@@ -6290,62 +6290,60 @@ function fpInitGanttInteract(){
   var p=fpGetPeriode();
   var TBL_W=460;
 
-  // --- TEGN NY AKTIVITET (mousedown på tom grid-celle) ---
   var rw=document.getElementById('fpRadWrap');
-  if(!rw) return;
+  var sc=document.getElementById('fpOvScroll'); // horisontal scroll-container
+  if(!rw||!sc) return;
 
-  var drawEl=null, drawStartX=0, drawFaseNavn='', drawRowY=0;
+  // Hjelpefunksjon: konverter clientX → x i gantt-koordinatsystemet (etter TBL_W)
+  function clientXToGanttX(clientX){
+    var rwRect=rw.getBoundingClientRect();
+    return clientX - rwRect.left + sc.scrollLeft - TBL_W;
+  }
+
+  // --- TEGN NY AKTIVITET ---
+  var drawEl=null, drawStartX=0, drawFaseNavn='';
 
   rw.addEventListener('mousedown', function(e){
-    // Bare venstre museknapp
     if(e.button!==0) return;
-    // Ikke start drag på bar, fase-rad, knapp eller handle
     var t=e.target;
     if(t.closest('.fp-g-bar')||t.closest('.fp-fase-row')||t.closest('button')||t.closest('.fp-drag-handle')) return;
 
-    // Finn aktivitetsrad (data-fpaktid) og fase
     var aktRad=t.closest('[data-fpaktid]');
-    var faseRad=t.closest('[data-fase]');
     var faseNavn='';
     if(aktRad){
       var aktId=parseInt(aktRad.dataset.fpaktid);
       var akt=fpAktiviteter.find(function(a){return a.id===aktId;});
       if(akt) faseNavn=akt.faseId;
-    } else if(faseRad){
-      return; // ikke tegn på fase-header
+    } else if(t.closest('[data-fase]')){
+      return;
     } else {
-      // Finn fase fra y-posisjon
-      var faser=rw.querySelectorAll('.fp-fase-row');
-      faser.forEach(function(fr){
+      rw.querySelectorAll('.fp-fase-row').forEach(function(fr){
         var rect=fr.getBoundingClientRect();
         if(e.clientY>rect.bottom) faseNavn=fr.dataset.fase||faseNavn;
       });
     }
 
-    // Beregn x relativt til gantt-kolonnen
-    var rwRect=rw.getBoundingClientRect();
-    var xRel=e.clientX-rwRect.left+rw.scrollLeft-TBL_W;
+    var xRel=clientXToGanttX(e.clientX);
     if(xRel<0) return;
 
     drawStartX=xRel;
     drawFaseNavn=faseNavn;
 
-    // Lag overlay-element
     drawEl=document.createElement('div');
     drawEl.className='fp-draw-sel';
-    drawEl.style.top=(e.clientY-rwRect.top+rw.scrollTop)+'px';
+    // top relativt til rw (som er position:relative)
+    var rwRect=rw.getBoundingClientRect();
+    drawEl.style.top=(e.clientY-rwRect.top+sc.scrollTop)+'px';
     drawEl.style.height='28px';
     drawEl.style.left=(TBL_W+xRel)+'px';
     drawEl.style.width='0px';
     rw.appendChild(drawEl);
-
     e.preventDefault();
   });
 
   document.addEventListener('mousemove', function(e){
     if(!drawEl) return;
-    var rwRect=rw.getBoundingClientRect();
-    var xNaa=e.clientX-rwRect.left+rw.scrollLeft-TBL_W;
+    var xNaa=clientXToGanttX(e.clientX);
     var x1=Math.min(drawStartX,xNaa), x2=Math.max(drawStartX,xNaa);
     drawEl.style.left=(TBL_W+x1)+'px';
     drawEl.style.width=Math.max(x2-x1,fpCOL_W)+'px';
@@ -6353,8 +6351,7 @@ function fpInitGanttInteract(){
 
   document.addEventListener('mouseup', function(e){
     if(!drawEl) return;
-    var rwRect=rw.getBoundingClientRect();
-    var xNaa=e.clientX-rwRect.left+rw.scrollLeft-TBL_W;
+    var xNaa=clientXToGanttX(e.clientX);
     var x1=Math.min(drawStartX,xNaa), x2=Math.max(drawStartX,xNaa);
     // Fjern overlay
     if(drawEl.parentNode) drawEl.parentNode.removeChild(drawEl);
@@ -6397,8 +6394,7 @@ function fpInitGanttInteract(){
   document.addEventListener('mousemove', function(e){
     if(!barDrag) return;
     var dx=e.clientX-barDrag.startX;
-    var colW=fpCOL_W;
-    var dagsDiff=fpZoom==='maaned'?Math.round(dx/colW*7):Math.round(dx/colW);
+    var dagsDiff=fpZoom==='maaned'?Math.round(dx/fpCOL_W*7):Math.round(dx/fpCOL_W);
     if(dagsDiff===0) return;
     var nyStart=new Date(barDrag.origStart); nyStart.setDate(nyStart.getDate()+dagsDiff);
     var nySlutt=new Date(barDrag.origSlutt); nySlutt.setDate(nySlutt.getDate()+dagsDiff);
