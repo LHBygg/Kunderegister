@@ -4275,7 +4275,7 @@ function closeMov(id) {
   sjekkScrollLas();
 }
 function sjekkScrollLas() {
-  var aapne = document.querySelectorAll('.mov:not(.hid), .fp-modal-bg.open, #fpOverlay.open');
+  var aapne = document.querySelectorAll('.mov:not(.hid), .fp-modal-bg.open, .fp-overlay.open');
   document.body.style.overflow = aapne.length ? 'hidden' : '';
 }
 
@@ -6537,7 +6537,7 @@ function fpNyAkt(){
       return '<div class="fp-aktor-item" data-navn="'+a.navn+'" data-farge="'+a.farge+'" onclick="fpVelgAktorItem(this)"><div style="width:8px;height:8px;border-radius:50%;background:'+a.farge+';flex-shrink:0;"></div>'+a.navn+'</div>';
     }).join('');
   }
-  document.getElementById('fpNyAktMbg').classList.add('open');
+  document.getElementById('fpNyAktMbg').classList.add('open'); sjekkScrollLas();
   setTimeout(function(){document.getElementById('fpMNavn').focus();},50);
 }
 
@@ -6575,7 +6575,7 @@ function fpNyFase(){
     return '<div class="fp-fase-forslag'+(brukt?' brukt':'')+'" onclick="'+(brukt?'':('fpVelgFaseForslag(this,\''+navn.replace(/'/g,"\\'")+'\')'))+'">'+(brukt?'<span style="color:var(--grn);">✓</span>':'<span style="color:var(--tx3);">＋</span>')+' '+navn+'</div>';
   }).join('');
   document.getElementById('fpFaseEget').value='';
-  document.getElementById('fpNyFaseMbg').classList.add('open');
+  document.getElementById('fpNyFaseMbg').classList.add('open'); sjekkScrollLas();
 }
 function fpVelgFaseForslag(el,navn){ document.querySelectorAll('.fp-fase-forslag').forEach(function(d){d.classList.remove('valgt');}); el.classList.add('valgt'); document.getElementById('fpFaseEget').value=navn; }
 function fpLagreNyFase(){ var navn=document.getElementById('fpFaseEget').value.trim(); if(!navn){toast('Velg eller skriv fasenavn','e');return;} if(!fpFaser.find(function(f){return f.navn===navn;})) fpFaser.push({navn:navn,aapen:true}); fpLukkModal('fpNyFaseMbg'); fpLagreFaserSP(); fpRender(); toast('"'+navn+'" lagt til','s'); }
@@ -6706,7 +6706,7 @@ function fpPeriodeModal(){
   if(fpPeriodeSlutt) document.getElementById('fpPSlutt').value=fpFmtISO(fpPeriodeSlutt);
   fpVisPeriodeModal();
 }
-function fpVisPeriodeModal(){ document.getElementById('fpPeriodeMbg').classList.add('open'); }
+function fpVisPeriodeModal(){ document.getElementById('fpPeriodeMbg').classList.add('open'); sjekkScrollLas(); }
 function fpSettPeriode(mnd){
   var s=new Date(FP_TODAY.getFullYear(),FP_TODAY.getMonth(),1);
   var e=new Date(s); e.setMonth(e.getMonth()+mnd); e.setDate(e.getDate()-1);
