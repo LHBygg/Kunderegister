@@ -6411,9 +6411,11 @@ function fpInitGanttInteract(){
   document.addEventListener('mousemove', function(e){
     if(!barDrag) return;
     var dx=e.clientX-barDrag.startX;
+    // Krev minst 8px bevegelse før det regnes som drag
+    if(Math.abs(dx)<8) return;
+    barDragMoved=true;
     var dagsDiff=fpZoom==='maaned'?Math.round(dx/fpCOL_W*7):Math.round(dx/fpCOL_W);
     if(dagsDiff===0) return;
-    barDragMoved=true;
     var nyStart=new Date(barDrag.origStart); nyStart.setDate(nyStart.getDate()+dagsDiff);
     var nySlutt=new Date(barDrag.origSlutt); nySlutt.setDate(nySlutt.getDate()+dagsDiff);
     barDrag.barEl.style.left=fpXPos(nyStart,fpGetPeriode().s)+'px';
