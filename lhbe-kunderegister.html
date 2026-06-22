@@ -6331,6 +6331,9 @@ function fpInitGanttInteract(){
       var aktId=parseInt(aktRad.dataset.fpaktid);
       var akt=fpAktiviteter.find(function(a){return a.id===aktId;});
       if(akt) faseNavn=akt.faseId;
+    } else {
+      var tomFaseRad=t.closest('[data-fpfase]');
+      if(tomFaseRad) faseNavn=tomFaseRad.dataset.fpfase;
     }
 
     var xRel=clientXToGanttX(e.clientX);
