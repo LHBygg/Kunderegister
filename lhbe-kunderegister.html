@@ -6051,6 +6051,9 @@ function fpHentData(projID, callback){
   }).catch(function(e){ toast('Feil ved lasting: '+e.message,'e'); });
 }
 
+// Initialiser gantt-interaksjon én gang ved første lasting
+setTimeout(function(){ fpInitGanttInteract(); }, 500);
+
 function fpLukk(){
   document.getElementById('fpOverlay').classList.remove('open');
   document.getElementById('fpLukkBtn').classList.remove('vis');
@@ -6201,7 +6204,6 @@ function fpRendreRader(dager,uker,p,W){
   rw.style.position='relative';
   rw.innerHTML=html;
   fpInitFaseDrag();
-  fpInitGanttInteract();
 
   // Sett today-line høyde
   requestAnimationFrame(function(){
@@ -6285,19 +6287,21 @@ function fpInitFaseDrag(){
 
 // ----------------------------------------------------------------
 // GANTT-INTERAKSJON: tegn ny aktivitet + flytt eksisterende
+// Registreres én gang (ikke per render) for å unngå dupliserte lyttere
 // ----------------------------------------------------------------
+var fpGanttInteractInit=false;
 function fpInitGanttInteract(){
-  var p=fpGetPeriode();
+  if(fpGanttInteractInit) return;
+  fpGanttInteractInit=true;
   var TBL_W=460;
 
-  var rw=document.getElementById('fpRadWrap');
-  var sc=document.getElementById('fpOvScroll'); // horisontal scroll-container
-  if(!rw||!sc) return;
-
-  // Hjelpefunksjon: konverter clientX → x i gantt-koordinatsystemet (etter TBL_W)
+  // Hjelpefunksjoner – henter DOM og periode dynamisk ved hvert kall
+  function getRW(){ return document.getElementById('fpRadWrap'); }
+  function getSC(){ return document.getElementById('fpOvScroll'); }
   function clientXToGanttX(clientX){
-    var rwRect=rw.getBoundingClientRect();
-    return clientX - rwRect.left + sc.scrollLeft - TBL_W;
+    var rw=getRW(), sc=getSC();
+    if(!rw||!sc) return 0;
+    return clientX - rw.getBoundingClientRect().left + sc.scrollLeft - TBL_W;
   }
 
   // --- TEGN NY AKTIVITET ---
@@ -6317,7 +6321,7 @@ function fpInitGanttInteract(){
     } else if(t.closest('[data-fase]')){
       return;
     } else {
-      rw.querySelectorAll('.fp-fase-row').forEach(function(fr){
+      getRW().querySelectorAll('.fp-fase-row').forEach(function(fr){
         var rect=fr.getBoundingClientRect();
         if(e.clientY>rect.bottom) faseNavn=fr.dataset.fase||faseNavn;
       });
@@ -6329,15 +6333,15 @@ function fpInitGanttInteract(){
     drawStartX=xRel;
     drawFaseNavn=faseNavn;
 
+    var rw2=getRW(); var sc2=getSC();
     drawEl=document.createElement('div');
     drawEl.className='fp-draw-sel';
-    // top relativt til rw (som er position:relative)
-    var rwRect=rw.getBoundingClientRect();
-    drawEl.style.top=(e.clientY-rwRect.top+sc.scrollTop)+'px';
+    var rwRect=rw2.getBoundingClientRect();
+    drawEl.style.top=(e.clientY-rwRect.top+sc2.scrollTop)+'px';
     drawEl.style.height='28px';
     drawEl.style.left=(TBL_W+xRel)+'px';
     drawEl.style.width='0px';
-    rw.appendChild(drawEl);
+    getRW().appendChild(drawEl);
     e.preventDefault();
   });
 
@@ -6353,6 +6357,7 @@ function fpInitGanttInteract(){
     if(!drawEl) return;
     var xNaa=clientXToGanttX(e.clientX);
     var x1=Math.min(drawStartX,xNaa), x2=Math.max(drawStartX,xNaa);
+    var p=fpGetPeriode();
     // Fjern overlay
     if(drawEl.parentNode) drawEl.parentNode.removeChild(drawEl);
     drawEl=null;
@@ -6379,8 +6384,9 @@ function fpInitGanttInteract(){
   // --- FLYTT EKSISTERENDE AKTIVITET (drag bar) ---
   var barDrag=null; // {akt, startX, origStart, origSlutt, barEl}
 
-  rw.addEventListener('mousedown', function(e){
+  document.addEventListener('mousedown', function(e){
     if(e.button!==0) return;
+    var rw=getRW(); if(!rw||!rw.contains(e.target)) return;
     var bar=e.target.closest('.fp-g-bar');
     if(!bar) return;
     var aktId=parseInt(bar.closest('[data-fpaktid]').dataset.fpaktid);
@@ -6398,8 +6404,7 @@ function fpInitGanttInteract(){
     if(dagsDiff===0) return;
     var nyStart=new Date(barDrag.origStart); nyStart.setDate(nyStart.getDate()+dagsDiff);
     var nySlutt=new Date(barDrag.origSlutt); nySlutt.setDate(nySlutt.getDate()+dagsDiff);
-    // Vis preview
-    var newLeft=fpXPos(nyStart,p.s);
+    var newLeft=fpXPos(nyStart,fpGetPeriode().s);
     barDrag.barEl.style.left=newLeft+'px';
     barDrag.barEl.title=fpFmt(nyStart)+' – '+fpFmt(nySlutt);
   });
@@ -6407,8 +6412,7 @@ function fpInitGanttInteract(){
   document.addEventListener('mouseup', function(e){
     if(!barDrag) return;
     var dx=e.clientX-barDrag.startX;
-    var colW=fpCOL_W;
-    var dagsDiff=fpZoom==='maaned'?Math.round(dx/colW*7):Math.round(dx/colW);
+    var dagsDiff=fpZoom==='maaned'?Math.round(dx/fpCOL_W*7):Math.round(dx/fpCOL_W);
     barDrag.barEl.classList.remove('fp-dragging');
     if(dagsDiff!==0){
       var akt=barDrag.akt;
