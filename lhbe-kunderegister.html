@@ -6142,9 +6142,9 @@ function fpRendreRader(dager,uker,p,W){
     });
     var ferdig=akts.filter(function(a){return a.status==='Ferdig';}).length;
     var faseNavn=fase.navn.replace(/'/g,"\\'");
-    html+='<div class="fp-fase-row" draggable="true" data-fase="'+faseNavn+'" oncontextmenu="fpVisCtxFase(event,\''+faseNavn+'\')" style="display:flex;height:'+FASE_H+'px;min-height:'+FASE_H+'px;width:'+TOTAL_W+'px;min-width:'+TOTAL_W+'px;background:var(--bg3);border-bottom:1px solid var(--br);flex-shrink:0;">'
+    html+='<div class="fp-fase-row" data-fase="'+faseNavn+'" oncontextmenu="fpVisCtxFase(event,\''+faseNavn+'\')" style="display:flex;height:'+FASE_H+'px;min-height:'+FASE_H+'px;width:'+TOTAL_W+'px;min-width:'+TOTAL_W+'px;background:var(--bg3);border-bottom:1px solid var(--br);flex-shrink:0;">'
       +'<div style="width:'+TBL_W+'px;min-width:'+TBL_W+'px;display:flex;align-items:center;border-right:2px solid var(--br);padding:0 4px 0 0;position:sticky;left:0;z-index:6;background:var(--bg3);flex-shrink:0;">'
-      +'<span class="fp-drag-handle" title="Dra for å endre rekkefolge">⋮</span>'
+      +'<span class="fp-drag-handle" draggable="true" title="Dra for å endre rekkefolge">⋮</span>'
       +'<span onclick="event.stopPropagation();fpToggleFase(\''+faseNavn+'\')" style="font-size:10px;color:var(--tx3);padding:0 4px;cursor:pointer;">'+(fase.aapen?'&#9660;':'&#9658;')+'</span>'
       +'<span onclick="event.stopPropagation();fpToggleFase(\''+faseNavn+'\')" style="font-size:10px;font-weight:700;color:var(--tx2);text-transform:uppercase;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;cursor:pointer;">'+fase.navn+'</span>'
       +'<span style="font-size:10px;color:var(--tx3);flex-shrink:0;padding-right:8px;">'+ferdig+'/'+akts.length+'</span>'
@@ -6256,7 +6256,18 @@ function fpFlyttFase(navn, retning){
 var fpDragFase=null;
 function fpInitFaseDrag(){
   document.querySelectorAll('.fp-fase-row').forEach(function(rad){
+    var handle=rad.querySelector('.fp-drag-handle');
+    if(handle){
+      handle.addEventListener('dragstart',function(e){
+        fpDragFase=rad.dataset.fase;
+        e.dataTransfer.effectAllowed='move';
+        e.stopPropagation();
+        setTimeout(function(){rad.style.opacity='0.4';},0);
+      });
+    }
     rad.addEventListener('dragstart',function(e){
+      // Bare tillat drag fra håndtaket
+      if(!e.target.closest('.fp-drag-handle')){ e.preventDefault(); return; }
       fpDragFase=rad.dataset.fase;
       e.dataTransfer.effectAllowed='move';
       setTimeout(function(){rad.style.opacity='0.4';},0);
@@ -6324,6 +6335,9 @@ function fpInitGanttInteract(){
 
     var xRel=clientXToGanttX(e.clientX);
     if(xRel<0) return;
+    // Krev at klikket er i et aktivitetsrad eller tom-fase-rad (ikke utenfor Gantt)
+    var erIRad=t.closest('[data-fpaktid]')||t.closest('[data-fpfase]');
+    if(!erIRad) return;
 
     // Snap til venstre kant av kolonnen
     drawStartX=snapX(xRel);
@@ -6391,7 +6405,7 @@ function fpInitGanttInteract(){
     barDrag={akt:akt, startX:e.clientX, origStart:new Date(akt.start), origSlutt:new Date(akt.slutt), barEl:bar};
     barDragMoved=false;
     bar.classList.add('fp-dragging');
-    e.preventDefault(); e.stopPropagation();
+    e.preventDefault();
   });
 
   document.addEventListener('mousemove', function(e){
@@ -6424,20 +6438,13 @@ function fpInitGanttInteract(){
     var nyStart=new Date(bd.origStart); nyStart.setDate(nyStart.getDate()+dagsDiff);
     var nySlutt=new Date(bd.origSlutt); nySlutt.setDate(nySlutt.getDate()+dagsDiff);
     akt.start=nyStart; akt.slutt=nySlutt;
-    // Blokker neste click-event på denne baren (som fyrer etter mouseup)
-    bd.barEl._blockClick=true;
-    setTimeout(function(){ bd.barEl._blockClick=false; }, 200);
     spPatch(SP+"/_api/lists('"+FP_AKTIVITETER_GUID+"')/items("+akt.spID+")",
       {Startdato:fpFmtISO(nyStart),Sluttdato:fpFmtISO(nySlutt)})
       .then(function(){ fpRender(); })
       .catch(function(err){ toast('Feil: '+err.message,'e'); fpRender(); });
   });
 
-  // Blokker onclick etter drag
-  document.addEventListener('click', function(e){
-    var bar=e.target.closest('.fp-g-bar');
-    if(bar && bar._blockClick){ e.stopImmediatePropagation(); e.preventDefault(); }
-  }, true);
+
 }
 
 var fpCtxFase=null;
