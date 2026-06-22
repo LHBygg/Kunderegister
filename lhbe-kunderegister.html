@@ -4266,8 +4266,18 @@ function exportCSV() {
   a.click();
 }
 
-function openMov(id) { document.getElementById(id).classList.remove('hid'); }
-function closeMov(id) { document.getElementById(id).classList.add('hid'); }
+function openMov(id) {
+  document.getElementById(id).classList.remove('hid');
+  sjekkScrollLas();
+}
+function closeMov(id) {
+  document.getElementById(id).classList.add('hid');
+  sjekkScrollLas();
+}
+function sjekkScrollLas() {
+  var aapne = document.querySelectorAll('.mov:not(.hid), .fp-modal-bg.open, #fpOverlay.open');
+  document.body.style.overflow = aapne.length ? 'hidden' : '';
+}
 
 function toast(msg, type) {
   type = type || 's';
@@ -5973,7 +5983,7 @@ function fpApne(projID, navnEnc, fulltNavn){
   fpProjNavn = decodeURIComponent(fulltNavn||'');
   document.getElementById('fpOvProjNavn').textContent = fpProjNavn;
   document.getElementById('fpOvDato').textContent = fpFmt(FP_TODAY);
-  document.getElementById('fpOverlay').classList.add('open');
+  document.getElementById('fpOverlay').classList.add('open'); sjekkScrollLas();
   document.getElementById('fpLukkBtn').classList.add('vis');
   // Hent alltid ferske data
   fpHentData(projID, function(){
@@ -6029,6 +6039,7 @@ function fpLukk(){
   document.getElementById('fpOverlay').classList.remove('open');
   document.getElementById('fpLukkBtn').classList.remove('vis');
   fpCloseDP();
+  sjekkScrollLas();
 }
 
 // ----------------------------------------------------------------
@@ -6583,7 +6594,7 @@ function fpAktorAdmin(){
   document.getElementById('fpNyAktorFargeValgt').value = ledig;
   fpRendreAktorListe();
   fpRenderFargePallett();
-  document.getElementById('fpAktorMbg').classList.add('open');
+  document.getElementById('fpAktorMbg').classList.add('open'); sjekkScrollLas();
 }
 function fpRendreAktorListe(){
   // Prosjektets egne aktører
@@ -6723,7 +6734,7 @@ function fpScrollIdag(){
   var rw=document.getElementById('fpRadWrap');
   if(rw){ var target=fpXPos(FP_TODAY,p.s)-(rw.clientWidth-460)/2; rw.scrollLeft=Math.max(0,target); }
 }
-function fpLukkModal(id){ document.getElementById(id).classList.remove('open'); }
+function fpLukkModal(id){ document.getElementById(id).classList.remove('open'); sjekkScrollLas(); }
 
 </script>
 
