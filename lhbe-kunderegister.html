@@ -6290,7 +6290,6 @@ function fpInitFaseDrag(){
 // Registreres én gang (ikke per render) for å unngå dupliserte lyttere
 // ----------------------------------------------------------------
 var fpGanttInteractInit=false;
-var fpGanttInteractInit=false;
 function fpInitGanttInteract(){
   if(fpGanttInteractInit) return;
   fpGanttInteractInit=true;
@@ -6304,6 +6303,7 @@ function fpInitGanttInteract(){
     if(!rw||!sc) return -1;
     return clientX - rw.getBoundingClientRect().left + sc.scrollLeft - TBL_W;
   }
+  function snapX(x){ return Math.floor(x/fpCOL_W)*fpCOL_W; }
 
   // ---- TEGN NY AKTIVITET ----
   var drawEl=null, drawStartX=0, drawFaseNavn='';
@@ -6312,7 +6312,6 @@ function fpInitGanttInteract(){
     if(e.button!==0) return;
     var rw=getRW(); if(!rw||!rw.contains(e.target)) return;
     var t=e.target;
-    // Ikke start tegning på bar, fase-header, knapp eller håndtak
     if(t.closest('.fp-g-bar')||t.closest('.fp-fase-row')||t.closest('button')||t.closest('.fp-drag-handle')) return;
 
     var faseNavn='';
@@ -6326,7 +6325,8 @@ function fpInitGanttInteract(){
     var xRel=clientXToGanttX(e.clientX);
     if(xRel<0) return;
 
-    drawStartX=xRel;
+    // Snap til venstre kant av kolonnen
+    drawStartX=snapX(xRel);
     drawFaseNavn=faseNavn;
 
     var sc=getSC();
@@ -6335,33 +6335,32 @@ function fpInitGanttInteract(){
     var rwRect=rw.getBoundingClientRect();
     drawEl.style.top=(e.clientY-rwRect.top+(sc?sc.scrollTop:0))+'px';
     drawEl.style.height='28px';
-    drawEl.style.left=(TBL_W+xRel)+'px';
-    drawEl.style.width='0px';
+    drawEl.style.left=(TBL_W+drawStartX)+'px';
+    drawEl.style.width=fpCOL_W+'px';
     rw.appendChild(drawEl);
     e.preventDefault();
   });
 
   document.addEventListener('mousemove', function(e){
     if(!drawEl) return;
-    var xNaa=clientXToGanttX(e.clientX);
-    var x1=Math.min(drawStartX,xNaa), x2=Math.max(drawStartX,xNaa);
+    var xNaa=snapX(clientXToGanttX(e.clientX));
+    var x1=Math.min(drawStartX,xNaa);
+    var x2=Math.max(drawStartX,xNaa)+fpCOL_W; // alltid minst én kolonne
     drawEl.style.left=(TBL_W+x1)+'px';
-    drawEl.style.width=Math.max(x2-x1,fpCOL_W)+'px';
+    drawEl.style.width=(x2-x1)+'px';
   });
 
   document.addEventListener('mouseup', function(e){
     if(!drawEl) return;
-    var xNaa=clientXToGanttX(e.clientX);
-    var x1=Math.min(drawStartX,xNaa), x2=Math.max(drawStartX,xNaa);
+    var xNaa=snapX(clientXToGanttX(e.clientX));
+    var x1=Math.min(drawStartX,xNaa);
+    var x2=Math.max(drawStartX,xNaa)+fpCOL_W;
     if(drawEl.parentNode) drawEl.parentNode.removeChild(drawEl);
     drawEl=null;
-    if(x2-x1<4) return;
+    if(x2-x1<fpCOL_W*0.5) return; // ignorer klikk uten drag
     var p=fpGetPeriode();
-    var snappedX1=Math.round(x1/fpCOL_W)*fpCOL_W;
-    var snappedX2=Math.round(x2/fpCOL_W)*fpCOL_W;
-    if(snappedX2<=snappedX1) snappedX2=snappedX1+fpCOL_W;
-    var startDato=fpXToDato(snappedX1,p.s);
-    var sluttDato=fpXToDato(snappedX2,p.s);
+    var startDato=fpXToDato(x1,p.s);
+    var sluttDato=fpXToDato(x2,p.s);
     sluttDato.setDate(sluttDato.getDate()-1);
     fpNyAkt(startDato, sluttDato);
     if(drawFaseNavn){
@@ -6374,6 +6373,7 @@ function fpInitGanttInteract(){
 
   // ---- FLYTT EKSISTERENDE BAR ----
   var barDrag=null;
+  var barDragMoved=false; // sporer om det faktisk ble dratt
 
   document.addEventListener('mousedown', function(e){
     if(e.button!==0) return;
@@ -6386,6 +6386,7 @@ function fpInitGanttInteract(){
     var akt=fpAktiviteter.find(function(a){return a.id===aktId;});
     if(!akt||akt.type==='Milepæl') return;
     barDrag={akt:akt, startX:e.clientX, origStart:new Date(akt.start), origSlutt:new Date(akt.slutt), barEl:bar};
+    barDragMoved=false;
     bar.classList.add('fp-dragging');
     e.preventDefault(); e.stopPropagation();
   });
@@ -6395,6 +6396,7 @@ function fpInitGanttInteract(){
     var dx=e.clientX-barDrag.startX;
     var dagsDiff=fpZoom==='maaned'?Math.round(dx/fpCOL_W*7):Math.round(dx/fpCOL_W);
     if(dagsDiff===0) return;
+    barDragMoved=true;
     var nyStart=new Date(barDrag.origStart); nyStart.setDate(nyStart.getDate()+dagsDiff);
     var nySlutt=new Date(barDrag.origSlutt); nySlutt.setDate(nySlutt.getDate()+dagsDiff);
     barDrag.barEl.style.left=fpXPos(nyStart,fpGetPeriode().s)+'px';
@@ -6403,21 +6405,36 @@ function fpInitGanttInteract(){
 
   document.addEventListener('mouseup', function(e){
     if(!barDrag) return;
-    var dx=e.clientX-barDrag.startX;
-    var dagsDiff=fpZoom==='maaned'?Math.round(dx/fpCOL_W*7):Math.round(dx/fpCOL_W);
-    barDrag.barEl.classList.remove('fp-dragging');
-    if(dagsDiff!==0){
-      var akt=barDrag.akt;
-      var nyStart=new Date(barDrag.origStart); nyStart.setDate(nyStart.getDate()+dagsDiff);
-      var nySlutt=new Date(barDrag.origSlutt); nySlutt.setDate(nySlutt.getDate()+dagsDiff);
-      akt.start=nyStart; akt.slutt=nySlutt;
-      spPatch(SP+"/_api/lists('"+FP_AKTIVITETER_GUID+"')/items("+akt.spID+")",
-        {Startdato:fpFmtISO(nyStart),Sluttdato:fpFmtISO(nySlutt)})
-        .then(function(){ fpRender(); })
-        .catch(function(err){ toast('Feil: '+err.message,'e'); fpRender(); });
-    }
+    var bd=barDrag;
     barDrag=null;
+    bd.barEl.classList.remove('fp-dragging');
+    if(!barDragMoved) {
+      // Var et klikk – åpne detaljpanel
+      fpVelgAkt(bd.akt.id);
+      return;
+    }
+    // Var et drag – lagre, IKKE åpne panel
+    var dx=e.clientX-bd.startX;
+    var dagsDiff=fpZoom==='maaned'?Math.round(dx/fpCOL_W*7):Math.round(dx/fpCOL_W);
+    if(dagsDiff===0) return;
+    var akt=bd.akt;
+    var nyStart=new Date(bd.origStart); nyStart.setDate(nyStart.getDate()+dagsDiff);
+    var nySlutt=new Date(bd.origSlutt); nySlutt.setDate(nySlutt.getDate()+dagsDiff);
+    akt.start=nyStart; akt.slutt=nySlutt;
+    // Blokker neste click-event på denne baren (som fyrer etter mouseup)
+    bd.barEl._blockClick=true;
+    setTimeout(function(){ bd.barEl._blockClick=false; }, 200);
+    spPatch(SP+"/_api/lists('"+FP_AKTIVITETER_GUID+"')/items("+akt.spID+")",
+      {Startdato:fpFmtISO(nyStart),Sluttdato:fpFmtISO(nySlutt)})
+      .then(function(){ fpRender(); })
+      .catch(function(err){ toast('Feil: '+err.message,'e'); fpRender(); });
   });
+
+  // Blokker onclick etter drag
+  document.addEventListener('click', function(e){
+    var bar=e.target.closest('.fp-g-bar');
+    if(bar && bar._blockClick){ e.stopImmediatePropagation(); e.preventDefault(); }
+  }, true);
 }
 
 var fpCtxFase=null;
