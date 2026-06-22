@@ -590,6 +590,8 @@ tr.erow td{padding:0;background:var(--bg2);border-bottom:1px solid var(--br2);}
 .fp-fase-forslag{padding:7px 10px;border-radius:6px;border:1px solid var(--br);background:var(--bg4);font-size:11px;cursor:pointer;display:flex;align-items:center;gap:6px;transition:all .12s;}
 .fp-drag-handle{cursor:grab;padding:0 6px;color:var(--tx3);font-size:15px;line-height:1;flex-shrink:0;user-select:none;}
 .fp-drag-handle:active{cursor:grabbing;}
+.fp-fase-legg-til:hover{background:var(--acc)!important;color:#fff!important;}
+@media print{.no-print{display:none!important;}}
 .fp-fase-drag-over{outline:2px dashed var(--acc);outline-offset:-2px;}
 .fp-draw-sel{position:absolute;background:rgba(232,184,75,.18);border:2px solid var(--acc);border-radius:3px;pointer-events:none;z-index:15;}
 .fp-g-bar{cursor:grab;}
@@ -6147,21 +6149,13 @@ function fpRendreRader(dager,uker,p,W){
       +'<span class="fp-drag-handle" draggable="true" title="Dra for å endre rekkefolge">⋮</span>'
       +'<span onclick="event.stopPropagation();fpToggleFase(\''+faseNavn+'\')" style="font-size:10px;color:var(--tx3);padding:0 4px;cursor:pointer;">'+(fase.aapen?'&#9660;':'&#9658;')+'</span>'
       +'<span onclick="event.stopPropagation();fpToggleFase(\''+faseNavn+'\')" style="font-size:10px;font-weight:700;color:var(--tx2);text-transform:uppercase;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;cursor:pointer;">'+fase.navn+'</span>'
-      +'<span style="font-size:10px;color:var(--tx3);flex-shrink:0;padding-right:8px;">'+ferdig+'/'+akts.length+'</span>'
+      +'<span style="font-size:10px;color:var(--tx3);flex-shrink:0;padding-right:4px;">'+ferdig+'/'+akts.length+'</span>'
+      +'<button class="fp-fase-legg-til no-print" onclick="event.stopPropagation();fpNyAktFase(\''+faseNavn+'\')" title="Legg til aktivitet i denne fasen" style="flex-shrink:0;margin-right:6px;width:20px;height:20px;border-radius:50%;border:1px solid var(--acc);background:transparent;color:var(--acc);font-size:14px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;">+</button>'
       +'</div>'
       +'<div style="width:'+W+'px;min-width:'+W+'px;display:flex;flex-shrink:0;">'+grid+'</div>'
       +'</div>';
 
     if(fase.aapen){
-      if(akts.length===0){
-        // Tom fase: vis en klikk/drag-rad slik at man kan tegne aktiviteter
-        html+='<div data-fpfase="'+faseNavn+'" style="display:flex;height:'+AKT_H+'px;min-height:'+AKT_H+'px;width:'+TOTAL_W+'px;min-width:'+TOTAL_W+'px;border-bottom:1px dashed rgba(46,53,80,.25);flex-shrink:0;opacity:0.5;">'
-          +'<div style="width:'+TBL_W+'px;min-width:'+TBL_W+'px;border-right:2px solid var(--br);position:sticky;left:0;z-index:6;background:var(--bg);display:flex;align-items:center;padding:0 12px;flex-shrink:0;">'
-          +'<span style="font-size:10px;color:var(--tx3);font-style:italic;">Dra her for å legge til aktivitet</span>'
-          +'</div>'
-          +'<div style="width:'+W+'px;min-width:'+W+'px;position:relative;display:flex;flex-shrink:0;">'+grid+'</div>'
-          +'</div>';
-      }
       akts.forEach(function(akt){
         var sel=akt.id===fpValgtId;
         var farge=fpAktorFarge(akt.aktorNavn);
@@ -6824,6 +6818,12 @@ function fpVelgAktorItem(el){
   el.style.color = farge;
   el.style.borderColor = farge;
   el.style.background = farge+'22';
+}
+
+function fpNyAktFase(faseNavn){
+  fpNyAkt(null, null);
+  var sel=document.getElementById('fpMFase');
+  if(sel){ for(var i=0;i<sel.options.length;i++){ if(sel.options[i].value===faseNavn){sel.selectedIndex=i;break;} } }
 }
 
 function fpNyAkt(startDato, sluttDato){
