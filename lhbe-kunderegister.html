@@ -6000,7 +6000,6 @@ function fpApne(projID, navnEnc, fulltNavn){
   document.getElementById('fpOvProjNavn').textContent = fpProjNavn;
   document.getElementById('fpOvDato').textContent = fpFmt(FP_TODAY);
   document.getElementById('fpOverlay').classList.add('open'); sjekkScrollLas();
-  document.getElementById('fpLukkBtn').classList.add('vis');
   // Hent alltid ferske data
   fpHentData(projID, function(){
     if(!fpPeriodeStart){
@@ -6056,7 +6055,6 @@ setTimeout(function(){ fpInitGanttInteract(); }, 500);
 
 function fpLukk(){
   document.getElementById('fpOverlay').classList.remove('open');
-  document.getElementById('fpLukkBtn').classList.remove('vis');
   fpCloseDP();
   sjekkScrollLas();
 }
