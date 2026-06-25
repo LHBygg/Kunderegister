@@ -7044,8 +7044,10 @@ function fpBekreftPeriode(){
 // ----------------------------------------------------------------
 function fpScrollIdag(){
   var p=fpGetPeriode();
-  var rw=document.querySelector('.fp-ov-scroll');
+  var rw=document.getElementById('fpRadWrap');
   if(rw){ var target=fpXPos(FP_TODAY,p.s)-(rw.clientWidth-460)/2; rw.scrollLeft=Math.max(0,target); }
+  var ov=document.getElementById('fpOvScroll');
+  if(ov){ var target2=fpXPos(FP_TODAY,p.s)-(ov.clientWidth-460)/2; ov.scrollLeft=Math.max(0,target2); }
 }
 function fpLukkModal(id){ document.getElementById(id).classList.remove('open'); sjekkScrollLas(); }
 
