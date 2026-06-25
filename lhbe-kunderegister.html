@@ -7044,7 +7044,7 @@ function fpBekreftPeriode(){
 // ----------------------------------------------------------------
 function fpScrollIdag(){
   var p=fpGetPeriode();
-  var rw=document.getElementById('fpRadWrap');
+  var rw=document.querySelector('.fp-ov-scroll');
   if(rw){ var target=fpXPos(FP_TODAY,p.s)-(rw.clientWidth-460)/2; rw.scrollLeft=Math.max(0,target); }
 }
 function fpLukkModal(id){ document.getElementById(id).classList.remove('open'); sjekkScrollLas(); }
@@ -7061,7 +7061,7 @@ function fpLukkModal(id){ document.getElementById(id).classList.remove('open'); 
   </div>
   <div class="fp-ov-toolbar">
     <button class="btn sm pri" onclick="fpNyAkt()">+ Ny aktivitet</button>
-    <button class="btn sm" onclick="fpNyFase()">+ Ny fase</button>
+    <button class="btn sm pri" onclick="fpNyFase()">+ Ny fase</button>
     <div style="width:1px;height:18px;background:var(--br);"></div>
     <button class="btn sm active" id="fpZUke" onclick="fpSetZoom('uke')">Uke</button>
     <button class="btn sm" id="fpZMnd" onclick="fpSetZoom('maaned')">Måned</button>
