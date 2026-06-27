@@ -570,7 +570,9 @@ tr.erow td{padding:0;background:var(--bg2);border-bottom:1px solid var(--br2);}
 .fp-rad-wrap{display:flex;flex-direction:column;flex:1;position:relative;overflow-x:auto;}
 .fp-g-bar{position:absolute;height:18px;border-radius:4px;display:flex;align-items:center;padding:0 5px;font-size:9px;font-weight:700;white-space:nowrap;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.4);cursor:pointer;transition:filter .12s;}
 .fp-g-bar:hover{filter:brightness(1.15);}
-
+.fp-lukk-btn{position:fixed;bottom:22px;right:22px;z-index:600;width:46px;height:46px;border-radius:50%;background:var(--bg3);border:1px solid var(--br);color:var(--tx2);font-size:18px;cursor:pointer;display:none;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(0,0,0,.5);}
+.fp-lukk-btn.vis{display:flex;}
+.fp-lukk-btn:hover{background:var(--red);border-color:var(--red);color:#fff;}
 .fp-modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:1000;display:none;align-items:center;justify-content:center;padding:16px;}
 .fp-modal-bg.open{display:flex;}
 .fp-modal{background:var(--bg2);border:1px solid var(--br);border-radius:10px;width:100%;max-width:420px;box-shadow:0 8px 32px rgba(0,0,0,.6);}
@@ -588,8 +590,6 @@ tr.erow td{padding:0;background:var(--bg2);border-bottom:1px solid var(--br2);}
 .fp-fase-forslag{padding:7px 10px;border-radius:6px;border:1px solid var(--br);background:var(--bg4);font-size:11px;cursor:pointer;display:flex;align-items:center;gap:6px;transition:all .12s;}
 .fp-drag-handle{cursor:grab;padding:0 6px;color:var(--tx3);font-size:15px;line-height:1;flex-shrink:0;user-select:none;}
 .fp-drag-handle:active{cursor:grabbing;}
-.fp-fase-legg-til:hover{background:var(--acc)!important;color:#fff!important;}
-@media print{.no-print{display:none!important;}}
 .fp-fase-drag-over{outline:2px dashed var(--acc);outline-offset:-2px;}
 .fp-draw-sel{position:absolute;background:rgba(232,184,75,.18);border:2px solid var(--acc);border-radius:3px;pointer-events:none;z-index:15;}
 .fp-g-bar{cursor:grab;}
@@ -1194,6 +1194,7 @@ var MSAL_CONFIG = {
 };
 var SP = 'https://lhbent.sharepoint.com/sites/Industriveien1ASLHBygg';
 var FP_AKTIVITETER_GUID = 'e9cfdabf-2f36-493d-92e5-899e22dd1e1e';
+var KL_GUID = '8e96ac5f-2750-422e-a8a1-609adb5a7413';
 var FP_AKTORER_GUID     = '6e6f1607-362a-48d3-9a2f-d50837785edb';
 var CL = 'D702DBE2-269F-41A0-8107-55C681AEC5BF';
 var PL = '3DB9CF64-778C-48D8-8F32-044AC6EE249C';
@@ -2050,6 +2051,7 @@ function openPD(pid) {
   hdrActs.push('<button class="btn sm" onclick="pdfProsjekt(' + p.ID + ')">&#128438; PDF</button>');
   if (s === 'Aktiv' && p.Prosjektnummer) hdrActs.push('<button class="btn sm" onclick="openTimerPdfMov(' + p.ID + ')">&#128202; Timer PDF</button>');
   // Status endres via Rediger-knappen
+  hdrActs.push('<button class="btn sm" onclick="klApne(' + p.ID + ', \'' + (p.Title||'') + '\')">&#128290; Kalkyle</button>');
   hdrActs.push('<button class="btn sm" onclick="openEditP(' + p.ID + ')">&#9998; Rediger</button>');
   document.getElementById('pdmHdrActs').innerHTML = hdrActs.join('');
 
@@ -6000,6 +6002,7 @@ function fpApne(projID, navnEnc, fulltNavn){
   document.getElementById('fpOvProjNavn').textContent = fpProjNavn;
   document.getElementById('fpOvDato').textContent = fpFmt(FP_TODAY);
   document.getElementById('fpOverlay').classList.add('open'); sjekkScrollLas();
+  document.getElementById('fpLukkBtn').classList.add('vis');
   // Hent alltid ferske data
   fpHentData(projID, function(){
     if(!fpPeriodeStart){
@@ -6055,6 +6058,7 @@ setTimeout(function(){ fpInitGanttInteract(); }, 500);
 
 function fpLukk(){
   document.getElementById('fpOverlay').classList.remove('open');
+  document.getElementById('fpLukkBtn').classList.remove('vis');
   fpCloseDP();
   sjekkScrollLas();
 }
@@ -6145,13 +6149,21 @@ function fpRendreRader(dager,uker,p,W){
       +'<span class="fp-drag-handle" draggable="true" title="Dra for å endre rekkefolge">⋮</span>'
       +'<span onclick="event.stopPropagation();fpToggleFase(\''+faseNavn+'\')" style="font-size:10px;color:var(--tx3);padding:0 4px;cursor:pointer;">'+(fase.aapen?'&#9660;':'&#9658;')+'</span>'
       +'<span onclick="event.stopPropagation();fpToggleFase(\''+faseNavn+'\')" style="font-size:10px;font-weight:700;color:var(--tx2);text-transform:uppercase;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;cursor:pointer;">'+fase.navn+'</span>'
-      +'<span style="font-size:10px;color:var(--tx3);flex-shrink:0;padding-right:4px;">'+ferdig+'/'+akts.length+'</span>'
-      +'<button class="fp-fase-legg-til no-print" onclick="event.stopPropagation();fpLeggTilTomRad(\''+faseNavn+'\')" title="Legg til rad for å tegne aktivitet" style="flex-shrink:0;margin-right:6px;width:20px;height:20px;border-radius:50%;border:1px solid var(--acc);background:transparent;color:var(--acc);font-size:14px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;">+</button>'
+      +'<span style="font-size:10px;color:var(--tx3);flex-shrink:0;padding-right:8px;">'+ferdig+'/'+akts.length+'</span>'
       +'</div>'
       +'<div style="width:'+W+'px;min-width:'+W+'px;display:flex;flex-shrink:0;">'+grid+'</div>'
       +'</div>';
 
     if(fase.aapen){
+      if(akts.length===0){
+        // Tom fase: vis en klikk/drag-rad slik at man kan tegne aktiviteter
+        html+='<div data-fpfase="'+faseNavn+'" style="display:flex;height:'+AKT_H+'px;min-height:'+AKT_H+'px;width:'+TOTAL_W+'px;min-width:'+TOTAL_W+'px;border-bottom:1px dashed rgba(46,53,80,.25);flex-shrink:0;opacity:0.5;">'
+          +'<div style="width:'+TBL_W+'px;min-width:'+TBL_W+'px;border-right:2px solid var(--br);position:sticky;left:0;z-index:6;background:var(--bg);display:flex;align-items:center;padding:0 12px;flex-shrink:0;">'
+          +'<span style="font-size:10px;color:var(--tx3);font-style:italic;">Dra her for å legge til aktivitet</span>'
+          +'</div>'
+          +'<div style="width:'+W+'px;min-width:'+W+'px;position:relative;display:flex;flex-shrink:0;">'+grid+'</div>'
+          +'</div>';
+      }
       akts.forEach(function(akt){
         var sel=akt.id===fpValgtId;
         var farge=fpAktorFarge(akt.aktorNavn);
@@ -6183,16 +6195,6 @@ function fpRendreRader(dager,uker,p,W){
           +'<div style="width:'+W+'px;min-width:'+W+'px;position:relative;display:flex;flex-shrink:0;">'+grid+barHtml+'</div>'
           +'</div>';
       });
-      // Ekstra tomme drag-rader lagt til via + knappen
-      var ekstra=fpEkstraRader[fase.navn]||0;
-      for(var ei=0;ei<ekstra;ei++){
-        html+='<div data-fpfase="'+faseNavn+'" style="display:flex;height:'+AKT_H+'px;min-height:'+AKT_H+'px;width:'+TOTAL_W+'px;min-width:'+TOTAL_W+'px;border-bottom:1px dashed rgba(46,53,80,.25);flex-shrink:0;opacity:0.5;">'
-          +'<div style="width:'+TBL_W+'px;min-width:'+TBL_W+'px;border-right:2px solid var(--br);position:sticky;left:0;z-index:6;background:var(--bg);display:flex;align-items:center;padding:0 12px;flex-shrink:0;">'
-          +'<span style="font-size:10px;color:var(--tx3);font-style:italic;">Dra her for å legge til aktivitet</span>'
-          +'</div>'
-          +'<div style="width:'+W+'px;min-width:'+W+'px;position:relative;display:flex;flex-shrink:0;">'+grid+'</div>'
-          +'</div>';
-      }
     }
   });
 
@@ -6331,9 +6333,6 @@ function fpInitGanttInteract(){
       var aktId=parseInt(aktRad.dataset.fpaktid);
       var akt=fpAktiviteter.find(function(a){return a.id===aktId;});
       if(akt) faseNavn=akt.faseId;
-    } else {
-      var tomFaseRad=t.closest('[data-fpfase]');
-      if(tomFaseRad) faseNavn=tomFaseRad.dataset.fpfase;
     }
 
     var xRel=clientXToGanttX(e.clientX);
@@ -6826,13 +6825,6 @@ function fpVelgAktorItem(el){
   el.style.background = farge+'22';
 }
 
-var fpEkstraRader={};
-function fpLeggTilTomRad(faseNavn){
-  if(!fpEkstraRader[faseNavn]) fpEkstraRader[faseNavn]=0;
-  fpEkstraRader[faseNavn]++;
-  fpRender();
-}
-
 function fpNyAkt(startDato, sluttDato){
   document.getElementById('fpMNavn').value='';
   document.getElementById('fpMStart').value=fpFmtISO(startDato||FP_TODAY);
@@ -6867,7 +6859,6 @@ function fpLagreNyAkt(){
     fpAktiviteter.push({id:nyID,spID:nyID,faseId:fase,navn:navn,start:fpD(start),slutt:fpD(type==='Milepæl'?start:slutt),type:type,aktorNavn:aktorNavn,status:status,notat:'',nr:nyID});
     if(!fpFaser.find(function(f){return f.navn===fase;})) fpFaser.push({navn:fase,aapen:true});
     fpLukkModal('fpNyAktMbg');
-    if(fpEkstraRader[fase]>0) fpEkstraRader[fase]--;
     fpRender();
     fpLastKort(fpProjID,null,null);
     toast('"'+navn+'" lagt til','s');
@@ -7042,17 +7033,270 @@ function fpScrollIdag(){
   var p=fpGetPeriode();
   var rw=document.getElementById('fpRadWrap');
   if(rw){ var target=fpXPos(FP_TODAY,p.s)-(rw.clientWidth-460)/2; rw.scrollLeft=Math.max(0,target); }
-  var ov=document.getElementById('fpOvScroll');
-  if(ov){ var target2=fpXPos(FP_TODAY,p.s)-(ov.clientWidth-460)/2; ov.scrollLeft=Math.max(0,target2); }
 }
 function fpLukkModal(id){ document.getElementById(id).classList.remove('open'); sjekkScrollLas(); }
 
+
+// ================================================================
+// KALKYLE-MODUL
+// ================================================================
+var KL_ENHETER = ['m\u00b2','m\u00b3','lm','stk','kg','t','RS'];
+var klProjID = null;
+var klProjNavn = '';
+var klSP_ID = null;
+var klState = { tittel:'', kapitler:[], nkid:1, nrid:1 };
+
+function klApne(projID, projNavn) {
+  klProjID = projID; klProjNavn = projNavn;
+  document.getElementById('klOvProjNavn').textContent = projNavn;
+  document.getElementById('klOverlay').classList.add('open');
+  sjekkScrollLas(); klLastFraSharePoint();
+}
+function klLukk() { document.getElementById('klOverlay').classList.remove('open'); sjekkScrollLas(); }
+
+function klLastFraSharePoint() {
+  document.getElementById('klInnhold').innerHTML = '<div style="padding:20px;color:var(--tx3);font-size:13px;">Laster kalkyle...</div>';
+  spGet(SP + "/_api/lists(guid'" + KL_GUID + "')/items?$filter=ProsjektID eq " + klProjID + "&$select=Id,Title,KalkyleData,Status&$orderby=Modified desc&$top=1")
+    .then(function(d) {
+      var item = (d.value||[])[0];
+      if (item && item.KalkyleData) {
+        klSP_ID = item.Id;
+        try { klState = JSON.parse(item.KalkyleData); } catch(e) { klNyState(); }
+        var st = item.Status||'';
+        document.getElementById('klStatusTxt').textContent = st==='Ferdig' ? '\u2705 Ferdig' : st==='Utkast' ? '\u270f Utkast' : '';
+      } else { klSP_ID = null; klNyState(); }
+      klRender();
+    }).catch(function() { klNyState(); klRender(); });
+}
+
+function klNyState() {
+  klState = { tittel: klProjNavn, kapitler:[{id:1,nr:'1',tittel:'Nytt kapittel',aapen:true,rader:[{id:1,b:'',m:0,e:'m\u00b2',p:0,t:0}]}], nkid:2, nrid:2 };
+}
+
+function klErRS(r){ return r.e==='RS'; }
+function klRadSum(r){ return klErRS(r)?r.m:Math.round(r.m*r.p); }
+function klRadTimer(r){ return r.m*(r.t||0); }
+function klSumKap(kap){ var s=0,t=0,arb=0,mat=0; kap.rader.forEach(function(r){var b=klRadSum(r);s+=b;t+=klRadTimer(r);if(r.e==='t'){arb+=b;}else{mat+=b;}}); return{sum:s,timer:t,arb:arb,mat:mat}; }
+function klFmtKr(v){ return Math.round(v).toLocaleString('nb-NO')+',-'; }
+function klFmtT(v){ return v>0?Math.round(v*10)/10+' t':''; }
+
+function klRender() {
+  var el = document.getElementById('klInnhold'); if(!el) return;
+  var totS=0,totT=0,totArb=0,totMat=0;
+  var statsHtml='<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px;">'
+    +['Materiell u/mva','Arbeid u/mva','Sum u/mva','Totale timer'].map(function(l,i){
+      return '<div style="background:var(--bg2);border-radius:8px;padding:10px 12px;border:1px solid var(--br);">'
+        +'<div style="font-size:11px;color:var(--tx3);margin-bottom:3px;">'+l+'</div>'
+        +'<div style="font-size:17px;font-weight:700;color:'+(i===3?'#22c55e':'var(--acc)')+'" id="klStat'+i+'">-</div></div>';
+    }).join('')+'</div>';
+  var kapHtml='';
+  klState.kapitler.forEach(function(kap){
+    var res=klSumKap(kap); totS+=res.sum; totT+=res.timer; totArb+=res.arb; totMat+=res.mat;
+    var inpS='width:100%;border:none;background:transparent;font-size:12px;color:var(--tx);padding:6px 8px;font-family:inherit;outline:none;';
+    var eOpts=function(val){return KL_ENHETER.map(function(e){return'<option value="'+e+'"'+(e===val?' selected':'')+'>'+e+'</option>';}).join('');};
+    kapHtml+='<div style="margin-bottom:12px;border:1px solid var(--br);border-radius:10px;overflow:hidden;">'
+      +'<div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--bg2);cursor:pointer;" onclick="klToggleKap('+kap.id+')">'
+      +'<div style="width:24px;height:24px;border-radius:50%;background:rgba(59,130,246,.15);color:var(--acc);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;">'+kap.nr+'</div>'
+      +'<input value="'+kap.tittel.replace(/"/g,'&quot;')+'" style="background:transparent;border:none;font-size:13px;font-weight:700;color:var(--tx);font-family:inherit;flex:1;" onclick="event.stopPropagation()" onchange="klOppdKap('+kap.id+',this.value)">'
+      +(res.timer>0?'<span style="font-size:11px;color:var(--tx3);margin-right:8px;">\u23f1 '+klFmtT(res.timer)+'</span>':'')
+      +'<span style="font-size:13px;font-weight:700;color:var(--tx);">'+klFmtKr(res.sum)+'</span>'
+      +'<i class="ti ti-chevron-down" style="color:var(--tx3);font-size:14px;margin-left:6px;transform:rotate('+(kap.aapen?'180':'0')+'deg);" aria-hidden="true"></i>'
+      +'</div>';
+    if(kap.aapen){
+      var rows=''; kap.rader.forEach(function(r){
+        var rs=klErRS(r); var sum=klRadSum(r); var tv=klRadTimer(r);
+        rows+='<tr style="border-bottom:1px solid var(--br);" onmouseover="this.style.background=\'var(--bg2)\'" onmouseout="this.style.background=\'\'">'
+          +'<td><input style="'+inpS+'" value="'+r.b.replace(/"/g,'&quot;')+'" placeholder="Beskrivelse" onfocus="this.select()" onchange="klOppdR('+kap.id+','+r.id+',\'b\',this.value)"></td>';
+        if(rs){
+          rows+='<td colspan="2"></td><td><input type="number" style="'+inpS+'text-align:right;" value="'+r.m+'" onfocus="this.select()" onchange="klOppdR('+kap.id+','+r.id+',\'m\',+this.value)"></td>';
+        } else {
+          rows+='<td><input type="number" style="'+inpS+'text-align:right;" value="'+r.m+'" onfocus="this.select()" onchange="klOppdR('+kap.id+','+r.id+',\'m\',+this.value)"></td>'
+            +'<td><select style="width:100%;border:none;background:transparent;font-size:12px;color:var(--tx);padding:5px 4px;font-family:inherit;outline:none;cursor:pointer;" onchange="klOppdR('+kap.id+','+r.id+',\'e\',this.value)">'+eOpts(r.e)+'</select></td>'
+            +'<td><input type="number" style="'+inpS+'text-align:right;" value="'+r.p+'" onfocus="this.select()" onchange="klOppdR('+kap.id+','+r.id+',\'p\',+this.value)"></td>';
+        }
+        rows+='<td><input type="number" step="0.01" style="'+inpS+'text-align:right;color:#22c55e;" value="'+(r.t||'')+'" placeholder="t/enh" onfocus="this.select()" onchange="klOppdR('+kap.id+','+r.id+',\'t\',+this.value)" title="Timer per enhet"></td>'
+          +'<td style="padding:6px 8px;text-align:right;font-size:12px;font-weight:700;color:var(--tx);">'+klFmtKr(sum)+'</td>'
+          +'<td style="padding:6px 8px;text-align:right;font-size:12px;font-weight:700;color:#22c55e;">'+(tv>0?klFmtT(tv):'')+'</td>'
+          +'<td style="padding:4px;text-align:center;"><button onclick="klSlettRad('+kap.id+','+r.id+')" style="background:none;border:none;cursor:pointer;color:var(--tx3);font-size:13px;padding:2px 4px;" title="Slett"><i class="ti ti-x" aria-hidden="true"></i></button></td></tr>';
+      });
+      kapHtml+='<div style="border-top:1px solid var(--br);">'
+        +'<table style="width:100%;border-collapse:collapse;table-layout:fixed;">'
+        +'<colgroup><col style="width:30%"><col style="width:10%"><col style="width:9%"><col style="width:10%"><col style="width:10%"><col style="width:13%"><col style="width:10%"><col style="width:4%"></colgroup>'
+        +'<thead style="background:var(--bg3);"><tr>'
+        +'<th style="font-size:10px;color:var(--tx3);padding:5px 8px;text-align:left;border-bottom:1px solid var(--br);">BESKRIVELSE</th>'
+        +'<th style="font-size:10px;color:var(--tx3);padding:5px 8px;text-align:right;border-bottom:1px solid var(--br);">MENGDE</th>'
+        +'<th style="font-size:10px;color:var(--tx3);padding:5px 8px;border-bottom:1px solid var(--br);">ENHET</th>'
+        +'<th style="font-size:10px;color:var(--tx3);padding:5px 8px;text-align:right;border-bottom:1px solid var(--br);">PRIS/ENH</th>'
+        +'<th style="font-size:10px;color:var(--tx3);padding:5px 8px;text-align:right;border-bottom:1px solid var(--br);">TIMER/ENH</th>'
+        +'<th style="font-size:10px;color:var(--tx3);padding:5px 8px;text-align:right;border-bottom:1px solid var(--br);">SUM</th>'
+        +'<th style="font-size:10px;color:var(--tx3);padding:5px 8px;text-align:right;border-bottom:1px solid var(--br);">TIMER</th>'
+        +'<th style="border-bottom:1px solid var(--br);"></th></tr></thead>'
+        +'<tbody>'+rows+'</tbody>'
+        +'<tfoot><tr style="background:var(--bg2);border-top:1px solid var(--br);">'
+        +'<td colspan="5" style="padding:5px 8px;font-size:12px;font-weight:700;color:var(--tx);">Delsum</td>'
+        +'<td style="padding:5px 8px;text-align:right;font-size:12px;font-weight:700;color:var(--tx);">'+klFmtKr(res.sum)+'</td>'
+        +'<td style="padding:5px 8px;text-align:right;font-size:12px;font-weight:700;color:#22c55e;">'+klFmtT(res.timer)+'</td>'
+        +'<td></td></tr></tfoot></table>'
+        +'<div onclick="klLeggTilRad('+kap.id+')" style="display:flex;align-items:center;gap:6px;padding:6px 12px;font-size:12px;color:var(--acc);cursor:pointer;border-top:1px solid var(--br);background:var(--bg3);" onmouseover="this.style.background=\'rgba(59,130,246,.08)\'" onmouseout="this.style.background=\'var(--bg3)\'"><i class="ti ti-plus" aria-hidden="true"></i> Legg til rad</div></div>';
+    }
+    kapHtml+='</div>';
+  });
+  kapHtml+='<button onclick="klLeggTilKapittel()" style="display:flex;align-items:center;gap:6px;padding:8px 14px;font-size:13px;border:1px solid var(--br2);border-radius:8px;background:transparent;color:var(--tx2);cursor:pointer;margin-bottom:16px;"><i class="ti ti-plus" aria-hidden="true"></i> Nytt kapittel</button>';
+  var moms=totS*0.25;
+  var totHtml='<div style="background:var(--bg2);border-radius:10px;border:1px solid var(--br);padding:12px 16px;margin-bottom:16px;">'
+    +'<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:13px;color:var(--tx);"><span>Sum ekskl. mva</span><span>'+klFmtKr(totS)+'</span></div>'
+    +'<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:12px;color:var(--tx3);"><span>Mva 25%</span><span>'+klFmtKr(moms)+'</span></div>'
+    +'<div style="display:flex;justify-content:space-between;padding:8px 0 4px;font-size:15px;font-weight:700;color:var(--tx);border-top:1px solid var(--br);margin-top:4px;"><span>Sum inkl. mva</span><span style="color:var(--acc);">'+klFmtKr(totS+moms)+'</span></div>'
+    +'<div style="display:flex;align-items:center;gap:6px;margin-top:8px;padding:8px 10px;background:rgba(34,197,94,.1);border-radius:6px;">'
+    +'<i class="ti ti-clock" style="font-size:16px;color:#22c55e;" aria-hidden="true"></i>'
+    +'<span style="font-size:12px;color:#22c55e;">Totale timer: <strong>'+Math.round(totT*10)/10+' t</strong></span>'
+    +'<span style="font-size:11px;color:var(--tx3);margin-left:auto;">\u2248 '+Math.round(totT/7.5*10)/10+' dagsverk</span>'
+    +'</div></div>';
+  el.innerHTML=statsHtml+kapHtml+totHtml;
+  [totMat,totArb,totS,totT].forEach(function(v,i){var e2=document.getElementById('klStat'+i);if(e2)e2.textContent=i===3?Math.round(totT*10)/10+' t':klFmtKr(v);});
+}
+
+function klToggleKap(id){var k=klState.kapitler.find(function(x){return x.id===id;});if(k)k.aapen=!k.aapen;klRender();}
+function klOppdKap(id,v){var k=klState.kapitler.find(function(x){return x.id===id;});if(k)k.tittel=v;}
+function klOppdR(kid,rid,f,v){var k=klState.kapitler.find(function(x){return x.id===kid;});if(!k)return;var r=k.rader.find(function(x){return x.id===rid;});if(!r)return;r[f]=v;klRender();}
+function klSlettRad(kid,rid){var k=klState.kapitler.find(function(x){return x.id===kid;});if(!k)return;k.rader=k.rader.filter(function(r){return r.id!==rid;});klRender();}
+function klLeggTilRad(kid){var k=klState.kapitler.find(function(x){return x.id===kid;});if(!k)return;k.rader.push({id:klState.nrid++,b:'',m:0,e:'m\u00b2',p:0,t:0});k.aapen=true;klRender();}
+function klLeggTilKapittel(){klState.kapitler.push({id:klState.nkid++,nr:String(klState.kapitler.length+1),tittel:'Nytt kapittel',aapen:true,rader:[{id:klState.nrid++,b:'',m:0,e:'m\u00b2',p:0,t:0}]});klRender();}
+
+function klLagreSP(status,callback){
+  var body={ProsjektID:klProjID,Title:klState.tittel||klProjNavn,KalkyleData:JSON.stringify(klState),Status:status};
+  var url=SP+"/_api/lists(guid'"+KL_GUID+"')/items";
+  var p=klSP_ID?spPatch(url+'('+klSP_ID+')',body):spPost(url,body);
+  p.then(function(d){if(!klSP_ID&&d&&d.Id)klSP_ID=d.Id;if(callback)callback();})
+   .catch(function(e){toast('Feil ved lagring: '+(e.message||''),'e');});
+}
+
+function klMellomlagre(){
+  var btn=document.getElementById('klMellomlagreBtn');
+  btn.disabled=true;btn.textContent='Lagrer...';
+  klLagreSP('Utkast',function(){
+    btn.disabled=false;btn.innerHTML='&#128190; Mellomlagre';
+    document.getElementById('klStatusTxt').textContent='\u270f Utkast';
+    toast('Kalkyle mellomlagret','s');
+  });
+}
+
+function klFullfor(){
+  var btn=document.getElementById('klFullforBtn');
+  btn.disabled=true;btn.textContent='Lagrer...';
+  klLagreSP('Ferdig',function(){
+    document.getElementById('klStatusTxt').textContent='\u2705 Ferdig';
+    klGenPdfOgLastOpp(function(){
+      btn.disabled=false;btn.innerHTML='&#10003; Lagre og fullf\u00f8r';
+      toast('Kalkyle fullf\u00f8rt og PDF lagret i Kalkyler-mappen','s');
+    });
+  });
+}
+
+function klGenPdfOgLastOpp(callback){
+  function lagPdf(){
+    var doc=new window.jspdf.jsPDF({unit:'mm',format:'a4'});
+    var marg=18,y=20,pgW=210,cW=pgW-marg*2;
+    function linje(yy){doc.setDrawColor(200,200,200);doc.setLineWidth(0.2);doc.line(marg,yy,pgW-marg,yy);}
+    doc.setFont('helvetica','bold');doc.setFontSize(18);doc.setTextColor(30,80,160);
+    doc.text('LH Bygg Entrepren\u00f8r AS',marg,y);
+    doc.setFontSize(9);doc.setTextColor(120,120,120);doc.setFont('helvetica','normal');
+    y+=6;doc.text('lhbe.no  -  post@lhbe.no',marg,y);
+    y+=10;linje(y);y+=6;
+    doc.setFont('helvetica','bold');doc.setFontSize(13);doc.setTextColor(30,30,30);
+    doc.text('TILBUD',marg,y);
+    doc.setFont('helvetica','normal');doc.setFontSize(9);doc.setTextColor(120,120,120);
+    doc.text('Dato: '+new Date().toLocaleDateString('nb-NO'),pgW-marg,y,{align:'right'});
+    y+=5;doc.setFontSize(10);doc.setTextColor(30,30,30);doc.text(klProjNavn,marg,y);y+=10;
+    var totS=0;
+    klState.kapitler.forEach(function(kap){
+      var res=klSumKap(kap);totS+=res.sum;
+      if(y>260){doc.addPage();y=20;}
+      doc.setFillColor(30,80,160);doc.roundedRect(marg,y-4,cW,8,1,1,'F');
+      doc.setFont('helvetica','bold');doc.setFontSize(10);doc.setTextColor(255,255,255);
+      doc.text(kap.nr+' - '+kap.tittel,marg+3,y+0.5);
+      doc.text(klFmtKr(res.sum),pgW-marg-3,y+0.5,{align:'right'});
+      y+=10;
+      kap.rader.forEach(function(r){
+        if(y>265){doc.addPage();y=20;}
+        doc.setFont('helvetica','normal');doc.setFontSize(9);doc.setTextColor(30,30,30);
+        doc.text(r.b+(klErRS(r)?' (RS)':''),marg+3,y);
+        if(!klErRS(r)){doc.setTextColor(120,120,120);doc.text(r.m+' '+r.e+' x '+r.p+',-',marg+80,y);}
+        doc.setTextColor(30,30,30);doc.text(klFmtKr(klRadSum(r)),pgW-marg-3,y,{align:'right'});
+        y+=5;linje(y-1);
+      });
+      y+=4;
+    });
+    y+=4;linje(y);y+=6;
+    var moms=totS*0.25;
+    doc.setFont('helvetica','normal');doc.setFontSize(10);doc.setTextColor(30,30,30);
+    doc.text('Sum ekskl. mva',marg,y);doc.text(klFmtKr(totS),pgW-marg,y,{align:'right'});
+    y+=5;doc.setTextColor(120,120,120);doc.setFontSize(9);
+    doc.text('Mva 25%',marg,y);doc.text(klFmtKr(moms),pgW-marg,y,{align:'right'});
+    y+=7;doc.setFillColor(230,230,230);doc.roundedRect(marg,y-4,cW,9,1,1,'F');
+    doc.setFont('helvetica','bold');doc.setFontSize(11);doc.setTextColor(30,30,30);
+    doc.text('Sum inkl. mva',marg+3,y+1);doc.setTextColor(30,80,160);
+    doc.text(klFmtKr(totS+moms),pgW-marg-3,y+1,{align:'right'});
+    y+=16;doc.setFont('helvetica','italic');doc.setFontSize(8);doc.setTextColor(120,120,120);
+    doc.text('Tilbudet er gyldig i 30 dager fra dato. Priser er ekskl. mva om ikke annet er oppgitt.',marg,y);
+    return doc.output('arraybuffer');
+  }
+  function lastOpp(pdfBytes){
+    var filnavn='Kalkyle_'+klProjNavn.replace(/[^a-zA-Z0-9_-]/g,'_')+'_'+new Date().toISOString().slice(0,10)+'.pdf';
+    var spBase='/sites/Industriveien1ASLHBygg/Delte dokumenter/Felles/LHBE/Prosjekter/';
+    getToken().then(function(t){
+      return fetch(SP+"/_api/web/GetFolderByServerRelativePath(decodedurl='"+encodeURIComponent(spBase+klProjNavn)+"')/Folders?$select=Name&$top=50",{
+        headers:{Authorization:'Bearer '+t,Accept:'application/json;odata=nometadata'}
+      });
+    }).then(function(r){return r.json();})
+    .then(function(d){
+      var mapper=(d.value||[]).map(function(f){return f.Name;});
+      var mappeNavn=mapper.find(function(n){return n.toLowerCase().indexOf('kalkyl')>=0;})||'Kalkyler_Beskrivelser_Tegninger';
+      return getToken().then(function(t2){
+        return fetch(SP+"/_api/web/GetFolderByServerRelativePath(decodedurl='"+encodeURIComponent(spBase+klProjNavn+'/'+mappeNavn)+"')/Files/add(overwrite=true,url='"+encodeURIComponent(filnavn)+"')",{
+          method:'POST',
+          headers:{Authorization:'Bearer '+t2,Accept:'application/json;odata=nometadata','Content-Type':'application/octet-stream'},
+          body:pdfBytes
+        });
+      });
+    })
+    .then(function(r){if(r&&r.ok){if(callback)callback();}else{toast('PDF generert men opplasting feilet','w');if(callback)callback();}})
+    .catch(function(e){toast('Feil ved PDF-opplasting: '+(e.message||''),'e');if(callback)callback();});
+  }
+  if(!window.jspdf){
+    var sc=document.createElement('script');
+    sc.src='https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+    sc.onload=function(){lastOpp(lagPdf());};
+    document.head.appendChild(sc);
+  } else { lastOpp(lagPdf()); }
+}
+// END KALKYLE-MODUL
+
+
 </script>
+
+
+<!-- ===== KALKYLE OVERLAY ===== -->
+<div class="fp-overlay" id="klOverlay">
+  <div class="fp-ov-hdr">
+    <button onclick="klLukk()" class="pdmback">&#8592; Tilbake</button>
+    <span style="font-size:13px;font-weight:700;color:var(--acc);">LH Bygg</span>
+    <span style="color:var(--tx3);">/</span>
+    <span style="font-size:12px;color:var(--tx2);" id="klOvProjNavn">-</span>
+    <div style="margin-left:auto;display:flex;align-items:center;gap:8px;">
+      <span style="font-size:11px;color:var(--tx3);" id="klStatusTxt"></span>
+      <button class="btn sm" id="klMellomlagreBtn" onclick="klMellomlagre()">&#128190; Mellomlagre</button>
+      <button class="btn sm pri" id="klFullforBtn" onclick="klFullfor()">&#10003; Lagre og fullf&#248;r</button>
+    </div>
+  </div>
+  <div class="fp-ov-scroll" id="klScroll" style="flex:1;overflow-y:auto;padding:16px 20px;">
+    <div id="klInnhold"></div>
+  </div>
+</div>
 
 <!-- ===== FREMDRIFT OVERLAY ===== -->
 <div class="fp-overlay" id="fpOverlay">
   <div class="fp-ov-hdr">
-    <button onclick="fpLukk()" class="pdmback">&#8592; Tilbake</button>
     <span style="font-size:13px;font-weight:700;color:var(--acc);">LH Bygg</span>
     <span style="color:var(--tx3);">/</span>
     <span style="font-size:12px;color:var(--tx2);" id="fpOvProjNavn">–</span>
@@ -7060,7 +7304,7 @@ function fpLukkModal(id){ document.getElementById(id).classList.remove('open'); 
   </div>
   <div class="fp-ov-toolbar">
     <button class="btn sm pri" onclick="fpNyAkt()">+ Ny aktivitet</button>
-    <button class="btn sm pri" onclick="fpNyFase()">+ Ny fase</button>
+    <button class="btn sm" onclick="fpNyFase()">+ Ny fase</button>
     <div style="width:1px;height:18px;background:var(--br);"></div>
     <button class="btn sm active" id="fpZUke" onclick="fpSetZoom('uke')">Uke</button>
     <button class="btn sm" id="fpZMnd" onclick="fpSetZoom('maaned')">Måned</button>
@@ -7092,7 +7336,7 @@ function fpLukkModal(id){ document.getElementById(id).classList.remove('open'); 
     </div>
   </div>
 </div>
-<!-- fpLukkBtn fjernet – tilbake-pil i header brukes i stedet -->
+<button class="fp-lukk-btn" id="fpLukkBtn" onclick="fpLukk()">✕</button>
 
 <!-- DETALJ PANEL -->
 <div style="position:fixed;top:0;right:-300px;width:290px;height:100vh;background:var(--bg2);border-left:1px solid var(--br);z-index:700;display:flex;flex-direction:column;transition:right .22s;box-shadow:-4px 0 20px rgba(0,0,0,.4);" id="fpDP">
