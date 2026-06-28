@@ -7129,11 +7129,9 @@ function klRender() {
   var inpS2Focus='transition:border-color .15s;';
   var metaHtml='<div style="background:var(--bg2);border:1px solid var(--br);border-radius:10px;padding:12px 16px;margin-bottom:16px;">'
     +'<div style="font-size:11px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;">\ud83d\udccb Tilbudsinfo</div>'
-    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">'
-    +'<div><label style="font-size:11px;color:var(--tx3);display:block;margin-bottom:3px;">Betalingsvilk\u00e5r</label>'
-    +'<input style="'+inpS2+'" value="'+(klState.meta.betalingsvilkar||'').replace(/"/g,'&quot;')+'" placeholder="f.eks. 14 dager netto" onchange="klState.meta.betalingsvilkar=this.value"></div>'
-    +'<div><label style="font-size:11px;color:var(--tx3);display:block;margin-bottom:3px;">Forfallsdato</label>'
-    +'<input type="date" style="'+inpS2+'" value="'+(klState.meta.forfallsdato||'')+'" onchange="klState.meta.forfallsdato=this.value"></div>'
+    +'<div style="margin-bottom:10px;">'
+    +'<label style="font-size:11px;color:var(--tx3);display:block;margin-bottom:3px;">Betalingsvilk\u00e5r</label>'
+    +'<input style="'+inpS2+'" value="'+(klState.meta.betalingsvilkar||'').replace(/"/g,'&quot;')+'" placeholder="f.eks. 14 dager netto" onchange="klState.meta.betalingsvilkar=this.value">'
     +'</div>'
     +'<div style="margin-bottom:10px;"><label style="font-size:11px;color:var(--tx3);display:block;margin-bottom:3px;">Hva tilbudet gjelder (ingress til PDF)</label>'
     +'<textarea style="'+inpS2+'height:60px;resize:vertical;" placeholder="Eks: Kostnadsoverslag p\u00e5 omgj\u00f8ring av lokaler..." onchange="klState.meta.ingress=this.value">'+(klState.meta.ingress||'')+'</textarea></div>'
@@ -7142,7 +7140,7 @@ function klRender() {
     +'</div>';
 
   /* -- KAPITLER -- */
-  var inpS='width:100%;border:1px solid transparent;border-radius:4px;background:transparent;font-size:12px;color:var(--tx);padding:5px 7px;font-family:inherit;outline:none;transition:border-color .15s;box-sizing:border-box;';
+  var inpS='width:100%;border:1px solid var(--br2);border-radius:4px;background:var(--bg3);font-size:12px;color:var(--tx);padding:5px 7px;font-family:inherit;outline:none;transition:border-color .15s,box-shadow .15s;box-sizing:border-box;';
   var inpSFocus='onfocus="this.style.borderColor=\'var(--acc)\';this.style.background=\'var(--bg2)\'" onblur="this.style.borderColor=\'var(--br2)\';this.style.background=\'var(--bg3)\'"';
   var kapHtml='';
   klState.kapitler.forEach(function(kap){
@@ -7160,7 +7158,7 @@ function klRender() {
       var rows=''; kap.rader.forEach(function(r){
         var rs=klErRS(r); var sum=klRadSum(r); var tv=klRadTimer(r);
         rows+='<tr style="border-bottom:1px solid var(--br);" onmouseover="this.style.background=\'var(--bg2)\'" onmouseout="this.style.background=\'\'">'
-          +'<td style="padding:3px 4px;"><input style="'+inpS+'" value="'+r.b.replace(/"/g,'&quot;')+'" placeholder="Beskrivelse" '+inpSFocus+' onfocus="this.style.borderColor=\'var(--acc)\';this.style.background=\'var(--bg3)\';this.select()" onblur="this.style.borderColor=\'var(--br2)\';this.style.background=\'var(--bg3)\'" onchange="klOppdR('+kap.id+','+r.id+',\'b\',this.value)"></td>';
+          +'<td style="padding:3px 4px;"><input style="'+inpS+'" value="'+r.b.replace(/"/g,'&quot;')+'" placeholder="Beskrivelse" '+inpSFocus+' onfocus="this.style.borderColor=\'var(--acc)\';this.style.background=\'var(--bg2)\';this.select()" onchange="klOppdR('+kap.id+','+r.id+',\'b\',this.value)"></td>';
         if(rs){
           rows+='<td colspan="2"></td><td style="padding:3px 4px;"><input type="number" style="'+inpS+'text-align:right;" onfocus="this.style.borderColor=\'var(--acc)\';this.style.background=\'var(--bg3)\';this.select()" onblur="this.style.borderColor=\'var(--br2)\';this.style.background=\'var(--bg3)\'" value="'+r.m+'" onchange="klOppdR('+kap.id+','+r.id+',\'m\',+this.value)"></td>';
         } else {
@@ -7365,7 +7363,7 @@ function klGenPdfOgLastOpp(callback){
     }
     y+=36;
 
-    /* --- Info-rad: Selger, Stilling, Betalingsvilkår, Forfallsdato --- */
+    /* --- Info-rad: Selger, Firma, Betalingsvilkår, E-post --- */
     var infoW=cW/4;
     ['Selger','Firma','Betalingsvilkår','E-post'].forEach(function(h,i){
       doc.setFillColor(30,30,30);doc.rect(marg+i*infoW,y,infoW,7,'F');
@@ -7501,7 +7499,8 @@ function klGenPdfOgLastOpp(callback){
     return doc.output('arraybuffer');
   }
   function lastOpp(pdfBytes){
-    var filnavn='Kalkyle_'+klProjNavn.replace(/[^a-zA-Z0-9_-]/g,'_')+'_'+new Date().toISOString().slice(0,10)+'.pdf';
+    var datoPrefix=new Date().toISOString().slice(0,10);
+    var filnavn=datoPrefix+'_Kalkyle_'+klProjNavn.replace(/[^a-zA-Z0-9æøåÆØÅ_-]/g,'_').replace(/_+/g,'_')+'.pdf';
     var p=projects.filter(function(x){return x.ID===klProjID;})[0];
     if(!p){toast('Finner ikke prosjekt for opplasting','e');if(callback)callback();return;}
     var s=p.Status||'Under kalkyle';
@@ -7518,7 +7517,8 @@ function klGenPdfOgLastOpp(callback){
     }
     var destMappe='/sites/Industriveien1ASLHBygg/Delte dokumenter/'+prosjektMappe+'/Kalkyler_Beskrivelser_Tegninger';
     getToken().then(function(t){
-      return fetch(SP+"/_api/web/GetFolderByServerRelativePath(decodedurl='"+encodeURIComponent(destMappe)+"')/Files/add(overwrite=true,url='"+encodeURIComponent(filnavn)+"')",{
+      var uploadUrl=SP+'/_api/web/GetFolderByServerRelativePath(decodedurl=\''+destMappe+'\')'+'/Files/add(url=\''+encodeURIComponent(filnavn)+'\',overwrite=true)';
+      return fetch(uploadUrl,{
         method:'POST',
         headers:{Authorization:'Bearer '+t,Accept:'application/json;odata=nometadata','Content-Type':'application/octet-stream'},
         body:pdfBytes
