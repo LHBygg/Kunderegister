@@ -7396,7 +7396,7 @@ function klGenPdfOgLastOpp(callback){
     doc.text('ANTALL',colA+3,y+5.5);
     doc.text('BESKRIVELSE',colB+3,y+5.5);
     doc.text('ENHETSPRIS',colC+3,y+5.5);
-    doc.text('LINJETOTAL',colD-3,y+5.5,{align:'right'});
+    if(visEnhetspriser) doc.text('LINJETOTAL',colD-3,y+5.5,{align:'right'});
     y+=8;
 
     /* --- Kapitler og rader --- */
@@ -7406,8 +7406,8 @@ function klGenPdfOgLastOpp(callback){
         /* Gjenta kolonneheader på ny side */
         doc.setFillColor(30,30,30);doc.rect(colA,y,cW,8,'F');
         doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(255,255,255);
-        doc.text('ANTALL',colA+3,y+5.5);doc.text('BESKRIVELSE',colB+3,y+5.5);
-        if(visEnhetspriser) doc.text('ENHETSPRIS',colC+3,y+5.5);doc.text('LINJETOTAL',colD-3,y+5.5,{align:'right'});
+        if(visEnhetspriser) doc.text('ANTALL',colA+3,y+5.5);doc.text('BESKRIVELSE',colB+3,y+5.5);
+        if(visEnhetspriser){doc.text('ENHETSPRIS',colC+3,y+5.5);doc.text('LINJETOTAL',colD-3,y+5.5,{align:'right'});}
         y+=8;
       }
     }
@@ -7437,9 +7437,9 @@ function klGenPdfOgLastOpp(callback){
       doc.setLineWidth(0.1);
       synligeRader.forEach(function(r,ri){
         var ry=y+ri*radH;
-        /* Mengde og enhet */
+        /* Mengde og enhet – kun intern */
         doc.setFont('helvetica','normal');doc.setFontSize(9);
-        if(!klErRS(r)&&r.m){
+        if(visEnhetspriser&&!klErRS(r)&&r.m){
           doc.setTextColor(60,60,60);
           doc.text(String(r.m),colA+3,ry+5);
           doc.text(r.e,colA+14,ry+5);
@@ -7453,9 +7453,11 @@ function klGenPdfOgLastOpp(callback){
           doc.setTextColor(80,80,80);
           doc.text(klFmtKr(r.p),colC+3,ry+5);
         }
-        /* Linjetotal */
-        doc.setFont('helvetica','bold');doc.setTextColor(20,20,20);
-        doc.text(klFmtKr(klRadSum(r)),colD-3,ry+5,{align:'right'});
+        /* Linjetotal – kun intern */
+        if(visEnhetspriser){
+          doc.setFont('helvetica','bold');doc.setTextColor(20,20,20);
+          doc.text(klFmtKr(klRadSum(r)),colD-3,ry+5,{align:'right'});
+        }
       });
       y+=boksH+4;
     });
@@ -7485,8 +7487,7 @@ function klGenPdfOgLastOpp(callback){
           doc.setFont('helvetica','normal');doc.setFontSize(9);doc.setTextColor(20,20,20);
           doc.text(tl.b||'Tillegg',colB+3,ty+5);
           if(visEnhetspriser){doc.setTextColor(80,80,80);doc.text(tl.timer+' t × '+tl.kr+' kr/t',colC+3,ty+5);}
-          doc.setFont('helvetica','bold');doc.setTextColor(20,20,20);
-          doc.text(klFmtKr(ts),colD-3,ty+5,{align:'right'});
+          if(visEnhetspriser){doc.setFont('helvetica','bold');doc.setTextColor(20,20,20);doc.text(klFmtKr(ts),colD-3,ty+5,{align:'right'});}
         });
         y+=tlBoksH+4;
       }
