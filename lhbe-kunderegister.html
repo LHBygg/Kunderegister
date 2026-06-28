@@ -7085,6 +7085,9 @@ function klLastFraSharePoint() {
       if (item && item.KalkyleData) {
         klSP_ID = item.Id;
         try { klState = JSON.parse(item.KalkyleData); } catch(e) { klNyState(); }
+        if(!klState.tillegg) klState.tillegg=[];
+        if(!klState.ntid) klState.ntid=1;
+        if(!klState.meta) klState.meta={ingress:'',forbehold:'Tilbudet er gyldig i 30 dager fra dato. Priser er oppgitt ekskl. mva. Mengder er basert på tilgjengelig dokumentasjon og kan justeres ved avvik. Eventuelle tilleggsarbeider avtales skriftlig før utførelse. Betalingsvilkår: 14 dager netto.',betalingsvilkar:'14 dager netto',forfallsdato:''};
         var st = item.Status||'';
         document.getElementById('klStatusTxt').textContent = st==='Ferdig' ? '\u2705 Ferdig' : st==='Utkast' ? '\u270f Utkast' : '';
       } else { klSP_ID = null; klNyState(); }
@@ -7140,7 +7143,7 @@ function klRender() {
 
   /* -- KAPITLER -- */
   var inpS='width:100%;border:1px solid transparent;border-radius:4px;background:transparent;font-size:12px;color:var(--tx);padding:5px 7px;font-family:inherit;outline:none;transition:border-color .15s;box-sizing:border-box;';
-  var inpSFocus='onfocus="this.style.borderColor=\'var(--acc)\';this.style.background=\'var(--bg2)\'" onblur="this.style.borderColor=\'transparent\';this.style.background=\'transparent\'"';
+  var inpSFocus='onfocus="this.style.borderColor=\'var(--acc)\';this.style.background=\'var(--bg2)\'" onblur="this.style.borderColor=\'var(--br2)\';this.style.background=\'var(--bg3)\'"';
   var kapHtml='';
   klState.kapitler.forEach(function(kap){
     var res=klSumKap(kap); totS+=res.sum; totT+=res.timer;
@@ -7157,15 +7160,15 @@ function klRender() {
       var rows=''; kap.rader.forEach(function(r){
         var rs=klErRS(r); var sum=klRadSum(r); var tv=klRadTimer(r);
         rows+='<tr style="border-bottom:1px solid var(--br);" onmouseover="this.style.background=\'var(--bg2)\'" onmouseout="this.style.background=\'\'">'
-          +'<td style="padding:3px 4px;"><input style="'+inpS+'" value="'+r.b.replace(/"/g,'&quot;')+'" placeholder="Beskrivelse" '+inpSFocus+' onfocus="this.style.borderColor=\'var(--acc)\';this.style.background=\'var(--bg3)\';this.select()" onblur="this.style.borderColor=\'transparent\';this.style.background=\'transparent\'" onchange="klOppdR('+kap.id+','+r.id+',\'b\',this.value)"></td>';
+          +'<td style="padding:3px 4px;"><input style="'+inpS+'" value="'+r.b.replace(/"/g,'&quot;')+'" placeholder="Beskrivelse" '+inpSFocus+' onfocus="this.style.borderColor=\'var(--acc)\';this.style.background=\'var(--bg3)\';this.select()" onblur="this.style.borderColor=\'var(--br2)\';this.style.background=\'var(--bg3)\'" onchange="klOppdR('+kap.id+','+r.id+',\'b\',this.value)"></td>';
         if(rs){
-          rows+='<td colspan="2"></td><td style="padding:3px 4px;"><input type="number" style="'+inpS+'text-align:right;" onfocus="this.style.borderColor=\'var(--acc)\';this.style.background=\'var(--bg3)\';this.select()" onblur="this.style.borderColor=\'transparent\';this.style.background=\'transparent\'" value="'+r.m+'" onchange="klOppdR('+kap.id+','+r.id+',\'m\',+this.value)"></td>';
+          rows+='<td colspan="2"></td><td style="padding:3px 4px;"><input type="number" style="'+inpS+'text-align:right;" onfocus="this.style.borderColor=\'var(--acc)\';this.style.background=\'var(--bg3)\';this.select()" onblur="this.style.borderColor=\'var(--br2)\';this.style.background=\'var(--bg3)\'" value="'+r.m+'" onchange="klOppdR('+kap.id+','+r.id+',\'m\',+this.value)"></td>';
         } else {
-          rows+='<td style="padding:3px 4px;"><input type="number" style="'+inpS+'text-align:right;" onfocus="this.style.borderColor=\'var(--acc)\';this.style.background=\'var(--bg3)\';this.select()" onblur="this.style.borderColor=\'transparent\';this.style.background=\'transparent\'" value="'+r.m+'" onchange="klOppdR('+kap.id+','+r.id+',\'m\',+this.value)"></td>'
+          rows+='<td style="padding:3px 4px;"><input type="number" style="'+inpS+'text-align:right;" onfocus="this.style.borderColor=\'var(--acc)\';this.style.background=\'var(--bg3)\';this.select()" onblur="this.style.borderColor=\'var(--br2)\';this.style.background=\'var(--bg3)\'" value="'+r.m+'" onchange="klOppdR('+kap.id+','+r.id+',\'m\',+this.value)"></td>'
             +'<td style="padding:3px 2px;"><select style="width:100%;border:1px solid var(--br2);border-radius:4px;background:var(--bg3);font-size:12px;color:var(--tx);padding:5px 3px;font-family:inherit;outline:none;cursor:pointer;" onchange="klOppdR('+kap.id+','+r.id+',\'e\',this.value)">'+eOpts(r.e)+'</select></td>'
-            +'<td style="padding:3px 4px;"><input type="number" style="'+inpS+'text-align:right;" onfocus="this.style.borderColor=\'var(--acc)\';this.style.background=\'var(--bg3)\';this.select()" onblur="this.style.borderColor=\'transparent\';this.style.background=\'transparent\'" value="'+r.p+'" onchange="klOppdR('+kap.id+','+r.id+',\'p\',+this.value)"></td>';
+            +'<td style="padding:3px 4px;"><input type="number" style="'+inpS+'text-align:right;" onfocus="this.style.borderColor=\'var(--acc)\';this.style.background=\'var(--bg3)\';this.select()" onblur="this.style.borderColor=\'var(--br2)\';this.style.background=\'var(--bg3)\'" value="'+r.p+'" onchange="klOppdR('+kap.id+','+r.id+',\'p\',+this.value)"></td>';
         }
-        rows+='<td style="padding:3px 4px;"><input type="number" step="0.01" style="'+inpS+'text-align:right;color:#22c55e;" onfocus="this.style.borderColor=\'var(--acc)\';this.style.background=\'var(--bg3)\';this.select()" onblur="this.style.borderColor=\'transparent\';this.style.background=\'transparent\'" value="'+(r.t||'')+'" placeholder="t/enh" onchange="klOppdR('+kap.id+','+r.id+',\'t\',+this.value)" title="Timer per enhet"></td>'
+        rows+='<td style="padding:3px 4px;"><input type="number" step="0.01" style="'+inpS+'text-align:right;color:#22c55e;" onfocus="this.style.borderColor=\'var(--acc)\';this.style.background=\'var(--bg3)\';this.select()" onblur="this.style.borderColor=\'var(--br2)\';this.style.background=\'var(--bg3)\'" value="'+(r.t||'')+'" placeholder="t/enh" onchange="klOppdR('+kap.id+','+r.id+',\'t\',+this.value)" title="Timer per enhet"></td>'
           +'<td style="padding:6px 8px;text-align:right;font-size:12px;font-weight:700;color:var(--tx);">'+klFmtKr(sum)+'</td>'
           +'<td style="padding:6px 8px;text-align:right;font-size:12px;font-weight:700;color:#22c55e;">'+(tv>0?klFmtT(tv):'')+'</td>'
           +'<td style="padding:4px;text-align:center;"><button onclick="klSlettRad('+kap.id+','+r.id+')" style="background:none;border:none;cursor:pointer;color:var(--tx3);font-size:13px;padding:2px 4px;" title="Slett"><i class="ti ti-x" aria-hidden="true"></i></button></td></tr>';
@@ -7302,10 +7305,10 @@ function klGenPdfOgLastOpp(callback){
     var y=18;
 
     /* --- HEADER: logo + KOSTNADSOVERSLAG --- */
-    try{ doc.addImage('data:image/jpeg;base64,'+KL_LOGO_B64,'JPEG',marg,y,52,18); }catch(e){}
-    doc.setFont('helvetica','bold');doc.setFontSize(22);doc.setTextColor(20,20,20);
-    doc.text('KOSTNADSOVERSLAG',pgW-marg,y+13,{align:'right'});
-    y+=26;
+    try{ doc.addImage('data:image/jpeg;base64,'+KL_LOGO_B64,'JPEG',marg,y,52,13); }catch(e){}
+    doc.setFont('helvetica','bold');doc.setFontSize(16);doc.setTextColor(20,20,20);
+    doc.text('KOSTNADSOVERSLAG',pgW-marg,y+9,{align:'right'});
+    y+=20;
 
     /* --- Tynn linje under header --- */
     doc.setDrawColor(180,180,180);doc.setLineWidth(0.3);doc.line(marg,y,pgW-marg,y);
@@ -7321,10 +7324,10 @@ function klGenPdfOgLastOpp(callback){
     doc.text('post@lhbe.no',marg,y+20);
 
     var datoStr=new Date().toLocaleDateString('nb-NO',{day:'2-digit',month:'2-digit',year:'numeric'});
-    doc.setFont('helvetica','bold');doc.setFontSize(9);doc.setTextColor(20,20,20);
+    doc.setFont('helvetica','bold');doc.setFontSize(9);doc.setTextColor(80,80,80);
     doc.text('DATO:',pgW-marg-40,y);
-    doc.setFont('helvetica','normal');doc.setTextColor(80,80,80);
-    doc.text(datoStr,pgW-marg,y,{align:'right'});
+    doc.setFont('helvetica','bold');doc.setFontSize(10);doc.setTextColor(20,20,20);
+    doc.text(datoStr,pgW-marg,y+0.5,{align:'right'});
 
     var meta=klState.meta||{};
     if(meta.forfallsdato){
@@ -7343,14 +7346,16 @@ function klGenPdfOgLastOpp(callback){
     var kontaktperson=p.Kontaktperson||'';
 
     /* --- TIL-boks --- */
-    doc.setFillColor(245,245,245);doc.roundedRect(marg,y,75,28,1,1,'F');
+    var tilBoksH=kundeAdresse?30:24;
+    doc.setFillColor(245,245,245);doc.roundedRect(marg,y,78,tilBoksH,1,1,'F');
     doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(100,100,100);
     doc.text('TIL',marg+3,y+6);
     doc.setFont('helvetica','bold');doc.setFontSize(10);doc.setTextColor(20,20,20);
     if(kundeNavn) doc.text(kundeNavn,marg+3,y+13);
     doc.setFont('helvetica','normal');doc.setFontSize(9);doc.setTextColor(80,80,80);
-    if(kontaktperson) doc.text(kontaktperson,marg+3,y+19);
-    if(kundeAdresse) doc.text(kundeAdresse,marg+3,y+25);
+    var tilY=y+13;
+    if(kontaktperson&&kontaktperson!==kundeNavn){tilY+=6;doc.text(kontaktperson,marg+3,tilY);}
+    if(kundeAdresse){tilY+=6;doc.text(kundeAdresse,marg+3,tilY);}
 
     /* --- Ingress høyre --- */
     if(meta.ingress){
@@ -7362,7 +7367,7 @@ function klGenPdfOgLastOpp(callback){
 
     /* --- Info-rad: Selger, Stilling, Betalingsvilkår, Forfallsdato --- */
     var infoW=cW/4;
-    ['Selger','Stilling','Betalingsvilkår','Ref'].forEach(function(h,i){
+    ['Selger','Firma','Betalingsvilkår','E-post'].forEach(function(h,i){
       doc.setFillColor(30,30,30);doc.rect(marg+i*infoW,y,infoW,7,'F');
       doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(255,255,255);
       doc.text(h,marg+i*infoW+3,y+5);
@@ -7371,10 +7376,13 @@ function klGenPdfOgLastOpp(callback){
     doc.setDrawColor(200,200,200);doc.setLineWidth(0.2);
     doc.rect(marg,y,cW,8);
     for(var ci=1;ci<4;ci++) doc.line(marg+ci*infoW,y,marg+ci*infoW,y+8);
+    var selgerNavn=typeof acc!=='undefined'&&acc&&acc.name?acc.name:'LH Bygg';
+    var selgerEpost=typeof acc!=='undefined'&&acc&&acc.username?acc.username:'post@lhbe.no';
     doc.setFont('helvetica','normal');doc.setFontSize(9);doc.setTextColor(20,20,20);
-    doc.text('Magne Vidar Rise',marg+3,y+5.5);
-    doc.text('Daglig Leder',marg+infoW+3,y+5.5);
+    doc.text(selgerNavn,marg+3,y+5.5);
+    doc.text('LH Bygg Entreprenør AS',marg+infoW+3,y+5.5);
     doc.text(meta.betalingsvilkar||'14 dager netto',marg+infoW*2+3,y+5.5);
+    doc.text(selgerEpost,marg+infoW*3+3,y+5.5);
     y+=15;
 
     /* --- Kolonneheader tabell --- */
@@ -7417,8 +7425,9 @@ function klGenPdfOgLastOpp(callback){
         }
         /* Beskrivelse */
         var bLines=doc.splitTextToSize(r.b+(klErRS(r)?' (RS)':''),85);
-        doc.setTextColor(20,20,20);
+        doc.setFont('helvetica','normal');doc.setTextColor(20,20,20);
         doc.text(bLines[0]||'',marg+30,y+5.5);
+        if(bLines[1]){doc.text(bLines[1],marg+30,y+9.5);}
         /* Enhetspris */
         if(!klErRS(r)&&r.p){
           doc.setTextColor(80,80,80);
