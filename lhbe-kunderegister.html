@@ -7360,13 +7360,16 @@ function klGenPdfOgLastOpp(callback){
       tilY+=6;
     });
 
-    /* --- Ingress høyre --- */
+    y+=tilBoksH+5;
+    /* --- Ingress under TIL-boksen --- */
     if(meta.ingress){
       doc.setFont('helvetica','normal');doc.setFontSize(9);doc.setTextColor(40,40,40);
-      var ingressLines=doc.splitTextToSize(meta.ingress,pgW-marg-80-marg);
-      doc.text(ingressLines,marg+80,y+13);
+      var ingressLines=doc.splitTextToSize(meta.ingress,cW);
+      doc.text(ingressLines,marg,y);
+      y+=ingressLines.length*5+6;
+    } else {
+      y+=4;
     }
-    y+=36;
 
     /* --- Info-rad: Selger, Firma, Betalingsvilkår, E-post --- */
     var infoW=cW/4;
