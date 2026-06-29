@@ -4436,8 +4436,8 @@ function loadSDKData(projId, timerId, prosjektnr) {
   var toStr = toLocalDate(weekEnd);
   // Bruk prosjektets startdato for å hente hele historikken (fallback: 2020-01-01)
   var aktivtProsjektForDato = projects ? projects.filter(function(x){ return x.ID === activePID; })[0] : null;
-  var prosjektStart = (aktivtProsjektForDato && aktivtProsjektForDato.StartDato)
-    ? aktivtProsjektForDato.StartDato.substring(0, 10)
+  var prosjektStart = (aktivtProsjektForDato && aktivtProsjektForDato.PlanStart)
+    ? aktivtProsjektForDato.PlanStart.substring(0, 10)
     : '2020-01-01';
   var fraDato = prosjektStart;
   var tilDato = toLocalDate(new Date());
