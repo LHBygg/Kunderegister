@@ -4434,8 +4434,12 @@ function loadSDKData(projId, timerId, prosjektnr) {
   }
   var fromStr = toLocalDate(weekStart);
   var toStr = toLocalDate(weekEnd);
-  var fra90 = new Date(); fra90.setDate(fra90.getDate()-90);
-  var fraDato = toLocalDate(fra90) + 'T00:00:00';
+  // Bruk prosjektets startdato for å hente hele historikken (fallback: 2020-01-01)
+  var aktivtProsjektForDato = projects ? projects.filter(function(x){ return x.ID === activePID; })[0] : null;
+  var prosjektStart = (aktivtProsjektForDato && aktivtProsjektForDato.StartDato)
+    ? aktivtProsjektForDato.StartDato.substring(0, 10)
+    : '2020-01-01';
+  var fraDato = prosjektStart + 'T00:00:00';
   var tilDato = toLocalDate(new Date()) + 'T23:59:59';
   Promise.all([
     sdkGet('/ResourcePlanning/Resources?active=true&count=100'),
