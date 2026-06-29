@@ -4439,8 +4439,8 @@ function loadSDKData(projId, timerId, prosjektnr) {
   var prosjektStart = (aktivtProsjektForDato && aktivtProsjektForDato.StartDato)
     ? aktivtProsjektForDato.StartDato.substring(0, 10)
     : '2020-01-01';
-  var fraDato = prosjektStart + 'T00:00:00';
-  var tilDato = toLocalDate(new Date()) + 'T23:59:59';
+  var fraDato = prosjektStart;
+  var tilDato = toLocalDate(new Date());
   Promise.all([
     sdkGet('/ResourcePlanning/Resources?active=true&count=100'),
     sdkGet('/ResourcePlanning/Plans?projectId=' + projId + '&from=' + fromStr + '&to=' + toStr + '&count=100'),
