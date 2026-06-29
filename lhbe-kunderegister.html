@@ -4434,7 +4434,7 @@ function loadSDKData(projId, timerId, prosjektnr) {
   }
   var fromStr = toLocalDate(weekStart);
   var toStr = toLocalDate(weekEnd);
-  var fra90 = new Date(); fra90.setDate(fra90.getDate()-90);
+  var fra90 = new Date(); fra90.setDate(fra90.getDate()-730);
   var fraDato = toLocalDate(fra90) + 'T00:00:00';
   var tilDato = toLocalDate(new Date()) + 'T23:59:59';
   Promise.all([
