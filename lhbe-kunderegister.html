@@ -4434,20 +4434,29 @@ function loadSDKData(projId, timerId, prosjektnr) {
   }
   var fromStr = toLocalDate(weekStart);
   var toStr = toLocalDate(weekEnd);
-  var fra90 = new Date(); fra90.setDate(fra90.getDate()-730);
-  var fraDato = toLocalDate(fra90) + 'T00:00:00';
-  var tilDato = toLocalDate(new Date()) + 'T23:59:59';
+  var nowD = new Date();
+  var fra1 = new Date(nowD); fra1.setDate(nowD.getDate()-730);
+  var til1 = new Date(nowD); til1.setDate(nowD.getDate()-365);
+  var fra2 = new Date(nowD); fra2.setDate(nowD.getDate()-365);
+  var fraDato1 = toLocalDate(fra1) + 'T00:00:00';
+  var tilDato1 = toLocalDate(til1) + 'T23:59:59';
+  var fraDato2 = toLocalDate(fra2) + 'T00:00:00';
+  var tilDato2 = toLocalDate(nowD) + 'T23:59:59';
   Promise.all([
     sdkGet('/ResourcePlanning/Resources?active=true&count=100'),
     sdkGet('/ResourcePlanning/Plans?projectId=' + projId + '&from=' + fromStr + '&to=' + toStr + '&count=100'),
-    sdkGet('/WorkHours?projectId=' + timerId + '&fromDate=' + fraDato + '&toDate=' + tilDato).catch(function() { return {}; })
+    sdkGet('/WorkHours?projectId=' + timerId + '&fromDate=' + fraDato1 + '&toDate=' + tilDato1).catch(function() { return {}; }),
+    sdkGet('/WorkHours?projectId=' + timerId + '&fromDate=' + fraDato2 + '&toDate=' + tilDato2).catch(function() { return {}; })
   ]).then(function(results) {
     var resources = results[0].Data || results[0].data || results[0].Items || results[0] || [];
     var plans = results[1].Data || results[1].data || results[1].Items || results[1] || [];
-    var hours = results[2].Data || results[2].data || results[2].Items || results[2] || [];
+    var h1 = results[2].Data || results[2].data || results[2].Items || results[2] || [];
+    var h2 = results[3].Data || results[3].data || results[3].Items || results[3] || [];
     if (!Array.isArray(resources)) resources = [];
     if (!Array.isArray(plans)) plans = [];
-    if (!Array.isArray(hours)) hours = [];
+    if (!Array.isArray(h1)) h1 = [];
+    if (!Array.isArray(h2)) h2 = [];
+    var hours = h1.concat(h2);
     renderSDK(resources, plans, hours, fromStr, toStr);
   }).catch(function(e) { sdkError(e.message); });
 }
