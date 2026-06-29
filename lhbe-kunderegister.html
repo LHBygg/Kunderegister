@@ -6324,7 +6324,8 @@ function fpInitGanttInteract(){
   function clientXToGanttX(clientX){
     var rw=getRW(), sc=getSC();
     if(!rw||!sc) return -1;
-    return clientX - rw.getBoundingClientRect().left + sc.scrollLeft - TBL_W;
+    var scrollLeft = rw.scrollLeft || sc.scrollLeft;
+    return clientX - rw.getBoundingClientRect().left + scrollLeft - TBL_W;
   }
   function snapX(x){ return Math.floor(x/fpCOL_W)*fpCOL_W; }
 
