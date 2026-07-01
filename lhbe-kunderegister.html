@@ -814,10 +814,12 @@ tr.erow td{padding:0;background:var(--bg2);border-bottom:1px solid var(--br2);}
     <div class="mbody">
       <input type="hidden" id="levId">
       <div class="fg"><label class="fl">Firmanavn *</label><input class="fi2" id="levNavn" placeholder="Firma AS"></div>
-      <div class="fg2" style="margin-top:8px;">
-        <div class="fg"><label class="fl">Org.nr</label><input class="fi2" id="levOrgnr" placeholder="000 000 000"></div>
-        <div class="fg"><label class="fl">Kategori</label>
-          <select class="fi2" id="levKategori"><option value="">Velg kategori</option></select>
+      <div class="fg" style="margin-top:8px;"><label class="fl">Org.nr</label><input class="fi2" id="levOrgnr" placeholder="000 000 000"></div>
+      <div class="fg" style="margin-top:8px;">
+        <label class="fl">Kategori <span style="font-weight:400;font-size:11px;color:var(--tx3);">(velg én eller flere)</span></label>
+        <div id="levKategoriBox" style="border:1px solid var(--br);border-radius:6px;padding:8px 12px;max-height:180px;overflow-y:auto;background:var(--bg2);display:flex;flex-direction:column;gap:6px;"></div>
+        <div id="levAnnetBox" style="display:none;margin-top:6px;">
+          <input class="fi2" id="levAnnetTekst" placeholder="Beskriv kategori...">
         </div>
       </div>
       <div class="fg" style="margin-top:8px;"><label class="fl">Nettside</label><input class="fi2" id="levNettside" placeholder="www.firma.no"></div>
@@ -1209,7 +1211,7 @@ var LEVKL = '30434dbc-a93e-43a4-aa5e-2f7a89d7e7dd';
 var PLEVL = '91a10cdc-2629-4f80-ae9a-95b05978e44b';
 var NL = '55e4ff82-3d85-480e-a97e-23921b1c8edf';
 var SETTINGS_KEY = 'lhbe_standard_layout'; // SP-liste-tittel for lagring
-var LEV_KATEGORIER = ['Byggvarer','Betong','Stål/Armering','Festemidler','Transport','Verktøy/maskin','Elektro','VVS-materiell','Annet'];
+var LEV_KATEGORIER = ['Byggvarer','Betong','Stål/Armering','Festemidler','Transport','Verktøy/maskin','Elektro','VVS-materiell','Vindu','Dører','Porter','Annet'];
 var levList = [];
 var levKontakter = [];
 var prosjektLev = [];
@@ -4812,7 +4814,7 @@ function renderLevView() {
   var kat = document.getElementById('levKatFilter') ? document.getElementById('levKatFilter').value : '';
   var liste = levList.filter(function(l) {
     var matchQ = !q || (l.Title||'').toLowerCase().includes(q) || (l.Kategori||'').toLowerCase().includes(q);
-    var matchK = !kat || (l.Kategori||'') === kat;
+    var matchK = !kat || (l.Kategori||'').split(',').map(function(s){return s.trim();}).indexOf(kat) !== -1;
     return matchQ && matchK;
   });
   liste.sort(function(a, b) {
@@ -4884,15 +4886,70 @@ function toggleLevKontakter(e, id, antall) {
   if (pil) pil.style.transform = open ? '' : 'rotate(90deg)';
 }
 
+function buildLevKategoriCheckboxes(selected) {
+  var sel = typeof selected === 'string' ? selected.split(',').map(function(s){return s.trim();}) : (selected || []);
+  var annetTekst = '';
+  var selFiltrert = sel.filter(function(s) {
+    if (s && LEV_KATEGORIER.indexOf(s) === -1 && s !== 'Annet') { annetTekst = s; return false; }
+    return !!s;
+  });
+  var box = document.getElementById('levKategoriBox');
+  box.innerHTML = '';
+  LEV_KATEGORIER.forEach(function(k) {
+    var isChecked = selFiltrert.indexOf(k) !== -1 || (k === 'Annet' && annetTekst);
+    var safeId = 'levkat_' + k.replace(/[^a-zA-Z0-9]/g,'_');
+    var row = document.createElement('label');
+    row.style.cssText = 'display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;padding:2px 0;user-select:none;';
+    var cb = document.createElement('input');
+    cb.type = 'checkbox';
+    cb.id = safeId;
+    cb.value = k;
+    cb.checked = !!isChecked;
+    cb.style.cssText = 'width:16px;height:16px;cursor:pointer;accent-color:var(--blu);';
+    if (k === 'Annet') {
+      cb.addEventListener('change', function() {
+        var ab = document.getElementById('levAnnetBox');
+        ab.style.display = this.checked ? 'block' : 'none';
+        if (!this.checked) document.getElementById('levAnnetTekst').value = '';
+      });
+    }
+    row.appendChild(cb);
+    row.appendChild(document.createTextNode(k));
+    box.appendChild(row);
+  });
+  var annetBox = document.getElementById('levAnnetBox');
+  if (annetTekst || selFiltrert.indexOf('Annet') !== -1) {
+    annetBox.style.display = 'block';
+    document.getElementById('levAnnetTekst').value = annetTekst || '';
+  } else {
+    annetBox.style.display = 'none';
+    document.getElementById('levAnnetTekst').value = '';
+  }
+}
+
+function getLevKategoriValue() {
+  var vals = [];
+  LEV_KATEGORIER.forEach(function(k) {
+    var safeId = 'levkat_' + k.replace(/[^a-zA-Z0-9]/g,'_');
+    var el = document.getElementById(safeId);
+    if (!el || !el.checked) return;
+    if (k === 'Annet') {
+      var txt = document.getElementById('levAnnetTekst').value.trim();
+      vals.push(txt || 'Annet');
+    } else {
+      vals.push(k);
+    }
+  });
+  return vals.join(', ');
+}
+
 function openNyLev() {
   document.getElementById('levmT').textContent = 'Ny leverandør';
   document.getElementById('levId').value = '';
   document.getElementById('levNavn').value = '';
   document.getElementById('levOrgnr').value = '';
   document.getElementById('levNettside').value = '';
-  var sel = document.getElementById('levKategori');
-  sel.innerHTML = '<option value="">Velg kategori</option>';
-  LEV_KATEGORIER.forEach(function(k) { sel.innerHTML += '<option value="' + k + '">' + k + '</option>'; });
+  buildLevKategoriCheckboxes([]);
   openMov('levModal');
 }
 
@@ -4904,9 +4961,7 @@ function openEditLev(id) {
   document.getElementById('levNavn').value = l.Title || '';
   document.getElementById('levOrgnr').value = l.Orgnr || '';
   document.getElementById('levNettside').value = l.Nettside || '';
-  var sel = document.getElementById('levKategori');
-  sel.innerHTML = '<option value="">Velg kategori</option>';
-  LEV_KATEGORIER.forEach(function(k) { sel.innerHTML += '<option value="' + k + '"' + (l.Kategori === k ? ' selected' : '') + '>' + k + '</option>'; });
+  buildLevKategoriCheckboxes(l.Kategori || '');
   openMov('levModal');
 }
 
@@ -4914,7 +4969,7 @@ function lagreLev() {
   var id = document.getElementById('levId').value;
   var navn = document.getElementById('levNavn').value.trim();
   var orgnr = document.getElementById('levOrgnr').value.trim();
-  var kat = document.getElementById('levKategori').value;
+  var kat = getLevKategoriValue();
   var nett = document.getElementById('levNettside').value.trim();
   if (!navn) { toast('Navn er påkrevd','w'); return; }
   var body = { Title: navn, Orgnr: orgnr, Kategori: kat, Nettside: nett };
