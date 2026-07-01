@@ -2262,7 +2262,7 @@ function openPD(pid) {
   setTimeout(function() { fpLastKort(p.ID, p.PlanStart, p.PlanSlutt); }, 200);
   // Last Tripletex økonomi-kort
   if (p.Prosjektnummer) {
-    setTimeout(function() { renderTTXKort(p.ID, p.Prosjektnummer); }, 300);
+    setTimeout(function() { renderTTXKort(p.ID, p.Prosjektnummer, p.Pris); }, 300);
   }
 
   if (s === 'Aktiv' && p.Prosjektnummer) {
@@ -7849,36 +7849,46 @@ function klGenPdfOgLastOpp(callback){
 
 <script>
 var _ttxCurrProsjektnr = '';
+var _ttxCurrKontraktsum = 0;
 var TTX_WORKER = 'https://lhbe-smartdok.tom-andre.workers.dev';
 
-function renderTTXKort(projId, prosjektnr) {
+function renderTTXKort(projId, prosjektnr, kontraktsum) {
   var body = document.getElementById('ttxKortBody_' + projId);
   if (!body) return;
   fetch(TTX_WORKER + '/tripletex/okonomi/' + prosjektnr)
     .then(function(r) { return r.json(); })
     .then(function(d) {
       if (d.error) throw new Error(d.error);
-      var dk = d.dekningsgrad;
+      var ks = parseFloat(kontraktsum) || 0;
+      var fakturert = d.inntekter || 0;
+      var kostnader = d.kostnader || 0;
+      var refSum = Math.max(ks, fakturert);
+      var fortjeneste = refSum - kostnader;
+      var dk = refSum > 0 ? Math.round((fortjeneste / refSum) * 100) : 0;
       var dkColor = dk >= 25 ? 'var(--grn)' : dk >= 15 ? '#f59e0b' : 'var(--red)';
       var html = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:4px 0 8px;">';
+      html += '<div style="background:rgba(100,116,139,.08);border-radius:8px;padding:10px 12px;">';
+      html += '<div style="font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px;">Kontraktsum</div>';
+      html += '<div style="font-size:15px;font-weight:700;color:var(--tx2);">' + (ks ? fmtCur(ks) : '-') + '</div>';
+      html += '</div>';
       html += '<div style="background:rgba(59,130,246,.08);border-radius:8px;padding:10px 12px;">';
       html += '<div style="font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px;">Fakturert</div>';
-      html += '<div style="font-size:15px;font-weight:700;color:var(--blu);">' + fmtCur(d.inntekter) + '</div>';
+      html += '<div style="font-size:15px;font-weight:700;color:var(--blu);">' + fmtCur(fakturert) + '</div>';
       html += '</div>';
       html += '<div style="background:rgba(239,68,68,.08);border-radius:8px;padding:10px 12px;">';
       html += '<div style="font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px;">Kostnader</div>';
-      html += '<div style="font-size:15px;font-weight:700;color:#ef4444;">' + fmtCur(d.kostnader) + '</div>';
+      html += '<div style="font-size:15px;font-weight:700;color:#ef4444;">' + fmtCur(kostnader) + '</div>';
       html += '</div>';
       html += '<div style="background:rgba(34,197,94,.08);border-radius:8px;padding:10px 12px;">';
       html += '<div style="font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px;">Fortjeneste</div>';
-      html += '<div style="font-size:15px;font-weight:700;color:var(--grn);">' + fmtCur(d.resultat) + '</div>';
+      html += '<div style="font-size:15px;font-weight:700;color:var(--grn);">' + fmtCur(fortjeneste) + '</div>';
       html += '</div>';
-      html += '<div style="background:rgba(168,85,247,.08);border-radius:8px;padding:10px 12px;">';
-      html += '<div style="font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px;">Dekningsgrad</div>';
+      html += '<div style="grid-column:1/-1;background:rgba(168,85,247,.08);border-radius:8px;padding:10px 12px;">';
+      html += '<div style="font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px;">Dekningsgrad' + (fakturert > ks ? ' <span style="text-transform:none;">(basert på fakturert)</span>' : '') + '</div>';
       html += '<div style="font-size:22px;font-weight:800;color:' + dkColor + ';">' + dk + '%</div>';
       html += '</div>';
       html += '</div>';
-      html += '<button class="btn sm" style="width:100%;margin-top:4px;" onclick="openTTXModal(\'' + prosjektnr + '\')">📊 Se resultatrapport →</button>';
+      html += '<button class="btn sm" style="width:100%;margin-top:4px;" onclick="openTTXModal(\'' + prosjektnr + '\', ' + ks + ')">📊 Se resultatrapport →</button>';
       body.innerHTML = html;
       body.className = '';
     })
@@ -7888,8 +7898,9 @@ function renderTTXKort(projId, prosjektnr) {
     });
 }
 
-function openTTXModal(prosjektnr) {
+function openTTXModal(prosjektnr, kontraktsum) {
   _ttxCurrProsjektnr = prosjektnr;
+  _ttxCurrKontraktsum = parseFloat(kontraktsum) || 0;
   document.getElementById('ttxRapportTittel').textContent = 'Prosjektøkonomi – Tripletex (prj. ' + prosjektnr + ')';
   document.getElementById('ttxTabRapport').classList.add('on');
   document.getElementById('ttxTabFakturaer').classList.remove('on');
@@ -7926,14 +7937,24 @@ function ttxLastRapport(prosjektnr) {
         html += '<span>' + gr.navn + '</span><span style="font-family:monospace;white-space:nowrap;">' + fmtCur(Math.abs(gr.sum)) + '</span>';
         html += '</div></div>';
       });
-      var dk = d.dekningsgrad;
-      var resColor = d.resultat >= 0 ? 'var(--grn)' : 'var(--red)';
+      var ks = _ttxCurrKontraktsum || 0;
+      var fakturert = d.inntekter || 0;
+      var kostnader = d.kostnader || 0;
+      var refSum = Math.max(ks, fakturert);
+      var resultat = refSum - kostnader;
+      var dk = refSum > 0 ? Math.round((resultat / refSum) * 100) : 0;
+      var resColor = resultat >= 0 ? 'var(--grn)' : 'var(--red)';
       var dkColor = dk >= 25 ? 'var(--grn)' : dk >= 15 ? '#f59e0b' : 'var(--red)';
+      if (ks) {
+        html += '<div style="display:flex;justify-content:space-between;font-size:12px;color:var(--tx3);padding:5px 4px;">';
+        html += '<span>Kontraktsum (kalkyle)</span><span style="font-family:monospace;">' + fmtCur(ks) + '</span>';
+        html += '</div>';
+      }
       html += '<div style="display:flex;justify-content:space-between;align-items:center;font-size:15px;font-weight:700;padding:12px 14px;background:var(--bg2);border-radius:8px;margin-top:8px;">';
       html += '<span>Driftsresultat</span>';
-      html += '<span style="color:' + resColor + ';font-family:monospace;">' + fmtCur(d.resultat) + '</span>';
+      html += '<span style="color:' + resColor + ';font-family:monospace;">' + fmtCur(resultat) + '</span>';
       html += '</div>';
-      html += '<div style="text-align:center;margin-top:10px;font-size:12px;color:var(--tx3);">Dekningsgrad: <strong style="font-size:18px;color:' + dkColor + ';">' + dk + '%</strong></div>';
+      html += '<div style="text-align:center;margin-top:10px;font-size:12px;color:var(--tx3);">Dekningsgrad' + (fakturert > ks ? ' (basert på fakturert)' : ' (basert på kontraktsum)') + ': <strong style="font-size:18px;color:' + dkColor + ';">' + dk + '%</strong></div>';
       html += '</div>';
       body.innerHTML = html;
     })
