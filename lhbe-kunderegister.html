@@ -2221,6 +2221,15 @@ function openPD(pid) {
     sdkHtml = '<div style="font-size:12px;color:var(--tx3);">Vises kun på aktive prosjekter med prosjektnummer.</div>';
   }
   b.push(cardWrap('smartdok', 'Ressursplanlegger – SmartDok', sdkHtml, null));
+
+  // Tripletex økonomi-kort
+  var ttxHtml;
+  if (p.Prosjektnummer) {
+    ttxHtml = '<div id="ttxKortBody_' + p.ID + '" class="sdk-load"><div class="sdk-spin"></div>Henter fra Tripletex...</div>';
+  } else {
+    ttxHtml = '<div style="font-size:12px;color:var(--tx3);">Vises kun på prosjekter med prosjektnummer.</div>';
+  }
+  b.push(cardWrap('ttxokonomi', 'Prosjektøkonomi – Tripletex', ttxHtml, null));
   // Marker SmartDok-kortet som no-scroll etter rendering
   setTimeout(function() {
     var sdkCard = document.querySelector('.pdm-lcard[data-id="smartdok"] .pdm-lcard-inner');
@@ -2251,6 +2260,10 @@ function openPD(pid) {
   renderProjIOListe(p.ID);
   // Last fremdriftsplan-kort
   setTimeout(function() { fpLastKort(p.ID, p.PlanStart, p.PlanSlutt); }, 200);
+  // Last Tripletex økonomi-kort
+  if (p.Prosjektnummer) {
+    setTimeout(function() { renderTTXKort(p.ID, p.Prosjektnummer); }, 300);
+  }
 
   if (s === 'Aktiv' && p.Prosjektnummer) {
     sdkWeekOffset = 0;
@@ -7816,8 +7829,162 @@ function klGenPdfOgLastOpp(callback){
   </div>
 </div>
 
-<div id="fpCtxMenu" class="fp-ctx-menu" style="display:none;">
-  <div class="fp-ctx-item danger" id="fpCtxSlett">&#128465; Slett fase</div>
+
+<!-- TRIPLETEX RESULTATRAPPORT MODAL -->
+<div class="mov hid" id="ttxRapportMov">
+  <div class="mbox" style="max-width:640px;max-height:90vh;display:flex;flex-direction:column;">
+    <div class="mhdr">
+      <span id="ttxRapportTittel">Prosjektøkonomi – Tripletex</span>
+      <button class="mclose" onclick="closeMov('ttxRapportMov')">&#x2715;</button>
+    </div>
+    <div style="display:flex;gap:0;border-bottom:1px solid var(--br);background:var(--bg2);flex-shrink:0;">
+      <button class="ftab on" id="ttxTabRapport" onclick="ttxByttTab('rapport')" style="padding:10px 20px;font-size:13px;">📊 Resultatrapport</button>
+      <button class="ftab" id="ttxTabFakturaer" onclick="ttxByttTab('fakturaer')" style="padding:10px 20px;font-size:13px;">🧾 Fakturaer</button>
+    </div>
+    <div id="ttxRapportBody" style="flex:1;overflow-y:auto;">
+      <div class="sdk-load"><div class="sdk-spin"></div>Henter data...</div>
+    </div>
+  </div>
 </div>
+
+<script>
+var _ttxCurrProsjektnr = '';
+var TTX_WORKER = 'https://lhbe-smartdok.tom-andre.workers.dev';
+
+function renderTTXKort(projId, prosjektnr) {
+  var body = document.getElementById('ttxKortBody_' + projId);
+  if (!body) return;
+  fetch(TTX_WORKER + '/tripletex/okonomi/' + prosjektnr)
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (d.error) throw new Error(d.error);
+      var dk = d.dekningsgrad;
+      var dkColor = dk >= 25 ? 'var(--grn)' : dk >= 15 ? '#f59e0b' : 'var(--red)';
+      var html = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:4px 0 8px;">';
+      html += '<div style="background:rgba(59,130,246,.08);border-radius:8px;padding:10px 12px;">';
+      html += '<div style="font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px;">Fakturert</div>';
+      html += '<div style="font-size:15px;font-weight:700;color:var(--blu);">' + fmtCur(d.inntekter) + '</div>';
+      html += '</div>';
+      html += '<div style="background:rgba(239,68,68,.08);border-radius:8px;padding:10px 12px;">';
+      html += '<div style="font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px;">Kostnader</div>';
+      html += '<div style="font-size:15px;font-weight:700;color:#ef4444;">' + fmtCur(d.kostnader) + '</div>';
+      html += '</div>';
+      html += '<div style="background:rgba(34,197,94,.08);border-radius:8px;padding:10px 12px;">';
+      html += '<div style="font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px;">Fortjeneste</div>';
+      html += '<div style="font-size:15px;font-weight:700;color:var(--grn);">' + fmtCur(d.resultat) + '</div>';
+      html += '</div>';
+      html += '<div style="background:rgba(168,85,247,.08);border-radius:8px;padding:10px 12px;">';
+      html += '<div style="font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px;">Dekningsgrad</div>';
+      html += '<div style="font-size:22px;font-weight:800;color:' + dkColor + ';">' + dk + '%</div>';
+      html += '</div>';
+      html += '</div>';
+      html += '<button class="btn sm" style="width:100%;margin-top:4px;" onclick="openTTXModal(\'' + prosjektnr + '\')">📊 Se resultatrapport →</button>';
+      body.innerHTML = html;
+      body.className = '';
+    })
+    .catch(function(e) {
+      body.innerHTML = '<div style="font-size:12px;color:var(--red);padding:8px;">Feil: ' + e.message + '</div>';
+      body.className = '';
+    });
+}
+
+function openTTXModal(prosjektnr) {
+  _ttxCurrProsjektnr = prosjektnr;
+  document.getElementById('ttxRapportTittel').textContent = 'Prosjektøkonomi – Tripletex (prj. ' + prosjektnr + ')';
+  document.getElementById('ttxTabRapport').classList.add('on');
+  document.getElementById('ttxTabFakturaer').classList.remove('on');
+  openMov('ttxRapportMov');
+  ttxLastRapport(prosjektnr);
+}
+
+function ttxByttTab(tab) {
+  document.getElementById('ttxTabRapport').classList.toggle('on', tab === 'rapport');
+  document.getElementById('ttxTabFakturaer').classList.toggle('on', tab === 'fakturaer');
+  if (tab === 'rapport') ttxLastRapport(_ttxCurrProsjektnr);
+  else ttxLastFakturaer(_ttxCurrProsjektnr);
+}
+
+function ttxLastRapport(prosjektnr) {
+  var body = document.getElementById('ttxRapportBody');
+  body.innerHTML = '<div class="sdk-load"><div class="sdk-spin"></div>Henter resultatrapport...</div>';
+  fetch(TTX_WORKER + '/tripletex/rapport/' + prosjektnr)
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (d.error) throw new Error(d.error);
+      var html = '<div style="padding:16px;">';
+      (d.grupper || []).forEach(function(gr) {
+        if (!gr.kontoer || !gr.kontoer.length) return;
+        html += '<div style="margin-bottom:16px;">';
+        html += '<div style="font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:var(--tx3);border-bottom:1px solid var(--br);padding-bottom:5px;margin-bottom:6px;">' + gr.navn + '</div>';
+        gr.kontoer.forEach(function(k) {
+          html += '<div style="display:flex;justify-content:space-between;font-size:12px;padding:3px 4px;color:var(--tx2);">';
+          html += '<span>' + k.nummer + ' ' + k.navn + '</span>';
+          html += '<span style="font-family:monospace;white-space:nowrap;margin-left:12px;">' + fmtCur(Math.abs(k.sum)) + '</span>';
+          html += '</div>';
+        });
+        html += '<div style="display:flex;justify-content:space-between;font-size:12px;font-weight:600;padding:5px 4px 0;border-top:1px solid var(--br);margin-top:4px;">';
+        html += '<span>' + gr.navn + '</span><span style="font-family:monospace;white-space:nowrap;">' + fmtCur(Math.abs(gr.sum)) + '</span>';
+        html += '</div></div>';
+      });
+      var dk = d.dekningsgrad;
+      var resColor = d.resultat >= 0 ? 'var(--grn)' : 'var(--red)';
+      var dkColor = dk >= 25 ? 'var(--grn)' : dk >= 15 ? '#f59e0b' : 'var(--red)';
+      html += '<div style="display:flex;justify-content:space-between;align-items:center;font-size:15px;font-weight:700;padding:12px 14px;background:var(--bg2);border-radius:8px;margin-top:8px;">';
+      html += '<span>Driftsresultat</span>';
+      html += '<span style="color:' + resColor + ';font-family:monospace;">' + fmtCur(d.resultat) + '</span>';
+      html += '</div>';
+      html += '<div style="text-align:center;margin-top:10px;font-size:12px;color:var(--tx3);">Dekningsgrad: <strong style="font-size:18px;color:' + dkColor + ';">' + dk + '%</strong></div>';
+      html += '</div>';
+      body.innerHTML = html;
+    })
+    .catch(function(e) {
+      body.innerHTML = '<div style="padding:16px;font-size:13px;color:var(--red);">Feil: ' + e.message + '</div>';
+    });
+}
+
+function ttxLastFakturaer(prosjektnr) {
+  var body = document.getElementById('ttxRapportBody');
+  body.innerHTML = '<div class="sdk-load"><div class="sdk-spin"></div>Henter fakturaer...</div>';
+  fetch(TTX_WORKER + '/tripletex/fakturaer/' + prosjektnr)
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (d.error) throw new Error(d.error);
+      var fakturaer = d.fakturaer || [];
+      if (!fakturaer.length) {
+        body.innerHTML = '<div style="padding:20px;font-size:13px;color:var(--tx3);text-align:center;">Ingen fakturaer funnet for dette prosjektet.</div>';
+        return;
+      }
+      var html = '<div style="padding:16px;overflow-x:auto;">';
+      html += '<table style="width:100%;border-collapse:collapse;font-size:12px;">';
+      html += '<thead><tr style="border-bottom:2px solid var(--br);text-align:left;color:var(--tx3);">';
+      html += '<th style="padding:6px 8px;">Fakturanr.</th>';
+      html += '<th style="padding:6px 8px;">Dato</th>';
+      html += '<th style="padding:6px 8px;">Forfall</th>';
+      html += '<th style="padding:6px 8px;text-align:right;">Beløp eks. mva</th>';
+      html += '<th style="padding:6px 8px;">Status</th>';
+      html += '</tr></thead><tbody>';
+      var totalBelop = 0;
+      fakturaer.forEach(function(f, i) {
+        html += '<tr style="border-bottom:1px solid var(--br);' + (i % 2 === 1 ? 'background:var(--bg2);' : '') + '">';
+        html += '<td style="padding:6px 8px;font-family:monospace;font-weight:600;">' + (f.nummer || '-') + '</td>';
+        html += '<td style="padding:6px 8px;">' + (f.dato || '-') + '</td>';
+        html += '<td style="padding:6px 8px;">' + (f.forfall || '-') + '</td>';
+        html += '<td style="padding:6px 8px;text-align:right;font-family:monospace;">' + fmtCur(f.belop) + '</td>';
+        html += '<td style="padding:6px 8px;">' + (f.betalt ? '<span style="color:var(--grn);font-size:11px;font-weight:600;">Betalt</span>' : '<span style="color:#f59e0b;font-size:11px;font-weight:600;">Åpen</span>') + '</td>';
+        html += '</tr>';
+        totalBelop += (f.belop || 0);
+      });
+      html += '</tbody><tfoot><tr style="border-top:2px solid var(--br);font-weight:700;background:var(--bg2);">';
+      html += '<td colspan="3" style="padding:8px;">Totalt (' + fakturaer.length + ' faktura' + (fakturaer.length !== 1 ? 'er' : '') + ')</td>';
+      html += '<td style="padding:8px;text-align:right;font-family:monospace;">' + fmtCur(totalBelop) + '</td>';
+      html += '<td></td></tr></tfoot></table></div>';
+      body.innerHTML = html;
+    })
+    .catch(function(e) {
+      body.innerHTML = '<div style="padding:16px;font-size:13px;color:var(--red);">Feil: ' + e.message + '</div>';
+    });
+}
+</script>
+
 </body>
 </html>
