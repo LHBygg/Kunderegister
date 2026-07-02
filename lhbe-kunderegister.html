@@ -7991,8 +7991,8 @@ function ttxLastFakturaer(prosjektnr) {
       var totalBelop = 0;
       fakturaer.forEach(function(f, i) {
         var klikkbar = !!f.voucherId;
-        html += '<tr style="border-bottom:1px solid var(--br);' + (i % 2 === 1 ? 'background:var(--bg2);' : '') + (klikkbar ? 'cursor:pointer;' : '') + '"' + (klikkbar ? ' onclick="window.open(\'' + TTX_WORKER + '/tripletex/vedlegg/' + f.voucherId + '\', \'_blank\')" title="Åpne PDF"' : '') + '>';
-        html += '<td style="padding:6px 8px;font-family:monospace;font-weight:600;' + (klikkbar ? 'color:var(--blu);text-decoration:underline;' : '') + '">' + (f.nummer || '-') + (klikkbar ? ' 📄' : '') + '</td>';
+        html += '<tr style="border-bottom:1px solid var(--br);' + (i % 2 === 1 ? 'background:var(--bg2);' : '') + '">';
+        html += '<td style="padding:6px 8px;font-family:monospace;font-weight:600;">' + (klikkbar ? ('<span style="color:var(--blu);text-decoration:underline;cursor:pointer;" title="Åpne PDF" onclick="window.open(\'' + TTX_WORKER + '/tripletex/vedlegg/' + f.voucherId + '\', \'_blank\')">' + (f.nummer || '-') + ' 📄</span>') : (f.nummer || '-')) + '</td>';
         html += '<td style="padding:6px 8px;">' + (f.dato || '-') + '</td>';
         html += '<td style="padding:6px 8px;">' + (f.forfall || '-') + '</td>';
         html += '<td style="padding:6px 8px;text-align:right;font-family:monospace;">' + fmtCur(f.belop) + '</td>';
@@ -8034,8 +8034,8 @@ function ttxLastLeverandorfakturaer(prosjektnr) {
       var totalBelop = 0;
       fakturaer.forEach(function(f, i) {
         var klikkbar = !!f.voucherId;
-        html += '<tr style="border-bottom:1px solid var(--br);' + (i % 2 === 1 ? 'background:var(--bg2);' : '') + (klikkbar ? 'cursor:pointer;' : '') + '"' + (klikkbar ? ' onclick="window.open(\'' + TTX_WORKER + '/tripletex/vedlegg/' + f.voucherId + '\', \'_blank\')" title="Åpne PDF"' : '') + '>';
-        html += '<td style="padding:6px 8px;font-weight:600;' + (klikkbar ? 'color:var(--blu);text-decoration:underline;' : '') + '">' + (f.leverandor || '-') + (klikkbar ? ' 📄' : '') + '</td>';
+        html += '<tr style="border-bottom:1px solid var(--br);' + (i % 2 === 1 ? 'background:var(--bg2);' : '') + '">';
+        html += '<td style="padding:6px 8px;font-weight:600;">' + (klikkbar ? ('<span style="color:var(--blu);text-decoration:underline;cursor:pointer;" title="Åpne PDF" onclick="window.open(\'' + TTX_WORKER + '/tripletex/vedlegg/' + f.voucherId + '\', \'_blank\')">' + (f.leverandor || '-') + ' 📄</span>') : (f.leverandor || '-')) + '</td>';
         html += '<td style="padding:6px 8px;color:var(--tx2);">' + (f.beskrivelse || '-') + '</td>';
         html += '<td style="padding:6px 8px;">' + (f.dato || '-') + '</td>';
         html += '<td style="padding:6px 8px;text-align:right;font-family:monospace;">' + fmtCur(f.belop) + '</td>';
