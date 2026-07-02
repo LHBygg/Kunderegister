@@ -7840,6 +7840,7 @@ function klGenPdfOgLastOpp(callback){
     <div style="display:flex;gap:0;border-bottom:1px solid var(--br);background:var(--bg2);flex-shrink:0;">
       <button class="ftab on" id="ttxTabRapport" onclick="ttxByttTab('rapport')" style="padding:10px 20px;font-size:13px;">📊 Resultatrapport</button>
       <button class="ftab" id="ttxTabFakturaer" onclick="ttxByttTab('fakturaer')" style="padding:10px 20px;font-size:13px;">🧾 Fakturaer</button>
+      <button class="ftab" id="ttxTabLeverandor" onclick="ttxByttTab('leverandor')" style="padding:10px 20px;font-size:13px;">📥 Leverandørfaktura</button>
     </div>
     <div id="ttxRapportBody" style="flex:1;overflow-y:auto;">
       <div class="sdk-load"><div class="sdk-spin"></div>Henter data...</div>
@@ -7904,6 +7905,7 @@ function openTTXModal(prosjektnr, kontraktsum) {
   document.getElementById('ttxRapportTittel').textContent = 'Prosjektøkonomi – Tripletex (prj. ' + prosjektnr + ')';
   document.getElementById('ttxTabRapport').classList.add('on');
   document.getElementById('ttxTabFakturaer').classList.remove('on');
+  document.getElementById('ttxTabLeverandor').classList.remove('on');
   openMov('ttxRapportMov');
   ttxLastRapport(prosjektnr);
 }
@@ -7911,8 +7913,10 @@ function openTTXModal(prosjektnr, kontraktsum) {
 function ttxByttTab(tab) {
   document.getElementById('ttxTabRapport').classList.toggle('on', tab === 'rapport');
   document.getElementById('ttxTabFakturaer').classList.toggle('on', tab === 'fakturaer');
+  document.getElementById('ttxTabLeverandor').classList.toggle('on', tab === 'leverandor');
   if (tab === 'rapport') ttxLastRapport(_ttxCurrProsjektnr);
-  else ttxLastFakturaer(_ttxCurrProsjektnr);
+  else if (tab === 'fakturaer') ttxLastFakturaer(_ttxCurrProsjektnr);
+  else ttxLastLeverandorfakturaer(_ttxCurrProsjektnr);
 }
 
 function ttxLastRapport(prosjektnr) {
@@ -7999,6 +8003,47 @@ function ttxLastFakturaer(prosjektnr) {
       html += '<td colspan="3" style="padding:8px;">Totalt (' + fakturaer.length + ' faktura' + (fakturaer.length !== 1 ? 'er' : '') + ')</td>';
       html += '<td style="padding:8px;text-align:right;font-family:monospace;">' + fmtCur(totalBelop) + '</td>';
       html += '<td></td></tr></tfoot></table></div>';
+      body.innerHTML = html;
+    })
+    .catch(function(e) {
+      body.innerHTML = '<div style="padding:16px;font-size:13px;color:var(--red);">Feil: ' + e.message + '</div>';
+    });
+}
+
+function ttxLastLeverandorfakturaer(prosjektnr) {
+  var body = document.getElementById('ttxRapportBody');
+  body.innerHTML = '<div class="sdk-load"><div class="sdk-spin"></div>Henter leverandørfakturaer...</div>';
+  fetch(TTX_WORKER + '/tripletex/leverandorfakturaer/' + prosjektnr)
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (d.error) throw new Error(d.error);
+      var fakturaer = d.leverandorfakturaer || [];
+      if (!fakturaer.length) {
+        body.innerHTML = '<div style="padding:20px;font-size:13px;color:var(--tx3);text-align:center;">Ingen leverandørfakturaer funnet for dette prosjektet.</div>';
+        return;
+      }
+      var html = '<div style="padding:16px;overflow-x:auto;">';
+      html += '<table style="width:100%;border-collapse:collapse;font-size:12px;">';
+      html += '<thead><tr style="border-bottom:2px solid var(--br);text-align:left;color:var(--tx3);">';
+      html += '<th style="padding:6px 8px;">Leverandør</th>';
+      html += '<th style="padding:6px 8px;">Beskrivelse</th>';
+      html += '<th style="padding:6px 8px;">Dato</th>';
+      html += '<th style="padding:6px 8px;text-align:right;">Beløp eks. mva</th>';
+      html += '</tr></thead><tbody>';
+      var totalBelop = 0;
+      fakturaer.forEach(function(f, i) {
+        html += '<tr style="border-bottom:1px solid var(--br);' + (i % 2 === 1 ? 'background:var(--bg2);' : '') + '">';
+        html += '<td style="padding:6px 8px;font-weight:600;">' + (f.leverandor || '-') + '</td>';
+        html += '<td style="padding:6px 8px;color:var(--tx2);">' + (f.beskrivelse || '-') + '</td>';
+        html += '<td style="padding:6px 8px;">' + (f.dato || '-') + '</td>';
+        html += '<td style="padding:6px 8px;text-align:right;font-family:monospace;">' + fmtCur(f.belop) + '</td>';
+        html += '</tr>';
+        totalBelop += (f.belop || 0);
+      });
+      html += '</tbody><tfoot><tr style="border-top:2px solid var(--br);font-weight:700;background:var(--bg2);">';
+      html += '<td colspan="3" style="padding:8px;">Totalt (' + fakturaer.length + ' leverandørfaktura' + (fakturaer.length !== 1 ? 'er' : '') + ')</td>';
+      html += '<td style="padding:8px;text-align:right;font-family:monospace;">' + fmtCur(totalBelop) + '</td>';
+      html += '</tr></tfoot></table></div>';
       body.innerHTML = html;
     })
     .catch(function(e) {
