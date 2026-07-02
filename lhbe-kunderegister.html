@@ -8029,7 +8029,9 @@ function ttxLastLeverandorfakturaer(prosjektnr) {
       html += '<th style="padding:6px 8px;">Leverandør</th>';
       html += '<th style="padding:6px 8px;">Beskrivelse</th>';
       html += '<th style="padding:6px 8px;">Dato</th>';
+      html += '<th style="padding:6px 8px;">Forfall</th>';
       html += '<th style="padding:6px 8px;text-align:right;">Beløp eks. mva</th>';
+      html += '<th style="padding:6px 8px;">Status</th>';
       html += '</tr></thead><tbody>';
       var totalBelop = 0;
       fakturaer.forEach(function(f, i) {
@@ -8038,14 +8040,16 @@ function ttxLastLeverandorfakturaer(prosjektnr) {
         html += '<td style="padding:6px 8px;font-weight:600;">' + (klikkbar ? ('<span style="color:var(--blu);text-decoration:underline;cursor:pointer;" title="Åpne PDF" onclick="window.open(\'' + TTX_WORKER + '/tripletex/vedlegg/' + f.voucherId + '\', \'_blank\')">' + (f.leverandor || '-') + ' 📄</span>') : (f.leverandor || '-')) + '</td>';
         html += '<td style="padding:6px 8px;color:var(--tx2);">' + (f.beskrivelse || '-') + '</td>';
         html += '<td style="padding:6px 8px;">' + (f.dato || '-') + '</td>';
+        html += '<td style="padding:6px 8px;">' + (f.forfall || '-') + '</td>';
         html += '<td style="padding:6px 8px;text-align:right;font-family:monospace;">' + fmtCur(f.belop) + '</td>';
+        html += '<td style="padding:6px 8px;">' + (f.betalt ? '<span style="color:var(--grn);font-size:11px;font-weight:600;">Betalt</span>' : '<span style="color:#f59e0b;font-size:11px;font-weight:600;">Åpen</span>') + '</td>';
         html += '</tr>';
         totalBelop += (f.belop || 0);
       });
       html += '</tbody><tfoot><tr style="border-top:2px solid var(--br);font-weight:700;background:var(--bg2);">';
-      html += '<td colspan="3" style="padding:8px;">Totalt (' + fakturaer.length + ' leverandørfaktura' + (fakturaer.length !== 1 ? 'er' : '') + ')</td>';
+      html += '<td colspan="4" style="padding:8px;">Totalt (' + fakturaer.length + ' leverandørfaktura' + (fakturaer.length !== 1 ? 'er' : '') + ')</td>';
       html += '<td style="padding:8px;text-align:right;font-family:monospace;">' + fmtCur(totalBelop) + '</td>';
-      html += '</tr></tfoot></table></div>';
+      html += '<td></td></tr></tfoot></table></div>';
       body.innerHTML = html;
     })
     .catch(function(e) {
