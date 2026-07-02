@@ -7990,8 +7990,9 @@ function ttxLastFakturaer(prosjektnr) {
       html += '</tr></thead><tbody>';
       var totalBelop = 0;
       fakturaer.forEach(function(f, i) {
-        html += '<tr style="border-bottom:1px solid var(--br);' + (i % 2 === 1 ? 'background:var(--bg2);' : '') + '">';
-        html += '<td style="padding:6px 8px;font-family:monospace;font-weight:600;">' + (f.nummer || '-') + '</td>';
+        var klikkbar = !!f.voucherId;
+        html += '<tr style="border-bottom:1px solid var(--br);' + (i % 2 === 1 ? 'background:var(--bg2);' : '') + (klikkbar ? 'cursor:pointer;' : '') + '"' + (klikkbar ? ' onclick="window.open(\'' + TTX_WORKER + '/tripletex/vedlegg/' + f.voucherId + '\', \'_blank\')" title="Åpne PDF"' : '') + '>';
+        html += '<td style="padding:6px 8px;font-family:monospace;font-weight:600;' + (klikkbar ? 'color:var(--blu);text-decoration:underline;' : '') + '">' + (f.nummer || '-') + (klikkbar ? ' 📄' : '') + '</td>';
         html += '<td style="padding:6px 8px;">' + (f.dato || '-') + '</td>';
         html += '<td style="padding:6px 8px;">' + (f.forfall || '-') + '</td>';
         html += '<td style="padding:6px 8px;text-align:right;font-family:monospace;">' + fmtCur(f.belop) + '</td>';
@@ -8032,8 +8033,9 @@ function ttxLastLeverandorfakturaer(prosjektnr) {
       html += '</tr></thead><tbody>';
       var totalBelop = 0;
       fakturaer.forEach(function(f, i) {
-        html += '<tr style="border-bottom:1px solid var(--br);' + (i % 2 === 1 ? 'background:var(--bg2);' : '') + '">';
-        html += '<td style="padding:6px 8px;font-weight:600;">' + (f.leverandor || '-') + '</td>';
+        var klikkbar = !!f.voucherId;
+        html += '<tr style="border-bottom:1px solid var(--br);' + (i % 2 === 1 ? 'background:var(--bg2);' : '') + (klikkbar ? 'cursor:pointer;' : '') + '"' + (klikkbar ? ' onclick="window.open(\'' + TTX_WORKER + '/tripletex/vedlegg/' + f.voucherId + '\', \'_blank\')" title="Åpne PDF"' : '') + '>';
+        html += '<td style="padding:6px 8px;font-weight:600;' + (klikkbar ? 'color:var(--blu);text-decoration:underline;' : '') + '">' + (f.leverandor || '-') + (klikkbar ? ' 📄' : '') + '</td>';
         html += '<td style="padding:6px 8px;color:var(--tx2);">' + (f.beskrivelse || '-') + '</td>';
         html += '<td style="padding:6px 8px;">' + (f.dato || '-') + '</td>';
         html += '<td style="padding:6px 8px;text-align:right;font-family:monospace;">' + fmtCur(f.belop) + '</td>';
