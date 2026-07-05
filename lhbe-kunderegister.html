@@ -4589,9 +4589,11 @@ function sdkFinnAvvik(uattTimer, plans, resources, allePlaner) {
     rader.forEach(function(h){
       if (!erArbeidsrad(h)) return;
       var uid = h.UserID || h.UserId; if (!uid) return;
-      if (!personer[uid]) personer[uid] = { pauser: [], harTillegg: false };
+      if (!personer[uid]) personer[uid] = { pauser: [], harTillegg: false, timer: 0 };
       var bt = parseFloat(h.BreakTime);
       if (!isNaN(bt)) personer[uid].pauser.push(bt);
+      var nh = parseFloat(h.NetHours);
+      if (!isNaN(nh)) personer[uid].timer += nh;
     });
     rader.forEach(function(h){
       var uid = h.UserID || h.UserId; if (!uid || !personer[uid]) return;
@@ -4622,6 +4624,22 @@ function sdkFinnAvvik(uattTimer, plans, resources, allePlaner) {
     if (medTillegg >= 2 && utenTillegg.length > 0 && medTillegg > utenTillegg.length) {
       utenTillegg.forEach(function(uid){
         avvik.push({ sev:'md', txt:'<b>' + navnForUid(uid) + '</b> mangler tillegg ' + sdkFormaterDatoKort(dd) + ' som resten av laget har ført. Glemt kost/diett?' });
+      });
+    }
+    // ulik timesum på laget samme dag (enhver forskjell)
+    var timeTelling = {};
+    uids.forEach(function(uid){
+      var t = Math.round(personer[uid].timer * 100) / 100;
+      timeTelling[String(t)] = (timeTelling[String(t)]||0) + 1;
+    });
+    var vanligsteTimer = null, maxTt = 0;
+    Object.keys(timeTelling).forEach(function(k){ if (timeTelling[k] > maxTt){ maxTt = timeTelling[k]; vanligsteTimer = parseFloat(k); } });
+    if (vanligsteTimer !== null && Object.keys(timeTelling).length > 1) {
+      uids.forEach(function(uid){
+        var t = Math.round(personer[uid].timer * 100) / 100;
+        if (t !== vanligsteTimer) {
+          avvik.push({ sev:'md', txt:'<b>' + navnForUid(uid) + '</b> førte ' + t.toFixed(1) + ' t ' + sdkFormaterDatoKort(dd) + ', resten av laget førte ' + vanligsteTimer.toFixed(1) + ' t. Ulik timesum samme dag.' });
+        }
       });
     }
   });
