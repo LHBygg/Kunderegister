@@ -4600,6 +4600,15 @@ function sdkFinnAvvik(uattTimer, plans, resources, allePlaner) {
       if (harTillegg(h)) personer[uid].harTillegg = true;
     });
     var uids = Object.keys(personer);
+
+    // ABSOLUTT REGEL: minimum 0,5 t pause, uansett lagstørrelse (også når personen er alene på prosjektet)
+    uids.forEach(function(uid){
+      var p = personer[uid].pauser.length ? personer[uid].pauser[0] : null;
+      if (p !== null && p < 0.5) {
+        avvik.push({ sev:'md', txt:'<b>' + navnForUid(uid) + '</b> førte kun ' + p.toFixed(1) + ' t pause ' + sdkFormaterDatoKort(dd) + '. Minimum 0,5 t pause må føres.' });
+      }
+    });
+
     if (uids.length < 2) return;
     // pause avviker
     var pauseTelling = {};
@@ -4608,15 +4617,27 @@ function sdkFinnAvvik(uattTimer, plans, resources, allePlaner) {
       if (p === null) return;
       pauseTelling[String(p)] = (pauseTelling[String(p)]||0) + 1;
     });
-    var vanligstePause = null, maxT = 0;
-    Object.keys(pauseTelling).forEach(function(k){ if (pauseTelling[k] > maxT){ maxT = pauseTelling[k]; vanligstePause = parseFloat(k); } });
-    if (vanligstePause !== null && maxT >= 2) {
-      uids.forEach(function(uid){
-        var p = personer[uid].pauser.length ? personer[uid].pauser[0] : null;
-        if (p !== null && p !== vanligstePause) {
-          avvik.push({ sev:'md', txt:'<b>' + navnForUid(uid) + '</b> førte ' + p.toFixed(1) + ' t pause ' + sdkFormaterDatoKort(dd) + ', resten av laget førte ' + vanligstePause.toFixed(1) + ' t. Sjekk pausen.' });
-        }
-      });
+    if (uids.length === 2) {
+      // Med kun 2 personer finnes ikke noe "flertall" - enhver ulikhet er et avvik
+      var pauseVerdier = uids.map(function(uid){ return personer[uid].pauser.length ? personer[uid].pauser[0] : null; });
+      if (pauseVerdier[0] !== null && pauseVerdier[1] !== null && pauseVerdier[0] !== pauseVerdier[1]) {
+        uids.forEach(function(uid, i){
+          var p = pauseVerdier[i];
+          var annen = pauseVerdier[1-i];
+          avvik.push({ sev:'md', txt:'<b>' + navnForUid(uid) + '</b> førte ' + p.toFixed(1) + ' t pause ' + sdkFormaterDatoKort(dd) + ', den andre på prosjektet førte ' + annen.toFixed(1) + ' t. Sjekk pausen.' });
+        });
+      }
+    } else {
+      var vanligstePause = null, maxT = 0;
+      Object.keys(pauseTelling).forEach(function(k){ if (pauseTelling[k] > maxT){ maxT = pauseTelling[k]; vanligstePause = parseFloat(k); } });
+      if (vanligstePause !== null && maxT >= 2) {
+        uids.forEach(function(uid){
+          var p = personer[uid].pauser.length ? personer[uid].pauser[0] : null;
+          if (p !== null && p !== vanligstePause) {
+            avvik.push({ sev:'md', txt:'<b>' + navnForUid(uid) + '</b> førte ' + p.toFixed(1) + ' t pause ' + sdkFormaterDatoKort(dd) + ', resten av laget førte ' + vanligstePause.toFixed(1) + ' t. Sjekk pausen.' });
+          }
+        });
+      }
     }
     // manglende tillegg
     var medTillegg = uids.filter(function(uid){ return personer[uid].harTillegg; }).length;
