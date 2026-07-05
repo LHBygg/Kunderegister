@@ -4460,8 +4460,8 @@ function loadSDKData(projId, timerId, prosjektnr) {
   Promise.all([
     sdkGet('/ResourcePlanning/Resources?active=true&count=100'),
     sdkGet('/ResourcePlanning/Plans?projectId=' + projId + '&from=' + fromStr + '&to=' + toStr + '&count=100'),
-    sdkGet('/WorkHours?projectId=' + timerId + '&fromDate=' + fraDato1 + '&toDate=' + tilDato1).catch(function() { return {}; }),
-    sdkGet('/WorkHours?projectId=' + timerId + '&fromDate=' + fraDato2 + '&toDate=' + tilDato2).catch(function() { return {}; })
+    sdkGet('/WorkHours?projectId=' + timerId + '&fromDate=' + fraDato1 + '&toDate=' + tilDato1 + '&onlyAttested=false').catch(function() { return {}; }),
+    sdkGet('/WorkHours?projectId=' + timerId + '&fromDate=' + fraDato2 + '&toDate=' + tilDato2 + '&onlyAttested=false').catch(function() { return {}; })
   ]).then(function(results) {
     var resources = results[0].Data || results[0].data || results[0].Items || results[0] || [];
     var plans = results[1].Data || results[1].data || results[1].Items || results[1] || [];
@@ -4474,6 +4474,101 @@ function loadSDKData(projId, timerId, prosjektnr) {
     var hours = h1.concat(h2);
     renderSDK(resources, plans, hours, fromStr, toStr);
   }).catch(function(e) { sdkError(e.message); });
+}
+
+// sdkFinnAvvik: kjører KUN på uattesterte timer. Sammenligner innad i laget samme dag.
+// Returnerer array av {sev:'hi'|'md', txt:string}
+function sdkFinnAvvik(uattTimer, plans, resources) {
+  var avvik = [];
+  if (!uattTimer || !uattTimer.length) return avvik;
+  function navnForUid(uid) {
+    var res = resources.filter(function(r){ return r.UserId === uid || r.userId === uid; })[0];
+    return res ? res.Name : 'Ukjent';
+  }
+  function datoStr(h) {
+    var raw = h.Date || h.WorkDate || '';
+    return raw ? String(raw).substring(0,10) : '';
+  }
+  var plannedUids = {};
+  plans.forEach(function(pl){
+    var res = resources.filter(function(r){ return r.Id === pl.ResourceId; })[0];
+    if (res && (res.UserId || res.userId)) plannedUids[res.UserId || res.userId] = true;
+  });
+  var byDato = {};
+  uattTimer.forEach(function(h){
+    var dd = datoStr(h);
+    if (!dd) return;
+    if (!byDato[dd]) byDato[dd] = [];
+    byDato[dd].push(h);
+  });
+  var validWagesA = ['Fastlonn','Timelonn','Overtid 50 %','Overtid 100 %','Fastlønn','Timelønn'];
+  function erArbeidsrad(h){
+    var w = h.WageName || '';
+    return validWagesA.indexOf(w) > -1 || w.indexOf('Overtid') > -1;
+  }
+  function harTillegg(h){
+    return h.WageAddition === true || h.UnitAddition === true || h.Diet === true;
+  }
+  // REGEL 1: ført på prosjekt man ikke er planlagt på
+  var flaggetUtenforPlan = {};
+  uattTimer.forEach(function(h){
+    var uid = h.UserID || h.UserId;
+    if (!uid) return;
+    if (!plannedUids[uid] && !flaggetUtenforPlan[uid]) {
+      flaggetUtenforPlan[uid] = true;
+      avvik.push({ sev:'hi', txt: '<b>' + navnForUid(uid) + '</b> har ført timer, men er ikke satt opp på prosjektet i ressursplanleggeren. Feil prosjekt, eller mangler i planen?' });
+    }
+  });
+  // REGEL 2 + 3: sammenlign innad i laget samme dag
+  Object.keys(byDato).forEach(function(dd){
+    var rader = byDato[dd];
+    var personer = {};
+    rader.forEach(function(h){
+      if (!erArbeidsrad(h)) return;
+      var uid = h.UserID || h.UserId; if (!uid) return;
+      if (!personer[uid]) personer[uid] = { uid: uid, pauser: [], harTillegg: false };
+      var bt = parseFloat(h.BreakTime);
+      if (!isNaN(bt)) personer[uid].pauser.push(bt);
+    });
+    rader.forEach(function(h){
+      var uid = h.UserID || h.UserId; if (!uid || !personer[uid]) return;
+      if (harTillegg(h)) personer[uid].harTillegg = true;
+    });
+    var uids = Object.keys(personer);
+    if (uids.length < 2) return;
+    // REGEL 3: pause avviker fra laget
+    var pauseTelling = {};
+    uids.forEach(function(uid){
+      var p = personer[uid].pauser.length ? personer[uid].pauser[0] : null;
+      if (p === null) return;
+      var key = String(p);
+      pauseTelling[key] = (pauseTelling[key]||0) + 1;
+    });
+    var vanligstePause = null, maxT = 0;
+    Object.keys(pauseTelling).forEach(function(k){ if (pauseTelling[k] > maxT){ maxT = pauseTelling[k]; vanligstePause = parseFloat(k); } });
+    if (vanligstePause !== null && maxT >= 2) {
+      uids.forEach(function(uid){
+        var p = personer[uid].pauser.length ? personer[uid].pauser[0] : null;
+        if (p !== null && p !== vanligstePause) {
+          avvik.push({ sev:'md', txt: '<b>' + navnForUid(uid) + '</b> førte ' + p.toFixed(1) + ' t pause ' + sdkFormaterDatoKort(dd) + ', resten av laget førte ' + vanligstePause.toFixed(1) + ' t. Sjekk pausen.' });
+        }
+      });
+    }
+    // REGEL 2: manglende tillegg vs laget
+    var medTillegg = uids.filter(function(uid){ return personer[uid].harTillegg; }).length;
+    var utenTillegg = uids.filter(function(uid){ return !personer[uid].harTillegg; });
+    if (medTillegg >= 2 && utenTillegg.length > 0 && medTillegg > utenTillegg.length) {
+      utenTillegg.forEach(function(uid){
+        avvik.push({ sev:'md', txt: '<b>' + navnForUid(uid) + '</b> mangler tillegg ' + sdkFormaterDatoKort(dd) + ' som resten av laget har ført. Glemt kost/diett?' });
+      });
+    }
+  });
+  return avvik;
+}
+function sdkFormaterDatoKort(dd){
+  var p = dd.split('-');
+  if (p.length !== 3) return dd;
+  return p[2] + '.' + p[1] + '.';
 }
 
 function renderSDK(resources, plans, hours, fromStr, toStr) {
@@ -4583,46 +4678,114 @@ function renderSDK(resources, plans, hours, fromStr, toStr) {
       if (filtered.length) filtrerteTimer = filtered;
     }
     var validWages = ['Fastlonn', 'Timelonn', 'Overtid 50 %', 'Overtid 100 %', 'Fastlønn', 'Timelønn'];
-    var totalTimer = filtrerteTimer.reduce(function(s, h) {
+    function sdkErArbeidsrad(h){
       var wageName = h.WageName || '';
-      var isValid = validWages.indexOf(wageName) > -1 || wageName.indexOf('Overtid') > -1;
-      return s + (isValid ? parseFloat(h.NetHours || 0) : 0);
+      return validWages.indexOf(wageName) > -1 || wageName.indexOf('Overtid') > -1;
+    }
+    function sdkErUatt(h){ return (h.AdminAttested === null || typeof h.AdminAttested === 'undefined'); }
+
+    var totalTimer = filtrerteTimer.reduce(function(s, h) {
+      return s + (sdkErArbeidsrad(h) ? parseFloat(h.NetHours || 0) : 0);
     }, 0);
+    // Splitt arbeidstimer i attestert / uattestert (ett tall, brukes i bar + boks)
+    var uattestertTimer = filtrerteTimer.reduce(function(s, h){
+      return s + ((sdkErArbeidsrad(h) && sdkErUatt(h)) ? parseFloat(h.NetHours || 0) : 0);
+    }, 0);
+    var attestertTimer = totalTimer - uattestertTimer;
+    // Uattesterte føringer (ALLE rader, inkl. tillegg) – antall
+    var uattFøringer = filtrerteTimer.filter(sdkErUatt);
+    var antUattFøringer = uattFøringer.length;
+
     var filterInfo = (sdkCurrUnderNavn && filtrerteTimer !== hours)
       ? '<span style="font-size:10px;color:var(--tx3);font-weight:400;margin-left:6px;">' + sdkCurrUnderNavn + '</span>'
       : '';
-    html.push('<div class="wh-sum"><div class="wh-sum-lbl">Totalt registrert' + filterInfo + '</div><div class="wh-sum-val">' + totalTimer.toFixed(1) + ' t</div></div>');
-    // Timebudsjett-bar
+    // Totalt registrert + splitt-tekst
+    var splittTekst = (antUattFøringer > 0)
+      ? '<div style="font-size:11px;color:var(--tx3);margin-top:3px;"><span style="color:#22c55e;font-weight:600;">' + attestertTimer.toFixed(1) + ' t attestert</span> &middot; <span style="color:#e8b84b;font-weight:600;">' + uattestertTimer.toFixed(1) + ' t venter</span></div>'
+      : '';
+    html.push('<div class="wh-sum"><div class="wh-sum-lbl">Totalt registrert' + filterInfo + splittTekst + '</div><div class="wh-sum-val">' + totalTimer.toFixed(1) + ' t</div></div>');
+
+    // Attestering-boks
+    if (antUattFøringer > 0) {
+      html.push(
+        '<div style="border-radius:8px;padding:10px 12px;margin-bottom:10px;display:flex;align-items:center;gap:9px;font-size:12.5px;font-weight:600;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.22);color:#ef4444;">'
+        + '<span style="width:7px;height:7px;border-radius:50%;background:currentColor;flex-shrink:0;"></span>'
+        + antUattFøringer + ' uattesterte føringer &middot; ' + uattestertTimer.toFixed(1) + ' arbeidstimer'
+        + '<span style="font-weight:400;color:var(--tx3);font-size:11px;margin-left:auto;">Attesteres i SmartDok web</span>'
+        + '</div>'
+      );
+    } else if (totalTimer > 0) {
+      html.push(
+        '<div style="border-radius:8px;padding:10px 12px;margin-bottom:10px;display:flex;align-items:center;gap:9px;font-size:12.5px;font-weight:600;background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.18);color:#22c55e;">'
+        + '&#10003; Alle timer attestert</div>'
+      );
+    }
+
+    // Timebudsjett-bar (tofarget: attestert grønn + uattestert stripet)
     if (timerBudsjett > 0) {
-      var pst = Math.min(totalTimer / timerBudsjett * 100, 100);
-      var barFarge = pst < 70 ? '#22c55e' : pst < 90 ? '#f97316' : '#ef4444';
+      var pstAtt = Math.min(attestertTimer / timerBudsjett * 100, 100);
+      var pstUatt = Math.min(uattestertTimer / timerBudsjett * 100, 100 - pstAtt);
       var overskudd = totalTimer > timerBudsjett;
+      var talFarge = totalTimer / timerBudsjett * 100 < 70 ? '#22c55e' : (totalTimer / timerBudsjett * 100 < 90 ? '#f97316' : '#ef4444');
       html.push(
         '<div style="margin:8px 0 12px;">'
         + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">'
         +   '<span style="font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.4px;font-weight:600;">Timebudsjett</span>'
-        +   '<span style="font-size:11px;font-weight:700;color:' + barFarge + ';">' + totalTimer.toFixed(1) + ' / ' + timerBudsjett + ' t'
-        +     (overskudd ? ' <span style=\'color:#ef4444;font-size:10px;\'>▲ ' + (totalTimer - timerBudsjett).toFixed(1) + ' t over</span>' : '') + '</span>'
+        +   '<span style="font-size:11px;font-weight:700;color:' + talFarge + ';">' + totalTimer.toFixed(1) + ' / ' + timerBudsjett + ' t'
+        +     (overskudd ? ' <span style=\'color:#ef4444;font-size:10px;\'>&#9650; ' + (totalTimer - timerBudsjett).toFixed(1) + ' t over</span>' : '') + '</span>'
         + '</div>'
-        + '<div style="height:8px;background:var(--bg3);border-radius:4px;overflow:hidden;border:1px solid var(--br);">'
-        +   '<div style="height:100%;width:' + pst.toFixed(1) + '%;background:' + barFarge + ';border-radius:4px;transition:width .4s;"></div>'
+        + '<div style="height:8px;background:var(--bg3);border-radius:4px;overflow:hidden;border:1px solid var(--br);display:flex;">'
+        +   '<div style="height:100%;width:' + pstAtt.toFixed(1) + '%;background:#22c55e;transition:width .4s;"></div>'
+        +   '<div style="height:100%;width:' + pstUatt.toFixed(1) + '%;background:repeating-linear-gradient(45deg,rgba(232,184,75,.55),rgba(232,184,75,.55) 4px,rgba(232,184,75,.25) 4px,rgba(232,184,75,.25) 8px);transition:width .4s;"></div>'
         + '</div>'
+        + (uattestertTimer > 0
+            ? '<div style="display:flex;gap:14px;margin-top:6px;font-size:10px;color:var(--tx3);">'
+              + '<span style="display:flex;align-items:center;gap:5px;"><span style="width:12px;height:8px;border-radius:2px;background:#22c55e;"></span>Attestert</span>'
+              + '<span style="display:flex;align-items:center;gap:5px;"><span style="width:12px;height:8px;border-radius:2px;background:repeating-linear-gradient(45deg,rgba(232,184,75,.55),rgba(232,184,75,.55) 3px,rgba(232,184,75,.25) 3px,rgba(232,184,75,.25) 6px);"></span>Ikke attestert</span>'
+              + '</div>'
+            : '')
         + '</div>'
       );
     }
+
+    // Avvik-flagging (kun på uattesterte timer)
+    var avvik = sdkFinnAvvik(uattFøringer, plans, resources);
+    if (avvik.length) {
+      var avvikHtml = ['<div style="background:linear-gradient(135deg,rgba(249,115,22,.08),rgba(232,184,75,.05));border:1px solid rgba(249,115,22,.25);border-radius:8px;padding:10px 12px;margin:12px 0;">'];
+      avvikHtml.push('<div style="display:flex;align-items:center;gap:7px;font-size:11.5px;font-weight:600;color:#f97316;margin-bottom:8px;">&#9888; AI-kontroll fant ' + avvik.length + ' mulig' + (avvik.length>1?'e':'') + ' avvik</div>');
+      avvik.forEach(function(a, i){
+        var farge = a.sev === 'hi' ? '#ef4444' : '#f97316';
+        var ikon = a.sev === 'hi' ? '&#9888;' : '&#9679;';
+        avvikHtml.push('<div style="display:flex;gap:8px;padding:6px 0;' + (i>0?'border-top:1px solid rgba(249,115,22,.15);':'') + 'font-size:11.5px;line-height:1.45;color:var(--tx);"><span style="flex-shrink:0;width:14px;text-align:center;color:' + farge + ';">' + ikon + '</span><span>' + a.txt + '</span></div>');
+      });
+      avvikHtml.push('</div>');
+      html.push(avvikHtml.join(''));
+    }
+
     var byUser = {};
     filtrerteTimer.forEach(function(h) {
-      var wageName = h.WageName || '';
-      var isValid = validWages.indexOf(wageName) > -1 || wageName.indexOf('Overtid') > -1;
-      if (!isValid) return;
+      if (!sdkErArbeidsrad(h)) return;
       var uid = h.UserID || h.UserId || 'ukjent';
       var res = resources.filter(function(r) { return r.UserId === uid || r.userId === uid; })[0];
       var name = res ? res.Name : (h.EmployeeNo ? 'Ansatt ' + h.EmployeeNo : 'Ukjent');
-      if (!byUser[uid]) byUser[uid] = { name: name, timer: 0 };
+      if (!byUser[uid]) byUser[uid] = { name: name, timer: 0, uatt: false, iPlan: true };
       byUser[uid].timer += parseFloat(h.NetHours || 0);
+      if (sdkErUatt(h)) byUser[uid].uatt = true;
+    });
+    // marker hvem som ikke er i ressursplan
+    var planUids = {};
+    plans.forEach(function(pl){
+      var pr = resources.filter(function(r){ return r.Id === pl.ResourceId; })[0];
+      if (pr && (pr.UserId || pr.userId)) planUids[pr.UserId || pr.userId] = true;
+    });
+    Object.keys(byUser).forEach(function(uid){
+      if (!planUids[uid]) byUser[uid].iPlan = false;
     });
     Object.values(byUser).forEach(function(u) {
-      html.push('<div class="wh-row"><div class="wh-lbl">' + u.name + '</div><div class="wh-val">' + u.timer.toFixed(1) + ' t</div></div>');
+      var tags = '';
+      if (u.uatt) tags += ' <span style="font-size:9px;padding:1px 6px;border-radius:10px;font-weight:600;background:rgba(239,68,68,.15);color:#ef4444;">uatt.</span>';
+      if (!u.iPlan) tags += ' <span style="font-size:9px;padding:1px 6px;border-radius:10px;font-weight:600;background:rgba(249,115,22,.15);color:#f97316;">ikke i plan</span>';
+      html.push('<div class="wh-row"><div class="wh-lbl">' + u.name + tags + '</div><div class="wh-val">' + u.timer.toFixed(1) + ' t</div></div>');
     });
   }
   html.push('</div>');
