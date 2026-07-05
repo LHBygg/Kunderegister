@@ -4499,17 +4499,13 @@ function sdkHentAllePlaner(fromStr, toStr) {
   return hentSide(0);
 }
 
-// sdkFinnAvvik: alle regler er scopet til det AKTIVE prosjektet (samme prosjekt brukeren har åpent).
-// Regel 1: feil prosjekt/ikke i plan. Regel 2-3: pause/tillegg/timesum-avvik i laget samme dag.
-// Regel 4: satt opp på DETTE prosjektet i ressursplanleggeren, men ingen timerad ført på det >2 dager tilbake.
-// Fraværsprosjekt (Ferie/fravær, id 2) inngår aldri i "satt opp"-vurderingen, siden mange ikke fører timer der.
-// allePlaner = planer for alle prosjekter (kun brukt til å vise HVOR noen faktisk var satt opp, ved feil-prosjekt-avvik).
+// sdkFinnAvvik: kjører KUN på uattesterte timer.
+// allePlaner = planer for alle prosjekter (for å sjekke om noen var planlagt på annet prosjekt).
 // Returnerer array av {sev:'hi'|'md', txt:string}
-var SDK_FRAVAER_PROJID = 2; // Ferie/fravær-prosjektet i ressursplanleggeren – ekskluderes fra avvikssjekk
-function sdkFinnAvvik(uattTimer, plans, resources, allePlaner, hours, aktivtProjId) {
+function sdkFinnAvvik(uattTimer, plans, resources, allePlaner) {
   var avvik = [];
+  if (!uattTimer || !uattTimer.length) return avvik;
   allePlaner = allePlaner || [];
-  hours = hours || [];
   function navnForUid(uid) {
     var res = resources.filter(function(r){ return r.UserId === uid || r.userId === uid; })[0];
     return res ? res.Name : 'Ukjent';
@@ -4528,7 +4524,7 @@ function sdkFinnAvvik(uattTimer, plans, resources, allePlaner, hours, aktivtProj
     var res = resources.filter(function(r){ return r.Id === rid; })[0];
     return res ? (res.UserId || res.userId) : null;
   }
-  // Bygg oppslag: UserId -> planer (fra allePlaner, brukes av regel 1 for å finne "planlagt annet sted")
+  // Bygg oppslag: UserId -> planer (fra allePlaner)
   var plansByUid = {};
   allePlaner.forEach(function(pl){
     var uid = uidForResource(pl.ResourceId);
@@ -4536,55 +4532,6 @@ function sdkFinnAvvik(uattTimer, plans, resources, allePlaner, hours, aktivtProj
     if (!plansByUid[uid]) plansByUid[uid] = [];
     plansByUid[uid].push(pl);
   });
-
-  // REGEL 4: satt opp på DETTE prosjektet (siste 35 dager, jf. allePlaner), men mer enn 2 dager
-  // siden siste timerad på prosjektet. Helt uavhengig av hvilken uke som vises (sdkWeekOffset) -
-  // basert kun på dagens dato vs. faktisk siste føringsdato, akkurat som regel 1-3 er stabile over tid.
-  if (aktivtProjId != null) {
-    function toLocalDateStr(d){
-      return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
-    }
-    function dagerMellom(dd1, dd2){
-      var a = new Date(dd1 + 'T12:00:00'), b = new Date(dd2 + 'T12:00:00');
-      return Math.round((b - a) / 86400000);
-    }
-    var idagStr = toLocalDateStr(new Date());
-    // Planer PÅ DETTE prosjektet, siste 35 dager (fra allePlaner - stabilt vindu, ikke ukevisning)
-    var planerPaaProsjektByUid = {};
-    allePlaner.forEach(function(pl){
-      if (String(pl.ProjectId) !== String(aktivtProjId)) return;
-      if (Number(pl.ProjectId) === SDK_FRAVAER_PROJID) return;
-      var uid = uidForResource(pl.ResourceId);
-      if (!uid) return;
-      if (!planerPaaProsjektByUid[uid]) planerPaaProsjektByUid[uid] = [];
-      planerPaaProsjektByUid[uid].push(pl);
-    });
-    // Siste dato hver person faktisk har ført timer PÅ DETTE prosjektet (hours = aktivt prosjekt, 180 dager)
-    var sisteFortByUid = {};
-    hours.forEach(function(h){
-      var uid = h.UserID || h.UserId; if (!uid) return;
-      var dd = datoStr(h); if (!dd) return;
-      if (!sisteFortByUid[uid] || dd > sisteFortByUid[uid]) sisteFortByUid[uid] = dd;
-    });
-    Object.keys(planerPaaProsjektByUid).forEach(function(uid){
-      // Sjekk kun personer som faktisk har en plan som dekker en dato til og med i dag (fortsatt aktuell på prosjektet)
-      var harAktuellPlan = planerPaaProsjektByUid[uid].some(function(pl){
-        var s = pl.Start ? pl.Start.substring(0,10) : '';
-        return s && s <= idagStr;
-      });
-      if (!harAktuellPlan) return;
-      var sisteDato = sisteFortByUid[uid];
-      var dagerSiden = sisteDato ? dagerMellom(sisteDato, idagStr) : null;
-      if (dagerSiden === null || dagerSiden > 2) {
-        var tekst = sisteDato
-          ? '<b>' + navnForUid(uid) + '</b> har ikke ført timer på prosjektet de siste ' + dagerSiden + ' dagene (sist ført ' + sdkFormaterDatoKort(sisteDato) + ').'
-          : '<b>' + navnForUid(uid) + '</b> er satt opp på prosjektet, men har ikke ført timer på det i det hele tatt.';
-        avvik.push({ sev:'hi', txt: tekst });
-      }
-    });
-  }
-
-  if (!uattTimer || !uattTimer.length) return avvik;
 
   var validWagesA = ['Fastlonn','Timelonn','Overtid 50 %','Overtid 100 %','Fastlønn','Timelønn'];
   function erArbeidsrad(h){
@@ -4884,7 +4831,7 @@ function renderSDK(resources, plans, hours, fromStr, toStr, allePlaner) {
     }
 
     // Avvik-flagging (kun på uattesterte timer)
-    var avvik = sdkFinnAvvik(uattFøringer, plans, resources, allePlaner, hours, sdkCurrProjId);
+    var avvik = sdkFinnAvvik(uattFøringer, plans, resources, allePlaner);
     if (avvik.length) {
       var avvikHtml = ['<div style="background:linear-gradient(135deg,rgba(249,115,22,.08),rgba(232,184,75,.05));border:1px solid rgba(249,115,22,.25);border-radius:8px;padding:10px 12px;margin:12px 0;">'];
       avvikHtml.push('<div style="display:flex;align-items:center;gap:7px;font-size:11.5px;font-weight:600;color:#f97316;margin-bottom:8px;">&#9888; AI-kontroll fant ' + avvik.length + ' mulig' + (avvik.length>1?'e':'') + ' avvik</div>');
