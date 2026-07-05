@@ -4682,7 +4682,7 @@ function renderSDK(resources, plans, hours, fromStr, toStr) {
       var wageName = h.WageName || '';
       return validWages.indexOf(wageName) > -1 || wageName.indexOf('Overtid') > -1;
     }
-    function sdkErUatt(h){ return (h.AdminAttested === null || typeof h.AdminAttested === 'undefined'); }
+    function sdkErUatt(h){ return h.AdminAttested === false || h.AdminAttested === null || typeof h.AdminAttested === 'undefined'; }
 
     var totalTimer = filtrerteTimer.reduce(function(s, h) {
       return s + (sdkErArbeidsrad(h) ? parseFloat(h.NetHours || 0) : 0);
@@ -4692,9 +4692,11 @@ function renderSDK(resources, plans, hours, fromStr, toStr) {
       return s + ((sdkErArbeidsrad(h) && sdkErUatt(h)) ? parseFloat(h.NetHours || 0) : 0);
     }, 0);
     var attestertTimer = totalTimer - uattestertTimer;
-    // Uattesterte føringer (ALLE rader, inkl. tillegg) – antall
+    // Uattesterte føringer = unike WorkHourID (én arbeidsdag = flere rader med samme ID)
     var uattFøringer = filtrerteTimer.filter(sdkErUatt);
-    var antUattFøringer = uattFøringer.length;
+    var uattIdSet = {};
+    uattFøringer.forEach(function(h){ var id = h.WorkHourID; if (id != null) uattIdSet[id] = true; });
+    var antUattFøringer = Object.keys(uattIdSet).length;
 
     var filterInfo = (sdkCurrUnderNavn && filtrerteTimer !== hours)
       ? '<span style="font-size:10px;color:var(--tx3);font-weight:400;margin-left:6px;">' + sdkCurrUnderNavn + '</span>'
