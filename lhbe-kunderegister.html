@@ -4537,24 +4537,21 @@ function sdkFinnAvvik(uattTimer, plans, resources, allePlaner, hours, aktivtProj
     plansByUid[uid].push(pl);
   });
 
-  // REGEL 4: satt opp på DETTE prosjektet, men ingen timerad ført på det for datoen (>2 dager tilbake)
-  // Kjøres kun når man ser på inneværende uke - "siste 2 arbeidsdager" gir ikke mening ved uke-navigering.
-  if (aktivtProjId != null && sdkWeekOffset === 0) {
+  // REGEL 4: satt opp på DETTE prosjektet (siste 35 dager, jf. allePlaner), men mer enn 2 dager
+  // siden siste timerad på prosjektet. Helt uavhengig av hvilken uke som vises (sdkWeekOffset) -
+  // basert kun på dagens dato vs. faktisk siste føringsdato, akkurat som regel 1-3 er stabile over tid.
+  if (aktivtProjId != null) {
     function toLocalDateStr(d){
       return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
     }
-    function forrigeArbeidsdager(n) {
-      var dager = [], d = new Date(); d.setHours(12,0,0,0);
-      while (dager.length < n) {
-        d.setDate(d.getDate() - 1);
-        if (d.getDay() !== 0 && d.getDay() !== 6) dager.push(toLocalDateStr(d));
-      }
-      return dager;
+    function dagerMellom(dd1, dd2){
+      var a = new Date(dd1 + 'T12:00:00'), b = new Date(dd2 + 'T12:00:00');
+      return Math.round((b - a) / 86400000);
     }
-    var sjekkDatoer = forrigeArbeidsdager(2);
-    // Planer på dette prosjektet, gruppert per bruker (fra "plans" - allerede scopet til aktivt prosjekt)
+    var idagStr = toLocalDateStr(new Date());
+    // Planer PÅ DETTE prosjektet, siste 35 dager (fra allePlaner - stabilt vindu, ikke ukevisning)
     var planerPaaProsjektByUid = {};
-    plans.forEach(function(pl){
+    allePlaner.forEach(function(pl){
       if (String(pl.ProjectId) !== String(aktivtProjId)) return;
       if (Number(pl.ProjectId) === SDK_FRAVAER_PROJID) return;
       var uid = uidForResource(pl.ResourceId);
@@ -4562,21 +4559,28 @@ function sdkFinnAvvik(uattTimer, plans, resources, allePlaner, hours, aktivtProj
       if (!planerPaaProsjektByUid[uid]) planerPaaProsjektByUid[uid] = [];
       planerPaaProsjektByUid[uid].push(pl);
     });
-    // Timer ført på dette prosjektet (hours er allerede scopet til aktivt prosjekt via API-kallet)
-    var fortNokkel = {}; // "uid|dato" -> true
+    // Siste dato hver person faktisk har ført timer PÅ DETTE prosjektet (hours = aktivt prosjekt, 180 dager)
+    var sisteFortByUid = {};
     hours.forEach(function(h){
       var uid = h.UserID || h.UserId; if (!uid) return;
       var dd = datoStr(h); if (!dd) return;
-      fortNokkel[uid + '|' + dd] = true;
+      if (!sisteFortByUid[uid] || dd > sisteFortByUid[uid]) sisteFortByUid[uid] = dd;
     });
     Object.keys(planerPaaProsjektByUid).forEach(function(uid){
-      sjekkDatoer.forEach(function(dd){
-        var harPlan = planerPaaProsjektByUid[uid].some(function(pl){ return planDekkerDato(pl, dd); });
-        if (!harPlan) return;
-        if (!fortNokkel[uid + '|' + dd]) {
-          avvik.push({ sev:'hi', txt:'<b>' + navnForUid(uid) + '</b> var satt opp på dette prosjektet ' + sdkFormaterDatoKort(dd) + ', men har ikke ført timer ennå.' });
-        }
+      // Sjekk kun personer som faktisk har en plan som dekker en dato til og med i dag (fortsatt aktuell på prosjektet)
+      var harAktuellPlan = planerPaaProsjektByUid[uid].some(function(pl){
+        var s = pl.Start ? pl.Start.substring(0,10) : '';
+        return s && s <= idagStr;
       });
+      if (!harAktuellPlan) return;
+      var sisteDato = sisteFortByUid[uid];
+      var dagerSiden = sisteDato ? dagerMellom(sisteDato, idagStr) : null;
+      if (dagerSiden === null || dagerSiden > 2) {
+        var tekst = sisteDato
+          ? '<b>' + navnForUid(uid) + '</b> har ikke ført timer på prosjektet de siste ' + dagerSiden + ' dagene (sist ført ' + sdkFormaterDatoKort(sisteDato) + ').'
+          : '<b>' + navnForUid(uid) + '</b> er satt opp på prosjektet, men har ikke ført timer på det i det hele tatt.';
+        avvik.push({ sev:'hi', txt: tekst });
+      }
     });
   }
 
