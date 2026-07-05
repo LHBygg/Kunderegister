@@ -4466,19 +4466,31 @@ function loadSDKData(projId, timerId, prosjektnr) {
     sdkGet('/ResourcePlanning/Plans?projectId=' + projId + '&from=' + fromStr + '&to=' + toStr + '&count=100'),
     sdkGet('/WorkHours?projectId=' + timerId + '&fromDate=' + fraDato1 + '&toDate=' + tilDato1 + '&onlyAttested=false').catch(function() { return {}; }),
     sdkGet('/WorkHours?projectId=' + timerId + '&fromDate=' + fraDato2 + '&toDate=' + tilDato2 + '&onlyAttested=false').catch(function() { return {}; }),
-    sdkHentAllePlaner(avvikFraStr, avvikTilStr).catch(function() { return []; })
+    sdkHentAllePlaner(avvikFraStr, avvikTilStr).catch(function() { return []; }),
+    sdkGet('/Projects?count=100').catch(function() { return {}; })
   ]).then(function(results) {
     var resources = results[0].Data || results[0].data || results[0].Items || results[0] || [];
     var plans = results[1].Data || results[1].data || results[1].Items || results[1] || [];
     var h1 = results[2].Data || results[2].data || results[2].Items || results[2] || [];
     var h2 = results[3].Data || results[3].data || results[3].Items || results[3] || [];
     var allePlaner = Array.isArray(results[4]) ? results[4] : [];
+    var alleProsjekter = results[5].Data || results[5].data || results[5].Items || results[5] || [];
     if (!Array.isArray(resources)) resources = [];
     if (!Array.isArray(plans)) plans = [];
     if (!Array.isArray(h1)) h1 = [];
     if (!Array.isArray(h2)) h2 = [];
+    if (!Array.isArray(alleProsjekter)) alleProsjekter = [];
     var hours = h1.concat(h2);
-    renderSDK(resources, plans, hours, fromStr, toStr, allePlaner);
+    // Bygg oppslag projId -> navn(nr), for å vise prosjektnavn i avviksmeldinger i stedet for rå ID
+    var projNavnById = {};
+    alleProsjekter.forEach(function(p){
+      var pid = p.Id || p.id;
+      if (pid == null) return;
+      var navn = p.ProjectName || p.Name || p.name || p.Title || '';
+      var nr = p.ProjectNumber || p.projectNumber || p.Number || '';
+      projNavnById[pid] = navn + (nr ? ' (' + nr + ')' : '');
+    });
+    renderSDK(resources, plans, hours, fromStr, toStr, allePlaner, projNavnById);
   }).catch(function(e) { sdkError(e.message); });
 }
 
@@ -4504,11 +4516,12 @@ function sdkHentAllePlaner(fromStr, toStr) {
 // personer/rader som selv er uattestert - attesterte rader trenger ikke nytt varsel.
 // allePlaner = planer for alle prosjekter (for å sjekke om noen var planlagt på annet prosjekt).
 // Returnerer array av {sev:'hi'|'md', txt:string}
-function sdkFinnAvvik(uattTimer, plans, resources, allePlaner, alleTimer) {
+function sdkFinnAvvik(uattTimer, plans, resources, allePlaner, alleTimer, projNavnById) {
   var avvik = [];
   if (!uattTimer || !uattTimer.length) return avvik;
   allePlaner = allePlaner || [];
   alleTimer = alleTimer || uattTimer;
+  projNavnById = projNavnById || {};
   function navnForUid(uid) {
     var res = resources.filter(function(r){ return r.UserId === uid || r.userId === uid; })[0];
     return res ? res.Name : 'Ukjent';
@@ -4548,9 +4561,10 @@ function sdkFinnAvvik(uattTimer, plans, resources, allePlaner, alleTimer) {
     return h.AdminAttested === false || h.AdminAttested === null || typeof h.AdminAttested === 'undefined';
   }
   function projNavn(projId){
-    var pl = allePlaner.filter(function(p){ return p.ProjectId === projId; })[0];
-    // finn navn fra en timerad med samme prosjekt hvis mulig
+    if (projNavnById[projId]) return projNavnById[projId];
+    // Fallback: prøv å finne navn fra en timerad med samme prosjekt
     var hr = uattTimer.filter(function(h){ return h.ProjectID === projId; })[0];
+    if (!hr) hr = alleTimer.filter(function(h){ return h.ProjectID === projId; })[0];
     if (hr && hr.ProjectName) return hr.ProjectName + (hr.ProjectNumber ? ' (' + hr.ProjectNumber + ')' : '');
     return 'prosjekt ' + projId;
   }
@@ -4686,7 +4700,7 @@ function sdkFormaterDatoKort(dd){
   return p[2] + '.' + p[1] + '.';
 }
 
-function renderSDK(resources, plans, hours, fromStr, toStr, allePlaner) {
+function renderSDK(resources, plans, hours, fromStr, toStr, allePlaner, projNavnById) {
   var el = document.getElementById('sdkBody');
   var timeEl = document.getElementById('sdkTime');
   if (!el) return;
@@ -4866,7 +4880,7 @@ function renderSDK(resources, plans, hours, fromStr, toStr, allePlaner) {
     }
 
     // Avvik-flagging (kun på uattesterte timer)
-    var avvik = sdkFinnAvvik(uattFøringer, plans, resources, allePlaner, filtrerteTimer);
+    var avvik = sdkFinnAvvik(uattFøringer, plans, resources, allePlaner, filtrerteTimer, projNavnById);
     if (avvik.length) {
       var avvikHtml = ['<div style="background:linear-gradient(135deg,rgba(249,115,22,.08),rgba(232,184,75,.05));border:1px solid rgba(249,115,22,.25);border-radius:8px;padding:10px 12px;margin:12px 0;">'];
       avvikHtml.push('<div style="display:flex;align-items:center;gap:7px;font-size:11.5px;font-weight:600;color:#f97316;margin-bottom:8px;">&#9888; Registrert ' + avvik.length + ' avvik</div>');
