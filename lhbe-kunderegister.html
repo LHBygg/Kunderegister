@@ -4457,30 +4457,55 @@ function loadSDKData(projId, timerId, prosjektnr) {
   var tilDato1 = toLocalDate(til1) + 'T23:59:59';
   var fraDato2 = toLocalDate(fra2) + 'T00:00:00';
   var tilDato2 = toLocalDate(nowD) + 'T23:59:59';
+  // Bred plan-henting for avvikssjekk: alle prosjekter, siste 35 dager (uatt. henger aldri lenger)
+  var avvikFra = new Date(nowD); avvikFra.setDate(nowD.getDate()-35);
+  var avvikFraStr = toLocalDate(avvikFra);
+  var avvikTilStr = toLocalDate(nowD);
   Promise.all([
     sdkGet('/ResourcePlanning/Resources?active=true&count=100'),
     sdkGet('/ResourcePlanning/Plans?projectId=' + projId + '&from=' + fromStr + '&to=' + toStr + '&count=100'),
     sdkGet('/WorkHours?projectId=' + timerId + '&fromDate=' + fraDato1 + '&toDate=' + tilDato1 + '&onlyAttested=false').catch(function() { return {}; }),
-    sdkGet('/WorkHours?projectId=' + timerId + '&fromDate=' + fraDato2 + '&toDate=' + tilDato2 + '&onlyAttested=false').catch(function() { return {}; })
+    sdkGet('/WorkHours?projectId=' + timerId + '&fromDate=' + fraDato2 + '&toDate=' + tilDato2 + '&onlyAttested=false').catch(function() { return {}; }),
+    sdkHentAllePlaner(avvikFraStr, avvikTilStr).catch(function() { return []; })
   ]).then(function(results) {
     var resources = results[0].Data || results[0].data || results[0].Items || results[0] || [];
     var plans = results[1].Data || results[1].data || results[1].Items || results[1] || [];
     var h1 = results[2].Data || results[2].data || results[2].Items || results[2] || [];
     var h2 = results[3].Data || results[3].data || results[3].Items || results[3] || [];
+    var allePlaner = Array.isArray(results[4]) ? results[4] : [];
     if (!Array.isArray(resources)) resources = [];
     if (!Array.isArray(plans)) plans = [];
     if (!Array.isArray(h1)) h1 = [];
     if (!Array.isArray(h2)) h2 = [];
     var hours = h1.concat(h2);
-    renderSDK(resources, plans, hours, fromStr, toStr);
+    renderSDK(resources, plans, hours, fromStr, toStr, allePlaner);
   }).catch(function(e) { sdkError(e.message); });
 }
 
-// sdkFinnAvvik: kjører KUN på uattesterte timer. Sammenligner innad i laget samme dag.
+// Henter ALLE planer (alle prosjekter) i perioden, paginert (count maks 100)
+function sdkHentAllePlaner(fromStr, toStr) {
+  var alle = [];
+  function hentSide(offset) {
+    return sdkGet('/ResourcePlanning/Plans?from=' + fromStr + '&to=' + toStr + '&count=100&offset=' + offset)
+      .then(function(d) {
+        var items = d.Data || d.data || d.Items || d || [];
+        if (!Array.isArray(items)) items = [];
+        alle = alle.concat(items);
+        // fortsett hvis vi fikk full side (kan være mer) – maks 5 sider som sikkerhet
+        if (items.length === 100 && offset < 400) return hentSide(offset + 100);
+        return alle;
+      });
+  }
+  return hentSide(0);
+}
+
+// sdkFinnAvvik: kjører KUN på uattesterte timer.
+// allePlaner = planer for alle prosjekter (for å sjekke om noen var planlagt på annet prosjekt).
 // Returnerer array av {sev:'hi'|'md', txt:string}
-function sdkFinnAvvik(uattTimer, plans, resources) {
+function sdkFinnAvvik(uattTimer, plans, resources, allePlaner) {
   var avvik = [];
   if (!uattTimer || !uattTimer.length) return avvik;
+  allePlaner = allePlaner || [];
   function navnForUid(uid) {
     var res = resources.filter(function(r){ return r.UserId === uid || r.userId === uid; })[0];
     return res ? res.Name : 'Ukjent';
@@ -4489,18 +4514,25 @@ function sdkFinnAvvik(uattTimer, plans, resources) {
     var raw = h.Date || h.WorkDate || '';
     return raw ? String(raw).substring(0,10) : '';
   }
-  var plannedUids = {};
-  plans.forEach(function(pl){
-    var res = resources.filter(function(r){ return r.Id === pl.ResourceId; })[0];
-    if (res && (res.UserId || res.userId)) plannedUids[res.UserId || res.userId] = true;
+  function planDekkerDato(pl, dd){
+    var s = pl.Start ? pl.Start.substring(0,10) : '';
+    var e = pl.End ? pl.End.substring(0,10) : '';
+    return s && e && s <= dd && dd <= e;
+  }
+  // ResourceId -> UserId
+  function uidForResource(rid){
+    var res = resources.filter(function(r){ return r.Id === rid; })[0];
+    return res ? (res.UserId || res.userId) : null;
+  }
+  // Bygg oppslag: UserId -> planer (fra allePlaner)
+  var plansByUid = {};
+  allePlaner.forEach(function(pl){
+    var uid = uidForResource(pl.ResourceId);
+    if (!uid) return;
+    if (!plansByUid[uid]) plansByUid[uid] = [];
+    plansByUid[uid].push(pl);
   });
-  var byDato = {};
-  uattTimer.forEach(function(h){
-    var dd = datoStr(h);
-    if (!dd) return;
-    if (!byDato[dd]) byDato[dd] = [];
-    byDato[dd].push(h);
-  });
+
   var validWagesA = ['Fastlonn','Timelonn','Overtid 50 %','Overtid 100 %','Fastlønn','Timelønn'];
   function erArbeidsrad(h){
     var w = h.WageName || '';
@@ -4509,24 +4541,55 @@ function sdkFinnAvvik(uattTimer, plans, resources) {
   function harTillegg(h){
     return h.WageAddition === true || h.UnitAddition === true || h.Diet === true;
   }
-  // REGEL 1: ført på prosjekt man ikke er planlagt på
-  var flaggetUtenforPlan = {};
+  function projNavn(projId){
+    var pl = allePlaner.filter(function(p){ return p.ProjectId === projId; })[0];
+    // finn navn fra en timerad med samme prosjekt hvis mulig
+    var hr = uattTimer.filter(function(h){ return h.ProjectID === projId; })[0];
+    if (hr && hr.ProjectName) return hr.ProjectName + (hr.ProjectNumber ? ' (' + hr.ProjectNumber + ')' : '');
+    return 'prosjekt ' + projId;
+  }
+
+  // REGEL 1: feil prosjekt / ikke i plan – dato mot dato, per unik WorkHourID
+  var sjekket = {};
   uattTimer.forEach(function(h){
-    var uid = h.UserID || h.UserId;
-    if (!uid) return;
-    if (!plannedUids[uid] && !flaggetUtenforPlan[uid]) {
-      flaggetUtenforPlan[uid] = true;
-      avvik.push({ sev:'hi', txt: '<b>' + navnForUid(uid) + '</b> har ført timer, men er ikke satt opp på prosjektet i ressursplanleggeren. Feil prosjekt, eller mangler i planen?' });
+    if (!erArbeidsrad(h)) return; // sjekk kun arbeidsrader for prosjekt-match
+    var whid = h.WorkHourID;
+    if (whid != null && sjekket[whid]) return;
+    if (whid != null) sjekket[whid] = true;
+    var uid = h.UserID || h.UserId; if (!uid) return;
+    var dd = datoStr(h); if (!dd) return;
+    var timeProj = h.ProjectID;
+    var timeSub = (h.SubProjectID == null) ? null : h.SubProjectID;
+    var userPlans = (plansByUid[uid] || []).filter(function(pl){ return planDekkerDato(pl, dd); });
+    if (userPlans.length === 0) {
+      avvik.push({ sev:'hi', txt:'<b>' + navnForUid(uid) + '</b> har ført timer ' + sdkFormaterDatoKort(dd) + ', men var ikke registrert på noe prosjekt i ressursplanleggeren denne dagen.' });
+      return;
+    }
+    var match = userPlans.filter(function(pl){
+      var pSub = (pl.SubProjectId == null) ? null : pl.SubProjectId;
+      return pl.ProjectId === timeProj && pSub === timeSub;
+    });
+    if (match.length === 0) {
+      // planlagt, men på annet prosjekt/underprosjekt
+      var planlagtProj = userPlans[0].ProjectId;
+      avvik.push({ sev:'hi', txt:'<b>' + navnForUid(uid) + '</b> førte timer ' + sdkFormaterDatoKort(dd) + ' på ' + projNavn(timeProj) + ', men var planlagt på ' + projNavn(planlagtProj) + '.' });
     }
   });
-  // REGEL 2 + 3: sammenlign innad i laget samme dag
+
+  // REGEL 2 + 3: pause/tillegg innad i laget samme dag
+  var byDato = {};
+  uattTimer.forEach(function(h){
+    var dd = datoStr(h); if (!dd) return;
+    if (!byDato[dd]) byDato[dd] = [];
+    byDato[dd].push(h);
+  });
   Object.keys(byDato).forEach(function(dd){
     var rader = byDato[dd];
     var personer = {};
     rader.forEach(function(h){
       if (!erArbeidsrad(h)) return;
       var uid = h.UserID || h.UserId; if (!uid) return;
-      if (!personer[uid]) personer[uid] = { uid: uid, pauser: [], harTillegg: false };
+      if (!personer[uid]) personer[uid] = { pauser: [], harTillegg: false };
       var bt = parseFloat(h.BreakTime);
       if (!isNaN(bt)) personer[uid].pauser.push(bt);
     });
@@ -4536,13 +4599,12 @@ function sdkFinnAvvik(uattTimer, plans, resources) {
     });
     var uids = Object.keys(personer);
     if (uids.length < 2) return;
-    // REGEL 3: pause avviker fra laget
+    // pause avviker
     var pauseTelling = {};
     uids.forEach(function(uid){
       var p = personer[uid].pauser.length ? personer[uid].pauser[0] : null;
       if (p === null) return;
-      var key = String(p);
-      pauseTelling[key] = (pauseTelling[key]||0) + 1;
+      pauseTelling[String(p)] = (pauseTelling[String(p)]||0) + 1;
     });
     var vanligstePause = null, maxT = 0;
     Object.keys(pauseTelling).forEach(function(k){ if (pauseTelling[k] > maxT){ maxT = pauseTelling[k]; vanligstePause = parseFloat(k); } });
@@ -4550,16 +4612,16 @@ function sdkFinnAvvik(uattTimer, plans, resources) {
       uids.forEach(function(uid){
         var p = personer[uid].pauser.length ? personer[uid].pauser[0] : null;
         if (p !== null && p !== vanligstePause) {
-          avvik.push({ sev:'md', txt: '<b>' + navnForUid(uid) + '</b> førte ' + p.toFixed(1) + ' t pause ' + sdkFormaterDatoKort(dd) + ', resten av laget førte ' + vanligstePause.toFixed(1) + ' t. Sjekk pausen.' });
+          avvik.push({ sev:'md', txt:'<b>' + navnForUid(uid) + '</b> førte ' + p.toFixed(1) + ' t pause ' + sdkFormaterDatoKort(dd) + ', resten av laget førte ' + vanligstePause.toFixed(1) + ' t. Sjekk pausen.' });
         }
       });
     }
-    // REGEL 2: manglende tillegg vs laget
+    // manglende tillegg
     var medTillegg = uids.filter(function(uid){ return personer[uid].harTillegg; }).length;
     var utenTillegg = uids.filter(function(uid){ return !personer[uid].harTillegg; });
     if (medTillegg >= 2 && utenTillegg.length > 0 && medTillegg > utenTillegg.length) {
       utenTillegg.forEach(function(uid){
-        avvik.push({ sev:'md', txt: '<b>' + navnForUid(uid) + '</b> mangler tillegg ' + sdkFormaterDatoKort(dd) + ' som resten av laget har ført. Glemt kost/diett?' });
+        avvik.push({ sev:'md', txt:'<b>' + navnForUid(uid) + '</b> mangler tillegg ' + sdkFormaterDatoKort(dd) + ' som resten av laget har ført. Glemt kost/diett?' });
       });
     }
   });
@@ -4571,7 +4633,7 @@ function sdkFormaterDatoKort(dd){
   return p[2] + '.' + p[1] + '.';
 }
 
-function renderSDK(resources, plans, hours, fromStr, toStr) {
+function renderSDK(resources, plans, hours, fromStr, toStr, allePlaner) {
   var el = document.getElementById('sdkBody');
   var timeEl = document.getElementById('sdkTime');
   if (!el) return;
@@ -4751,7 +4813,7 @@ function renderSDK(resources, plans, hours, fromStr, toStr) {
     }
 
     // Avvik-flagging (kun på uattesterte timer)
-    var avvik = sdkFinnAvvik(uattFøringer, plans, resources);
+    var avvik = sdkFinnAvvik(uattFøringer, plans, resources, allePlaner);
     if (avvik.length) {
       var avvikHtml = ['<div style="background:linear-gradient(135deg,rgba(249,115,22,.08),rgba(232,184,75,.05));border:1px solid rgba(249,115,22,.25);border-radius:8px;padding:10px 12px;margin:12px 0;">'];
       avvikHtml.push('<div style="display:flex;align-items:center;gap:7px;font-size:11.5px;font-weight:600;color:#f97316;margin-bottom:8px;">&#9888; AI-kontroll fant ' + avvik.length + ' mulig' + (avvik.length>1?'e':'') + ' avvik</div>');
