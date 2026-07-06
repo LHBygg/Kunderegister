@@ -4558,6 +4558,27 @@ function sdkFinnAvvik(uattTimer, plans, resources, allePlaner, alleTimer, projNa
   allePlaner = allePlaner || [];
   alleTimer = alleTimer || uattTimer;
   projNavnById = projNavnById || {};
+
+  // Unntatte personer: prosjektledere/daglig leder fører kun fakturerbare/anbudstimer,
+  // ofte få timer og uten pause, og attesterer selv sine egne timer.
+  // De fjernes helt fra datasettet her - både for å ikke få avvik selv, og for å ikke
+  // skjevfordele "resten av laget"-sammenligningen for andre ansatte.
+  var UNNTATT_AVVIK_NAVN = ['Tom Andre Søderberg', 'Magne Vidar Rise', 'Per Ytterhus Sognli'];
+  var unntattUid = {};
+  resources.forEach(function(r){
+    if (UNNTATT_AVVIK_NAVN.indexOf(r.Name) > -1) {
+      var u = r.UserId || r.userId;
+      if (u) unntattUid[u] = true;
+    }
+  });
+  function erUnntattRad(h){
+    var uid = h.UserID || h.UserId;
+    return !!(uid && unntattUid[uid]);
+  }
+  uattTimer = uattTimer.filter(function(h){ return !erUnntattRad(h); });
+  alleTimer = alleTimer.filter(function(h){ return !erUnntattRad(h); });
+  if (!uattTimer.length) return avvik;
+
   function navnForUid(uid) {
     var res = resources.filter(function(r){ return r.UserId === uid || r.userId === uid; })[0];
     return res ? res.Name : 'Ukjent';
@@ -4618,7 +4639,7 @@ function sdkFinnAvvik(uattTimer, plans, resources, allePlaner, alleTimer, projNa
     var timeSub = (h.SubProjectID == null) ? null : h.SubProjectID;
     var userPlans = (plansByUid[uid] || []).filter(function(pl){ return planDekkerDato(pl, dd); });
     if (userPlans.length === 0) {
-      avvik.push({ sev:'hi', txt:'<b>' + navnForUid(uid) + '</b> har ført timer ' + sdkFormaterDatoKort(dd) + ', men var ikke registrert på noe prosjekt i ressursplanleggeren denne dagen.' });
+      avvik.push({ sev:'hi', uid:uid, navn:navnForUid(uid), dato:dd, txt:'har ført timer ' + sdkFormaterDatoKort(dd) + ', men var ikke registrert på noe prosjekt i ressursplanleggeren denne dagen.' });
       return;
     }
     var match = userPlans.filter(function(pl){
@@ -4628,7 +4649,7 @@ function sdkFinnAvvik(uattTimer, plans, resources, allePlaner, alleTimer, projNa
     if (match.length === 0) {
       // planlagt, men på annet prosjekt/underprosjekt
       var planlagtProj = userPlans[0].ProjectId;
-      avvik.push({ sev:'hi', txt:'<b>' + navnForUid(uid) + '</b> førte timer ' + sdkFormaterDatoKort(dd) + ' på ' + projNavn(timeProj) + ', men var planlagt på ' + projNavn(planlagtProj) + '.' });
+      avvik.push({ sev:'hi', uid:uid, navn:navnForUid(uid), dato:dd, txt:'førte timer ' + sdkFormaterDatoKort(dd) + ' på ' + projNavn(timeProj) + ', men var planlagt på ' + projNavn(planlagtProj) + '.' });
     }
   });
 
@@ -4658,14 +4679,21 @@ function sdkFinnAvvik(uattTimer, plans, resources, allePlaner, alleTimer, projNa
       if (harTillegg(h)) personer[uid].harTillegg = true;
     });
     var uids = Object.keys(personer);
+    // Total pause for dagen = summen av pause ført på ALLE prosjekter personen har jobbet på denne dagen
+    // (en person kan ha ført f.eks. 0,0 t pause på prosjekt A og 1,0 t pause på prosjekt B samme dag -
+    // da er totalen 1,0 t og skal IKKE gi avvik, selv om enkeltraden på prosjekt A viser 0,0 t).
+    uids.forEach(function(uid){
+      var arr = personer[uid].pauser;
+      personer[uid].pauseTotal = arr.length ? Math.round(arr.reduce(function(a,b){ return a+b; }, 0) * 100) / 100 : null;
+    });
 
-    // ABSOLUTT REGEL: minimum 0,5 t pause, uansett lagstørrelse (også når personen er alene på prosjektet)
+    // ABSOLUTT REGEL: minimum 0,5 t pause totalt for dagen, uansett lagstørrelse (også når personen er alene på prosjektet)
     // Varsles kun for personer som selv er uattestert denne dagen.
     uids.forEach(function(uid){
       if (!personer[uid].uatt) return;
-      var p = personer[uid].pauser.length ? personer[uid].pauser[0] : null;
+      var p = personer[uid].pauseTotal;
       if (p !== null && p < 0.5) {
-        avvik.push({ sev:'md', txt:'<b>' + navnForUid(uid) + '</b> førte kun ' + p.toFixed(1) + ' t pause ' + sdkFormaterDatoKort(dd) + '. Minimum 0,5 t pause må føres.' });
+        avvik.push({ sev:'md', uid:uid, navn:navnForUid(uid), dato:dd, txt:'førte totalt kun ' + p.toFixed(1) + ' t pause ' + sdkFormaterDatoKort(dd) + '. Minimum 0,5 t pause må føres.' });
       }
     });
 
@@ -4673,19 +4701,19 @@ function sdkFinnAvvik(uattTimer, plans, resources, allePlaner, alleTimer, projNa
     // pause avviker (sammenlignes mot HELE laget, varsles kun for uattesterte personer)
     var pauseTelling = {};
     uids.forEach(function(uid){
-      var p = personer[uid].pauser.length ? personer[uid].pauser[0] : null;
+      var p = personer[uid].pauseTotal;
       if (p === null) return;
       pauseTelling[String(p)] = (pauseTelling[String(p)]||0) + 1;
     });
     if (uids.length === 2) {
       // Med kun 2 personer finnes ikke noe "flertall" - enhver ulikhet er et avvik
-      var pauseVerdier = uids.map(function(uid){ return personer[uid].pauser.length ? personer[uid].pauser[0] : null; });
+      var pauseVerdier = uids.map(function(uid){ return personer[uid].pauseTotal; });
       if (pauseVerdier[0] !== null && pauseVerdier[1] !== null && pauseVerdier[0] !== pauseVerdier[1]) {
         uids.forEach(function(uid, i){
           if (!personer[uid].uatt) return;
           var p = pauseVerdier[i];
           var annen = pauseVerdier[1-i];
-          avvik.push({ sev:'md', txt:'<b>' + navnForUid(uid) + '</b> førte ' + p.toFixed(1) + ' t pause ' + sdkFormaterDatoKort(dd) + ', den andre på prosjektet førte ' + annen.toFixed(1) + ' t. Sjekk pausen.' });
+          avvik.push({ sev:'md', uid:uid, navn:navnForUid(uid), dato:dd, txt:'førte ' + p.toFixed(1) + ' t pause ' + sdkFormaterDatoKort(dd) + ', den andre på prosjektet førte ' + annen.toFixed(1) + ' t. Sjekk pausen.' });
         });
       }
     } else {
@@ -4694,9 +4722,9 @@ function sdkFinnAvvik(uattTimer, plans, resources, allePlaner, alleTimer, projNa
       if (vanligstePause !== null && maxT >= 2) {
         uids.forEach(function(uid){
           if (!personer[uid].uatt) return;
-          var p = personer[uid].pauser.length ? personer[uid].pauser[0] : null;
+          var p = personer[uid].pauseTotal;
           if (p !== null && p !== vanligstePause) {
-            avvik.push({ sev:'md', txt:'<b>' + navnForUid(uid) + '</b> førte ' + p.toFixed(1) + ' t pause ' + sdkFormaterDatoKort(dd) + ', resten av laget førte ' + vanligstePause.toFixed(1) + ' t. Sjekk pausen.' });
+            avvik.push({ sev:'md', uid:uid, navn:navnForUid(uid), dato:dd, txt:'førte ' + p.toFixed(1) + ' t pause ' + sdkFormaterDatoKort(dd) + ', resten av laget førte ' + vanligstePause.toFixed(1) + ' t. Sjekk pausen.' });
           }
         });
       }
@@ -4707,7 +4735,7 @@ function sdkFinnAvvik(uattTimer, plans, resources, allePlaner, alleTimer, projNa
     if (medTillegg >= 2 && utenTillegg.length > 0 && medTillegg > utenTillegg.length) {
       utenTillegg.forEach(function(uid){
         if (!personer[uid].uatt) return;
-        avvik.push({ sev:'md', txt:'<b>' + navnForUid(uid) + '</b> mangler tillegg ' + sdkFormaterDatoKort(dd) + ' som resten av laget har ført. Glemt kost/diett?' });
+        avvik.push({ sev:'md', uid:uid, navn:navnForUid(uid), dato:dd, txt:'mangler tillegg ' + sdkFormaterDatoKort(dd) + ' som resten av laget har ført. Glemt kost/diett?' });
       });
     }
     // ulik timesum på laget samme dag (sammenlignes mot HELE laget, varsles kun for uattesterte personer)
@@ -4723,7 +4751,7 @@ function sdkFinnAvvik(uattTimer, plans, resources, allePlaner, alleTimer, projNa
         if (!personer[uid].uatt) return;
         var t = Math.round(personer[uid].timer * 100) / 100;
         if (t !== vanligsteTimer) {
-          avvik.push({ sev:'md', txt:'<b>' + navnForUid(uid) + '</b> førte ' + t.toFixed(1) + ' t ' + sdkFormaterDatoKort(dd) + ', resten av laget førte ' + vanligsteTimer.toFixed(1) + ' t. Ulik timesum samme dag.' });
+          avvik.push({ sev:'md', uid:uid, navn:navnForUid(uid), dato:dd, txt:'førte ' + t.toFixed(1) + ' t ' + sdkFormaterDatoKort(dd) + ', resten av laget førte ' + vanligsteTimer.toFixed(1) + ' t. Ulik timesum samme dag.' });
         }
       });
     }
@@ -4734,6 +4762,17 @@ function sdkFormaterDatoKort(dd){
   var p = dd.split('-');
   if (p.length !== 3) return dd;
   return p[2] + '.' + p[1] + '.';
+}
+function sdkToggleAvvikPerson(btn){
+  var wrap = btn.previousElementSibling;
+  if (!wrap || !wrap.classList || !wrap.classList.contains('avp-extra')) return;
+  var label = btn.querySelector('.avp-btn-label');
+  var chev = btn.querySelector('.avp-chevron');
+  var n = btn.getAttribute('data-hidden');
+  var isOpen = wrap.style.display === 'block';
+  wrap.style.display = isOpen ? 'none' : 'block';
+  if (label) label.textContent = isOpen ? ('Vis ' + n + ' til') : 'Vis mindre';
+  if (chev) chev.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(180deg)';
 }
 
 function renderSDK(resources, plans, hours, fromStr, toStr, allePlaner, projNavnById) {
@@ -4918,12 +4957,69 @@ function renderSDK(resources, plans, hours, fromStr, toStr, allePlaner, projNavn
     // Avvik-flagging (kun på uattesterte timer)
     var avvik = sdkFinnAvvik(uattFøringer, plans, resources, allePlaner, filtrerteTimer, projNavnById);
     if (avvik.length) {
+      // Grupper avvik per person - unngår at samme navn gjentas på hver linje når
+      // en person har flere avvik, og gjør kortet mye kortere når mange er involvert.
+      var avvikByPerson = {};
+      var avvikPersonOrder = [];
+      avvik.forEach(function(a){
+        var key = a.uid || a.navn || 'ukjent';
+        if (!avvikByPerson[key]) {
+          avvikByPerson[key] = { navn: a.navn || 'Ukjent', items: [] };
+          avvikPersonOrder.push(key);
+        }
+        avvikByPerson[key].items.push(a);
+      });
+      var sevRank = { hi: 0, md: 1 };
+      var avvikGrupper = avvikPersonOrder.map(function(key){ return avvikByPerson[key]; });
+      avvikGrupper.forEach(function(g){
+        // Vis mest alvorlig avvik først, deretter eldste dato
+        g.items.sort(function(x, y){
+          var sx = sevRank[x.sev] != null ? sevRank[x.sev] : 2;
+          var sy = sevRank[y.sev] != null ? sevRank[y.sev] : 2;
+          if (sx !== sy) return sx - sy;
+          return (x.dato || '') < (y.dato || '') ? -1 : ((x.dato || '') > (y.dato || '') ? 1 : 0);
+        });
+      });
+      // Personer med mest alvorlige/flest avvik vises øverst
+      avvikGrupper.sort(function(a, b){
+        var sa = sevRank[a.items[0].sev] != null ? sevRank[a.items[0].sev] : 2;
+        var sb = sevRank[b.items[0].sev] != null ? sevRank[b.items[0].sev] : 2;
+        if (sa !== sb) return sa - sb;
+        if (b.items.length !== a.items.length) return b.items.length - a.items.length;
+        return (a.navn || '').localeCompare(b.navn || '');
+      });
+
       var avvikHtml = ['<div style="background:linear-gradient(135deg,rgba(249,115,22,.08),rgba(232,184,75,.05));border:1px solid rgba(249,115,22,.25);border-radius:8px;padding:10px 12px;margin:12px 0;">'];
       avvikHtml.push('<div style="display:flex;align-items:center;gap:7px;font-size:11.5px;font-weight:600;color:#f97316;margin-bottom:8px;">&#9888; Registrert ' + avvik.length + ' avvik</div>');
-      avvik.forEach(function(a, i){
-        var farge = a.sev === 'hi' ? '#ef4444' : '#f97316';
-        var ikon = a.sev === 'hi' ? '&#9888;' : '&#9679;';
-        avvikHtml.push('<div style="display:flex;gap:8px;padding:6px 0;' + (i>0?'border-top:1px solid rgba(249,115,22,.15);':'') + 'font-size:11.5px;line-height:1.45;color:var(--tx);"><span style="flex-shrink:0;width:14px;text-align:center;color:' + farge + ';">' + ikon + '</span><span>' + a.txt + '</span></div>');
+      avvikGrupper.forEach(function(g, gi){
+        var navnEsc = String(g.navn || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        var forste = g.items[0];
+        var resten = g.items.slice(1);
+        var farge = forste.sev === 'hi' ? '#ef4444' : '#f97316';
+        var ikon = forste.sev === 'hi' ? '&#9888;' : '&#9679;';
+        // Datospenn: viser kun hvis avvikene til personen sprer seg over flere datoer
+        var datoer = g.items.map(function(x){ return x.dato; }).filter(Boolean).sort();
+        var datoSpennHtml = '';
+        if (datoer.length) {
+          var minD = datoer[0], maxD = datoer[datoer.length - 1];
+          if (minD !== maxD) datoSpennHtml = '<br><span style="color:#f97316;">' + sdkFormaterDatoKort(minD) + '&ndash;' + sdkFormaterDatoKort(maxD) + '</span>';
+        }
+        avvikHtml.push('<div style="padding:8px 0;' + (gi > 0 ? 'border-top:1px solid rgba(249,115,22,.15);' : '') + '">');
+        avvikHtml.push('<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">');
+        avvikHtml.push('<div style="display:flex;gap:8px;align-items:flex-start;font-size:11.5px;line-height:1.45;color:var(--tx);"><span style="flex-shrink:0;width:14px;text-align:center;color:' + farge + ';">' + ikon + '</span><span><b>' + navnEsc + '</b> ' + forste.txt + '</span></div>');
+        avvikHtml.push('<span style="font-size:10px;color:var(--tx3);flex-shrink:0;white-space:nowrap;text-align:right;">' + g.items.length + ' avvik' + datoSpennHtml + '</span>');
+        avvikHtml.push('</div>');
+        if (resten.length) {
+          avvikHtml.push('<div class="avp-extra" style="display:none;margin-top:2px;padding-left:22px;">');
+          resten.forEach(function(a){
+            var f2 = a.sev === 'hi' ? '#ef4444' : '#f97316';
+            var i2 = a.sev === 'hi' ? '&#9888;' : '&#9679;';
+            avvikHtml.push('<div style="display:flex;gap:8px;padding:6px 0;border-top:1px solid rgba(249,115,22,.15);font-size:11.5px;line-height:1.45;color:var(--tx);"><span style="flex-shrink:0;width:14px;text-align:center;color:' + f2 + ';">' + i2 + '</span><span>' + a.txt + '</span></div>');
+          });
+          avvikHtml.push('</div>');
+          avvikHtml.push('<button type="button" class="avp-btn" onclick="event.stopPropagation();sdkToggleAvvikPerson(this);" data-hidden="' + resten.length + '" style="margin-top:6px;margin-left:22px;background:none;border:none;color:#f97316;font-size:11px;cursor:pointer;padding:0;display:flex;align-items:center;gap:4px;"><span class="avp-btn-label">Vis ' + resten.length + ' til</span><span class="avp-chevron" style="display:inline-block;transition:transform .15s;">&#9660;</span></button>');
+        }
+        avvikHtml.push('</div>');
       });
       avvikHtml.push('</div>');
       html.push(avvikHtml.join(''));
