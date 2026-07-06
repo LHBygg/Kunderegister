@@ -214,7 +214,7 @@ input[type=file]{display:none;}
   <div class="ordre-page">
     <div class="ordre-sticky-hdr">
       <button class="back-btn" onclick="visHome()">← Tilbake</button>
-      <div style="flex:1;font-size:14px;font-weight:600;">Ny internordre</div>
+      <div style="flex:1;font-size:14px;font-weight:600;" id="ordreSkjemaTittel">Ny internordre</div>
     </div>
     <div class="ordre-body">
 
@@ -261,7 +261,7 @@ input[type=file]{display:none;}
   <div class="send-bar" id="sendBar">
     <div class="send-bar-inner">
       <div class="send-info-txt"><span class="send-info-proj" id="sendInfoProj">Velg prosjekt</span><span id="sendInfoVarer">Ingen varer lagt til</span></div>
-      <button class="btn pri" id="sendBtn" onclick="sendOrdre()" style="width:auto;padding:12px 22px;white-space:nowrap;">Send ordre →</button>
+      <button class="btn pri" id="sendBtn" onclick="sendOrdre()" style="width:auto;padding:12px 22px;white-space:nowrap;"><span id="sendBtnLbl">Send ordre →</span></button>
     </div>
   </div>
 </div>
@@ -289,7 +289,7 @@ input[type=file]{display:none;}
 <script>
 var WORKER_URL = 'https://gentle-snowflake-e307.tom-andre.workers.dev';
 var WORKER_KEY = 'LHBygg-Internordre-2026-XK9m';
-var innloggetBruker = null, korektPin = null, alleProsjekter = [], valgtProsjekt = null, ordreLinjer = [], linjeIdTeller = 0;
+var innloggetBruker = null, korektPin = null, alleProsjekter = [], valgtProsjekt = null, ordreLinjer = [], linjeIdTeller = 0, redigerOrdreId = null;
 
 function workerGet(p){return fetch(WORKER_URL+p,{headers:{'X-Api-Key':WORKER_KEY}}).then(function(r){return r.json();});}
 function workerPost(p,b){return fetch(WORKER_URL+p,{method:'POST',headers:{'X-Api-Key':WORKER_KEY,'Content-Type':'application/json'},body:JSON.stringify(b)}).then(function(r){return r.json();});}
@@ -422,9 +422,19 @@ function visOrdreDetalj(id){
         html+='<div class="detail-linje">'+bImg+'<div><div class="detail-linje-navn">'+(l.Varenavn||'')+'</div><div class="detail-linje-meta">'+(l.Antall||'')+' '+(l.Enhet||'')+'</div></div></div>';
       });
     }
+    var kanRedigere=(o.Status||'Ny')==='Ny' && o.Bestiller===innloggetBruker;
+    if(kanRedigere){
+      html+='<div style="margin-top:16px"><button class="btn pri" id="redigerOrdreBtn">✏️ Rediger ordre</button></div>';
+    }
     document.getElementById('modalTittel').textContent='Ordre '+(o.Title||'');
     document.getElementById('modalBody').innerHTML=html;
     document.getElementById('modalBg').classList.add('vis');
+    if(kanRedigere){
+      document.getElementById('redigerOrdreBtn').addEventListener('click',function(){
+        lukkModal();
+        startRedigerOrdre(o,linjer);
+      });
+    }
   }).catch(function(){toast('Kunne ikke laste ordre','e');});
 }
 function lukkModal(e){if(!e||e.target===document.getElementById('modalBg'))document.getElementById('modalBg').classList.remove('vis');}
@@ -486,7 +496,9 @@ function nullstillProsjekt(){
   oppdaterSendBar();
 }
 function startNyOrdre(){
-  valgtProsjekt=null;ordreLinjer=[];linjeIdTeller=0;
+  valgtProsjekt=null;ordreLinjer=[];linjeIdTeller=0;redigerOrdreId=null;
+  document.getElementById('ordreSkjemaTittel').textContent='Ny internordre';
+  document.getElementById('sendBtnLbl').textContent='Send ordre →';
   var kt=document.getElementById('projKnappTekst');if(kt){kt.textContent='Velg prosjekt...';kt.style.color='var(--tx3)';}
   document.getElementById('projDropdown').classList.remove('open');
   document.getElementById('projKnapp').classList.remove('aktiv');
@@ -504,6 +516,39 @@ function startNyOrdre(){
   oppdaterSendBar();
   visProsjektListe();
   visScreen('screenOrdre');
+}
+function startRedigerOrdre(ordre,linjer){
+  redigerOrdreId=ordre.ID;
+  linjeIdTeller=0;
+  ordreLinjer=(linjer||[]).map(function(l){
+    return {id:++linjeIdTeller,navn:l.Varenavn||'',full:l.BildeUrl||'',antall:l.Antall||1,enhet:l.Enhet||'stk',eksisterendeBildeUrl:l.BildeUrl||''};
+  });
+  valgtProsjekt={ID:ordre.ProsjektID,Title:ordre.ProsjektNavn,Prosjektnummer:ordre.ProsjektNummer||''};
+  document.getElementById('ordreSkjemaTittel').textContent='Rediger ordre '+(ordre.Title||'');
+  document.getElementById('sendBtnLbl').textContent='Lagre endringer →';
+  var kt=document.getElementById('projKnappTekst');
+  if(kt){kt.textContent=ordre.ProsjektNavn||'Velg prosjekt...';kt.style.color=ordre.ProsjektNavn?'':'var(--tx3)';}
+  document.getElementById('projDropdown').classList.remove('open');
+  document.getElementById('projKnapp').classList.remove('aktiv');
+  document.getElementById('projPil').classList.remove('opp');
+  if(ordre.ProsjektNavn){
+    document.getElementById('projNavn').textContent=ordre.ProsjektNavn;
+    document.getElementById('projValgt').style.display='flex';
+  } else {
+    document.getElementById('projValgt').style.display='none';
+  }
+  var si=document.getElementById('projSokInput');if(si)si.value='';
+  renderProjListe(alleProsjekter);
+  document.getElementById('ordreNotat').value=ordre.Notat||'';
+  document.getElementById('kameraInput').value='';
+  document.getElementById('filInput').value='';
+  document.getElementById('aiStatus').style.display='none';
+  document.getElementById('aiPreview').style.display='none';
+  oppdaterVareListe();
+  oppdaterSendBar();
+  visProsjektListe();
+  visScreen('screenOrdre');
+  toast('Redigerer ordre '+(ordre.Title||''),'i');
 }
 function visHome(){lastHistorikk();visScreen('screenHome');}
 function oppdaterSendBar(){
@@ -693,15 +738,37 @@ function sendOrdre(){
   if(!valgtProsjekt){toast('Velg prosjekt','i');return;}
   if(!ordreLinjer.length){toast('Legg til minst én vare','i');return;}
   var btn=document.getElementById('sendBtn');
-  btn.disabled=true;btn.textContent='Sender...';
+  var lbl=document.getElementById('sendBtnLbl');
+  var erRedigering=!!redigerOrdreId;
+  btn.disabled=true;lbl.textContent=erRedigering?'Lagrer...':'Sender...';
   ordreLinjer.forEach(function(l){
     var ni=document.querySelector('#linje_'+l.id+' .vare-navn-input');if(ni)l.navn=ni.value.trim()||l.navn;
     var ai=document.querySelector('#linje_'+l.id+' .ant-input');if(ai)l.antall=parseFloat(ai.value)||1;
     var ei=document.querySelector('#linje_'+l.id+' .enhet-sel');if(ei)l.enhet=ei.value;
   });
   var notat=document.getElementById('ordreNotat').value.trim();
-  var linjer=ordreLinjer.map(function(l){return{Varenavn:l.navn,Antall:l.antall,Enhet:l.enhet,BildeBase64:''};});
   var body={ProsjektID:valgtProsjekt.ID,ProsjektNavn:valgtProsjekt.Title,ProsjektNummer:valgtProsjekt.Prosjektnummer||'',Bestiller:innloggetBruker,Notat:notat};
+
+  if(erRedigering){
+    // Ved redigering: behold BildeUrl for uendrede bilder (full er tom hvis ikke nytt bilde er valgt),
+    // send kun BildeBase64 for helt nye/endrede bilder (full inneholder data-URL fra FileReader).
+    var linjer=ordreLinjer.map(function(l){
+      var erNyttBilde=l.full && l.full.indexOf('data:')===0;
+      return{Varenavn:l.navn,Antall:l.antall,Enhet:l.enhet,BildeUrl:erNyttBilde?'':(l.eksisterendeBildeUrl||''),BildeBase64:''};
+    });
+    workerPost('/ordre2/'+redigerOrdreId+'/oppdater',{ordre:body,linjer:linjer,bestiller:innloggetBruker}).then(function(d){
+      if(d.error)throw new Error(d.error);
+      toast('Ordre '+(d.ordreNr||'')+' oppdatert','ok');
+      redigerOrdreId=null;
+      visHome();
+    }).catch(function(e){
+      toast('Feil ved oppdatering: '+e.message,'e');
+      btn.disabled=false;lbl.textContent='Lagre endringer →';
+    });
+    return;
+  }
+
+  var linjer=ordreLinjer.map(function(l){return{Varenavn:l.navn,Antall:l.antall,Enhet:l.enhet,BildeBase64:''};});
   workerPost('/ordre2',{ordre:body,linjer:linjer}).then(function(d){
     if(d.error)throw new Error(d.error);
     document.getElementById('ordreNrVist').textContent=d.ordreNr||'';
@@ -728,7 +795,7 @@ function sendOrdre(){
     visScreen('screenSendt');
   }).catch(function(e){
     toast('Feil ved sending: '+e.message,'e');
-    btn.disabled=false;btn.textContent='Send ordre →';
+    btn.disabled=false;lbl.textContent='Send ordre →';
   });
 }
 window.addEventListener('DOMContentLoaded',function(){lastTema();lastData();});
