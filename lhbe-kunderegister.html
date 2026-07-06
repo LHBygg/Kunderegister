@@ -2152,7 +2152,11 @@ function openPD(pid) {
   if (visKont) kaHtml += '<div class="pdm-info-row"><span class="pdm-info-key">Kontaktperson</span><span class="pdm-info-val">' + visKont + '</span></div>';
   if (visTlf) kaHtml += '<div class="pdm-info-row"><span class="pdm-info-key">Telefon</span><span class="pdm-info-val grn"><a href="tel:' + visTlf + '" style="color:var(--grn);text-decoration:none;">' + visTlf + '</a></span></div>';
   if (visEpost) kaHtml += '<div class="pdm-info-row"><span class="pdm-info-key">E-post</span><span class="pdm-info-val" style="font-size:11px;"><a href="mailto:' + visEpost + '" style="color:var(--blu);text-decoration:none;">' + visEpost + '</a></span></div>';
-  if (p.Adresse) kaHtml += '<div class="pdm-info-row"><span class="pdm-info-key">Adresse</span><span class="pdm-info-val" style="font-size:11px;">' + p.Adresse + '</span></div>';
+  if (p.Adresse) {
+    var adrEsc = String(p.Adresse).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+    var adrMapsUrl = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(p.Adresse);
+    kaHtml += '<div class="pdm-info-row"><span class="pdm-info-key">Adresse</span><span class="pdm-info-val" style="font-size:11px;"><span style="display:inline-flex;align-items:center;gap:6px;justify-content:flex-end;"><a href="' + adrMapsUrl + '" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px;" title="Åpne i Google Maps" onclick="event.stopPropagation();">' + adrEsc + '</a><button type="button" class="xbtn" onclick="event.stopPropagation();kopierAdresse(this);" data-adr="' + adrEsc + '" title="Kopier adresse">&#128203;</button></span></span></div>';
+  }
   if (p.Notat) kaHtml += '<div class="pdm-info-row"><span class="pdm-info-key">Notat</span><span class="pdm-info-val" style="font-size:11px;color:var(--tx2);">' + p.Notat + '</span></div>';
   if (!kaHtml) kaHtml = '<div style="font-size:12px;color:var(--tx3);">Ingen kontaktinfo registrert.</div>';
   b.push(cardWrap('kontakt', 'Kontakt &amp; adresse', kaHtml, null));
@@ -4316,6 +4320,37 @@ function toast(msg, type) {
   t.textContent = (type === 's' ? 'OK: ' : type === 'e' ? 'Feil: ' : 'NB: ') + msg;
   t.className = 'toast ' + type + ' on';
   setTimeout(function() { t.className = 'toast'; }, 3500);
+}
+
+function kopierAdresse(btn) {
+  var txt = btn.getAttribute('data-adr') || '';
+  if (!txt) return;
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(txt).then(function() {
+      toast('Adresse kopiert', 's');
+    }).catch(function() {
+      _kopierFallback(txt);
+    });
+  } else {
+    _kopierFallback(txt);
+  }
+}
+
+function _kopierFallback(txt) {
+  try {
+    var ta = document.createElement('textarea');
+    ta.value = txt;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.focus();
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    toast('Adresse kopiert', 's');
+  } catch (e) {
+    toast('Kunne ikke kopiere adresse', 'e');
+  }
 }
 
 function sdkAuth() {
