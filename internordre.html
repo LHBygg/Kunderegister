@@ -246,6 +246,7 @@ input[type=file]{display:none;}
         </div>
         <input type="file" id="kameraInput" accept="image/*" capture="environment" onchange="handterBilde(this.files[0])">
         <input type="file" id="filInput" accept="image/*" onchange="handterBilde(this.files[0])">
+        <input type="file" id="kameraInput2" accept="image/*" capture="environment" onchange="handterBilde(this.files[0])">
         <div id="aiStatus" style="display:none;"></div>
         <div id="aiPreview" style="display:none;"></div>
         <div id="vareListe"></div>
@@ -508,8 +509,7 @@ function startNyOrdre(){
   renderProjListe(alleProsjekter);
   document.getElementById('vareListe').innerHTML='';
   document.getElementById('ordreNotat').value='';
-  document.getElementById('kameraInput').value='';
-  document.getElementById('filInput').value='';
+  nullstillAiBilder();
   document.getElementById('aiStatus').style.display='none';
   document.getElementById('aiPreview').style.display='none';
   document.getElementById('antallVarerLbl').textContent='';
@@ -540,8 +540,7 @@ function startRedigerOrdre(ordre,linjer){
   var si=document.getElementById('projSokInput');if(si)si.value='';
   renderProjListe(alleProsjekter);
   document.getElementById('ordreNotat').value=ordre.Notat||'';
-  document.getElementById('kameraInput').value='';
-  document.getElementById('filInput').value='';
+  nullstillAiBilder();
   document.getElementById('aiStatus').style.display='none';
   document.getElementById('aiPreview').style.display='none';
   oppdaterVareListe();
@@ -558,6 +557,7 @@ function oppdaterSendBar(){
   document.getElementById('sendInfoProj').textContent=valgtProsjekt?valgtProsjekt.Title:'Velg prosjekt';
   document.getElementById('sendInfoVarer').textContent=ordreLinjer.length?ordreLinjer.length+' vare'+(ordreLinjer.length>1?'r':''):'Ingen varer lagt til';
 }
+var aiBilde1=null, aiBilde2=null;
 function handterBilde(file){
   if(!file)return;
   var reader=new FileReader();
@@ -565,9 +565,35 @@ function handterBilde(file){
     var full=e.target.result;
     var parts=full.split(',');
     var mt=parts[0].replace('data:','').replace(';base64','');
-    komprimerBilde(file,function(kb,kt){visAiSpinner();kallAI(kb||parts[1],kt||mt,full);});
+    komprimerBilde(file,function(kb,kt){
+      var bilde={b64:kb||parts[1],mt:kt||mt,full:full};
+      if(!aiBilde1){
+        aiBilde1=bilde;
+        visBildeValg();
+      } else {
+        aiBilde2=bilde;
+        visAiSpinner();
+        kallAI();
+      }
+    });
   };
   reader.readAsDataURL(file);
+}
+function visBildeValg(){
+  var el=document.getElementById('aiStatus');
+  el.style.display='flex';
+  el.innerHTML='<div class="ai-spinner" style="flex-direction:column;align-items:stretch;gap:10px;">'+
+    '<div style="display:flex;align-items:center;gap:10px;"><img src="'+aiBilde1.full+'" style="width:44px;height:44px;object-fit:cover;border-radius:6px;flex-shrink:0;"><span>Bilde 1 klart. Vil du legge til et bilde av etikett/dimensjon for bedre treffsikkerhet?</span></div>'+
+    '<div style="display:flex;gap:8px;flex-wrap:wrap;">'+
+    '<button class="btn sm pri" onclick="document.getElementById(\'kameraInput2\').click()">📷 Ta bilde av etikett</button>'+
+    '<button class="btn sm" onclick="document.getElementById(\'filInput\').click()">🖼️ Velg fra galleri</button>'+
+    '<button class="btn sm" onclick="analyserNaa()">Analyser nå →</button>'+
+    '<button class="btn sm ghost" onclick="avbrytAi()">Avbryt</button>'+
+    '</div></div>';
+}
+function analyserNaa(){
+  visAiSpinner();
+  kallAI();
 }
 function komprimerBilde(file,cb){
   var canvas=document.createElement('canvas');
@@ -588,13 +614,17 @@ function visAiSpinner(){
   document.getElementById('aiStatus').innerHTML='<div class="ai-spinner"><div class="spinner"></div>AI identifiserer produktet...</div>';
   document.getElementById('aiPreview').style.display='none';
 }
-function kallAI(b64,mt,full){
-  workerPost('/ai-gjenkjenn',{base64:b64,mediaType:mt}).then(function(d){
+function kallAI(){
+  var payload={base64:aiBilde1.b64,mediaType:aiBilde1.mt};
+  if(aiBilde2){payload.base64_2=aiBilde2.b64;payload.mediaType_2=aiBilde2.mt;}
+  var full=aiBilde1.full;
+  workerPost('/ai-gjenkjenn',payload).then(function(d){
     if(d.error)throw new Error(d.error);
     document.getElementById('aiStatus').style.display='none';
     if(!d.ok && d.feil){
       toast(d.feil,'i');
       document.getElementById('aiPreview').style.display='none';
+      nullstillAiBilder();
     } else if(d.modus==='flere'){
       visFlereProdukt(d.produkter||[],full);
     } else {
@@ -603,7 +633,14 @@ function kallAI(b64,mt,full){
   }).catch(function(e){
     document.getElementById('aiStatus').style.display='none';
     toast('AI-gjenkjenning feilet: '+e.message,'e');
+    nullstillAiBilder();
   });
+}
+function nullstillAiBilder(){
+  aiBilde1=null;aiBilde2=null;
+  document.getElementById('kameraInput').value='';
+  document.getElementById('filInput').value='';
+  var k2=document.getElementById('kameraInput2');if(k2)k2.value='';
 }
 function visEttProdukt(forslag,full,enhet,dimensjon,antall,usikkert){
   enhet=enhet||'stk';
@@ -686,15 +723,14 @@ function leggTilFlere(encFull){
   });
   oppdaterVareListe();
   document.getElementById('aiPreview').style.display='none';
-  document.getElementById('kameraInput').value='';
-  document.getElementById('filInput').value='';
+  nullstillAiBilder();
   oppdaterSendBar();
   toast(valgte.length+' vare'+(valgte.length>1?'r':'')+' lagt til','ok');
 }
 function avbrytAi(){
   document.getElementById('aiPreview').style.display='none';
-  document.getElementById('kameraInput').value='';
-  document.getElementById('filInput').value='';
+  document.getElementById('aiStatus').style.display='none';
+  nullstillAiBilder();
 }
 function leggTilVare(encFull,enhet,antall){
   var inp=document.getElementById('aiNavnInput');
@@ -706,8 +742,7 @@ function leggTilVare(encFull,enhet,antall){
   ordreLinjer.push({id:id,navn:navn,full:full,antall:ant,enhet:enhet||'stk'});
   oppdaterVareListe();
   document.getElementById('aiPreview').style.display='none';
-  document.getElementById('kameraInput').value='';
-  document.getElementById('filInput').value='';
+  nullstillAiBilder();
   oppdaterSendBar();
   toast('Vare lagt til','ok');
 }
