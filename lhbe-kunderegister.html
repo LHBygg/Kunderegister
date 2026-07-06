@@ -4563,10 +4563,17 @@ function sdkFinnAvvik(uattTimer, plans, resources, allePlaner, alleTimer, projNa
   // ofte få timer og uten pause, og attesterer selv sine egne timer.
   // De fjernes helt fra datasettet her - både for å ikke få avvik selv, og for å ikke
   // skjevfordele "resten av laget"-sammenligningen for andre ansatte.
+  // Navnematch normaliseres (mellomrom/store-små bokstaver) siden SmartDok-data kan ha
+  // avvikende formatering (f.eks. dobbelt mellomrom eller ulik bruk av store bokstaver).
+  function normNavn(s){
+    return String(s || '').replace(/\u00a0/g,' ').replace(/\s+/g,' ').trim().toLowerCase();
+  }
   var UNNTATT_AVVIK_NAVN = ['Tom Andre Søderberg', 'Magne Vidar Rise', 'Per Ytterhus Sognli'];
+  var unntattNavnSet = {};
+  UNNTATT_AVVIK_NAVN.forEach(function(n){ unntattNavnSet[normNavn(n)] = true; });
   var unntattUid = {};
   resources.forEach(function(r){
-    if (UNNTATT_AVVIK_NAVN.indexOf(r.Name) > -1) {
+    if (unntattNavnSet[normNavn(r.Name)]) {
       var u = r.UserId || r.userId;
       if (u) unntattUid[u] = true;
     }
