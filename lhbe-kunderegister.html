@@ -4533,14 +4533,24 @@ function loadSDKData(projId, timerId, prosjektnr) {
 // Henter ALLE planer (alle prosjekter) i perioden, paginert (count maks 100)
 function sdkHentAllePlaner(fromStr, toStr) {
   var alle = [];
+  // Maks 20 sider (2000 rader) som sikkerhet mot uendelig loop.
+  // Tidligere tak (500 rader / 5 sider) var for lavt: med mange ansatte over 35 dager
+  // ble planrader for enkelte ansatte/dager kuttet bort, som ga falske "ikke registrert
+  // på noe prosjekt"-avvik selv om personen faktisk sto i ressursplanleggeren.
+  var MAKS_SIDER = 20;
   function hentSide(offset) {
     return sdkGet('/ResourcePlanning/Plans?from=' + fromStr + '&to=' + toStr + '&count=100&offset=' + offset)
       .then(function(d) {
         var items = d.Data || d.data || d.Items || d || [];
         if (!Array.isArray(items)) items = [];
         alle = alle.concat(items);
-        // fortsett hvis vi fikk full side (kan være mer) – maks 5 sider som sikkerhet
-        if (items.length === 100 && offset < 400) return hentSide(offset + 100);
+        var sideNr = (offset / 100) + 1;
+        if (items.length === 100 && sideNr >= MAKS_SIDER) {
+          console.warn('sdkHentAllePlaner: nådde maks ' + MAKS_SIDER + ' sider (' + alle.length + ' rader) - flere planrader kan finnes men ble ikke hentet. Vurder å øke MAKS_SIDER.');
+          return alle;
+        }
+        if (items.length === 100) return hentSide(offset + 100);
+        console.log('[sdkHentAllePlaner] Hentet ' + alle.length + ' planrader for periode ' + fromStr + ' til ' + toStr + '.');
         return alle;
       });
   }
@@ -4612,6 +4622,18 @@ function sdkFinnAvvik(uattTimer, plans, resources, allePlaner, alleTimer, projNa
     if (!plansByUid[uid]) plansByUid[uid] = [];
     plansByUid[uid].push(pl);
   });
+  // MIDLERTIDIG DEBUG: logg antall planrader funnet per bruker + rå datoer,
+  // for å diagnostisere "ikke registrert på prosjekt"-avvik som ikke forsvinner ved refresh.
+  // Fjern denne blokken når avviksfeilen er bekreftet løst.
+  if (window.SDK_DEBUG_AVVIK) {
+    console.log('[sdkFinnAvvik DEBUG] plansByUid oversikt:');
+    Object.keys(plansByUid).forEach(function(uid){
+      var navn = navnForUid(uid);
+      var datoer = plansByUid[uid].map(function(pl){ return (pl.Start||'').substring(0,10) + '..' + (pl.End||'').substring(0,10); });
+      console.log('  ' + navn + ' (uid=' + uid + '): ' + datoer.join(', '));
+    });
+    console.log('[sdkFinnAvvik DEBUG] Totalt allePlaner.length=' + allePlaner.length + ', resources.length=' + resources.length);
+  }
 
   var validWagesA = ['Fastlonn','Timelonn','Overtid 50 %','Overtid 100 %','Fastlønn','Timelønn'];
   function erArbeidsrad(h){
