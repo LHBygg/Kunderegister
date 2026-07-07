@@ -4526,6 +4526,10 @@ function loadSDKData(projId, timerId, prosjektnr) {
       var nr = p.ProjectNumber || p.projectNumber || p.Number || '';
       projNavnById[pid] = navn + (nr ? ' (' + nr + ')' : '');
     });
+    // MIDLERTIDIG DEBUG: eksponer rådata på window slik at de kan inspiseres direkte
+    // i konsollen uten å være avhengig av collapsed console-grupper. Fjern når løst.
+    window.__sdkDebugAllePlaner = allePlaner;
+    window.__sdkDebugResources = resources;
     renderSDK(resources, plans, hours, fromStr, toStr, allePlaner, projNavnById);
   }).catch(function(e) { sdkError(e.message); });
 }
