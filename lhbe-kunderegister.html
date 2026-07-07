@@ -4526,10 +4526,6 @@ function loadSDKData(projId, timerId, prosjektnr) {
       var nr = p.ProjectNumber || p.projectNumber || p.Number || '';
       projNavnById[pid] = navn + (nr ? ' (' + nr + ')' : '');
     });
-    // MIDLERTIDIG DEBUG: eksponer rådata på window slik at de kan inspiseres direkte
-    // i konsollen uten å være avhengig av collapsed console-grupper. Fjern når løst.
-    window.__sdkDebugAllePlaner = allePlaner;
-    window.__sdkDebugResources = resources;
     renderSDK(resources, plans, hours, fromStr, toStr, allePlaner, projNavnById);
   }).catch(function(e) { sdkError(e.message); });
 }
@@ -4626,18 +4622,6 @@ function sdkFinnAvvik(uattTimer, plans, resources, allePlaner, alleTimer, projNa
     if (!plansByUid[uid]) plansByUid[uid] = [];
     plansByUid[uid].push(pl);
   });
-  // MIDLERTIDIG DEBUG: logg antall planrader funnet per bruker + rå datoer,
-  // for å diagnostisere "ikke registrert på prosjekt"-avvik som ikke forsvinner ved refresh.
-  // Fjern denne blokken når avviksfeilen er bekreftet løst.
-  if (window.SDK_DEBUG_AVVIK) {
-    console.log('[sdkFinnAvvik DEBUG] plansByUid oversikt:');
-    Object.keys(plansByUid).forEach(function(uid){
-      var navn = navnForUid(uid);
-      var datoer = plansByUid[uid].map(function(pl){ return (pl.Start||'').substring(0,10) + '..' + (pl.End||'').substring(0,10); });
-      console.log('  ' + navn + ' (uid=' + uid + '): ' + datoer.join(', '));
-    });
-    console.log('[sdkFinnAvvik DEBUG] Totalt allePlaner.length=' + allePlaner.length + ', resources.length=' + resources.length);
-  }
 
   var validWagesA = ['Fastlonn','Timelonn','Overtid 50 %','Overtid 100 %','Fastlønn','Timelønn'];
   function erArbeidsrad(h){
