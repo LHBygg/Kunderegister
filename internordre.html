@@ -775,7 +775,7 @@ function sendOrdre(){
   var btn=document.getElementById('sendBtn');
   var lbl=document.getElementById('sendBtnLbl');
   var erRedigering=!!redigerOrdreId;
-  btn.disabled=true;lbl.textContent=erRedigering?'Lagrer...':'Sender...';
+  btn.disabled=true;lbl.textContent=erRedigering?'Lagrer bilder...':'Laster opp bilder...';
   ordreLinjer.forEach(function(l){
     var ni=document.querySelector('#linje_'+l.id+' .vare-navn-input');if(ni)l.navn=ni.value.trim()||l.navn;
     var ai=document.querySelector('#linje_'+l.id+' .ant-input');if(ai)l.antall=parseFloat(ai.value)||1;
@@ -784,12 +784,23 @@ function sendOrdre(){
   var notat=document.getElementById('ordreNotat').value.trim();
   var body={ProsjektID:valgtProsjekt.ID,ProsjektNavn:valgtProsjekt.Title,ProsjektNummer:valgtProsjekt.Prosjektnummer||'',Bestiller:innloggetBruker,Notat:notat};
 
+  // Bilder sendes direkte i samme kall som opprettelse/oppdatering av ordren.
+  // Worker laster dem opp sekvensielt server-side FØR den svarer - ingen egne
+  // parallelle etterkall fra klienten, og ingen risiko for at bilder forsvinner
+  // hvis appen lukkes rett etter innsending (knappen forblir "Laster opp..."
+  // til hele kallet er ferdig).
   if(erRedigering){
     // Ved redigering: behold BildeUrl for uendrede bilder (full er tom hvis ikke nytt bilde er valgt),
-    // send kun BildeBase64 for helt nye/endrede bilder (full inneholder data-URL fra FileReader).
+    // send BildeBase64 for helt nye/endrede bilder (full inneholder data-URL fra FileReader).
     var linjer=ordreLinjer.map(function(l){
       var erNyttBilde=l.full && l.full.indexOf('data:')===0;
-      return{Varenavn:l.navn,Antall:l.antall,Enhet:l.enhet,BildeUrl:erNyttBilde?'':(l.eksisterendeBildeUrl||''),BildeBase64:''};
+      return{
+        Varenavn:l.navn,
+        Antall:l.antall,
+        Enhet:l.enhet,
+        BildeUrl: erNyttBilde ? '' : (l.eksisterendeBildeUrl||''),
+        BildeBase64: erNyttBilde ? l.full : ''
+      };
     });
     workerPost('/ordre2/'+redigerOrdreId+'/oppdater',{ordre:body,linjer:linjer,bestiller:innloggetBruker}).then(function(d){
       if(d.error)throw new Error(d.error);
@@ -803,30 +814,13 @@ function sendOrdre(){
     return;
   }
 
-  var linjer=ordreLinjer.map(function(l){return{Varenavn:l.navn,Antall:l.antall,Enhet:l.enhet,BildeBase64:''};});
+  var linjer=ordreLinjer.map(function(l){
+    var harBilde=l.full && l.full.indexOf('data:')===0;
+    return{Varenavn:l.navn,Antall:l.antall,Enhet:l.enhet,BildeBase64: harBilde ? l.full : ''};
+  });
   workerPost('/ordre2',{ordre:body,linjer:linjer}).then(function(d){
     if(d.error)throw new Error(d.error);
     document.getElementById('ordreNrVist').textContent=d.ordreNr||'';
-    // Last opp bilder i bakgrunnen
-    if(d.linjeIder && d.linjeIder.length){
-      d.linjeIder.forEach(function(linjeId, idx){
-        var l = ordreLinjer[idx];
-        if(l && l.full && l.full.length > 100){
-          workerPost('/last-opp-bilde',{
-            linjeId: linjeId,
-            base64Full: l.full,
-            filnavn: (d.ordreNr||'IO') + '-' + (idx+1)
-          }).then(function(res){
-            if(res && res.ok) toast('Bilde lastet opp OK', 'ok');
-            else toast('Bilde feil: ' + JSON.stringify(res), 'e');
-          }).catch(function(e){ toast('Bilde feilet: ' + e.message, 'e'); });
-        } else {
-          toast('Ingen bilde for linje ' + idx, 'i');
-        }
-      });
-    } else {
-      toast('Ingen linjeIder fra Worker', 'i');
-    }
     visScreen('screenSendt');
   }).catch(function(e){
     toast('Feil ved sending: '+e.message,'e');
