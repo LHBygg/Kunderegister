@@ -933,6 +933,7 @@ tr.erow td{padding:0;background:var(--bg2);border-bottom:1px solid var(--br2);}
       <div class="splbl">Administrasjon</div>
       <div class="sprow"><div class="sprl">Kunder</div><button class="btn sm" id="spCustAdminBtn">Kunde-innstillinger</button></div>
       <div class="sprow"><div class="sprl">Prosjekter</div><button class="btn sm" id="spProjAdminBtn">Prosjekt-innstillinger</button></div>
+      <div class="sprow"><div class="sprl">Ansatte</div><button class="btn sm" id="spTimekostBtn">Timekost-innstillinger</button></div>
     </div>
     <div class="spsec">
       <div class="splbl">Om appen</div>
@@ -1105,6 +1106,61 @@ tr.erow td{padding:0;background:var(--bg2);border-bottom:1px solid var(--br2);}
   </div>
 </div>
 
+<!-- MODAL: TIMEKOST-INNSTILLINGER -->
+<div class="mov hid" id="timekostAdminMov">
+  <div class="mbox" style="max-width:620px">
+    <div class="mhdr"><div class="mhdr-t">Timekost-innstillinger</div><button class="mclose" id="timekostAdminCloseBtn">x</button></div>
+    <div class="mbody" style="padding-bottom:0">
+      <div class="splbl" style="margin-bottom:8px;">Firmasatser &ndash; gjelder alle ansatte</div>
+      <div id="timekostInnstBoks" style="margin-bottom:20px;"></div>
+      <div class="splbl" style="margin-bottom:8px;">Ansatte og beregnet timekost</div>
+      <div style="display:flex;gap:8px;margin-bottom:4px;">
+        <div class="srch" style="flex:1;max-width:100%">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input type="text" id="timekostSrch" placeholder="Sok ansatt..." style="background:none;border:none;outline:none;color:var(--tx);font-family:'DM Sans',sans-serif;font-size:13px;width:100%">
+        </div>
+        <button class="btn sm" id="timekostNyBtn">+ Ny ansatt</button>
+      </div>
+      <div id="timekostList" style="max-height:360px;overflow-y:auto;margin:0 -20px"></div>
+    </div>
+    <div class="mftr"><button class="btn" id="timekostAdminCancelBtn">Lukk</button></div>
+  </div>
+</div>
+
+<!-- MODAL: REDIGER ANSATT (TIMEKOST) -->
+<div class="mov hid" id="ansattEditMov">
+  <div class="mbox sm">
+    <div class="mhdr"><div class="mhdr-t" id="ansattEditTittel">Rediger ansatt</div><button class="mclose" id="ansattEditCloseBtn">x</button></div>
+    <div class="mbody">
+      <div class="fg"><label class="fl">Navn</label><input class="fi2" id="aeNavn" type="text" placeholder="Fullt navn (matcher SmartDok)"></div>
+      <div class="fg"><label class="fl">Rolle</label>
+        <select class="fi2" id="aeRolle">
+          <option value="Fagarbeider">Fagarbeider</option>
+          <option value="Bas">Bas</option>
+          <option value="Formann">Formann</option>
+          <option value="Kontor">Kontor</option>
+        </select>
+      </div>
+      <div class="fg"><label class="fl">Lonnstype</label>
+        <select class="fi2" id="aeLonnstype" onchange="aeOppdaterFelt()">
+          <option value="Timelonn">Timelonn</option>
+          <option value="Fastlonn">Fastlonn</option>
+        </select>
+      </div>
+      <div class="fg" id="aeGrunnrateWrap"><label class="fl">Grunnrate (kr/t)</label><input class="fi2" id="aeGrunnrateTime" type="number" step="0.5" oninput="aeOppdaterPreview()"></div>
+      <div class="fg" id="aeFastlonnWrap" style="display:none"><label class="fl">Fastlonn (kr/mnd)</label><input class="fi2" id="aeFastlonnMnd" type="number" step="100" oninput="aeOppdaterPreview()"></div>
+      <div class="fg" id="aeNormaltidWrap" style="display:none"><label class="fl">Normaltid (t/mnd)</label><input class="fi2" id="aeNormalTimerMnd" type="number" step="0.5" value="162.5" oninput="aeOppdaterPreview()"></div>
+      <div class="fg"><label class="fl">Tillegg bas/formann (kr/t)</label><input class="fi2" id="aeTilleggTime" type="number" step="0.5" value="0" oninput="aeOppdaterPreview()"></div>
+      <div class="fg"><label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--tx2);"><input type="checkbox" id="aeAktiv" checked> Aktiv</label></div>
+      <div style="background:rgba(232,184,75,.08);border-radius:8px;padding:10px 12px;text-align:center;margin-top:4px;">
+        <div style="font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px;">Beregnet timekost</div>
+        <div style="font-size:20px;font-weight:800;color:var(--acc);" id="aePreview">- kr/t</div>
+      </div>
+    </div>
+    <div class="mftr"><button class="btn" id="ansattEditCancelBtn">Avbryt</button><button class="btn pri" id="ansattEditSaveBtn">Lagre</button></div>
+  </div>
+</div>
+
 <!-- MODAL: BEKREFT -->
 <div class="mov hid" id="confMov">
   <div class="mbox sm">
@@ -1210,6 +1266,10 @@ var LEVL = 'f32d8a04-25cc-4f68-a5d5-1ead5c5ff82b';
 var LEVKL = '30434dbc-a93e-43a4-aa5e-2f7a89d7e7dd';
 var PLEVL = '91a10cdc-2629-4f80-ae9a-95b05978e44b';
 var NL = '55e4ff82-3d85-480e-a97e-23921b1c8edf';
+var ATL = '8f00ec1b-959a-4d45-bbdd-8e8e192e94bd'; // Listen "AnsattTimekost"
+var TIL = '946615d0-e699-4fc6-a096-916f114925b0'; // Listen "TimekostInnstillinger" (kun 1 rad)
+var ansattTimekost = [];
+var timekostInnstillinger = { ID: null, FeriepengeSats: 12, AGASats: 6.4, OTPSats: 2.5 };
 var SETTINGS_KEY = 'lhbe_standard_layout'; // SP-liste-tittel for lagring
 var LEV_KATEGORIER = ['Byggvarer','Betong','Stål/Armering','Festemidler','Transport','Verktøy/maskin','Elektro','VVS-materiell','Vindu','Dører','Porter','Annet'];
 var levList = [];
@@ -1294,10 +1354,18 @@ function init() {
   });
   document.getElementById('spCustAdminBtn').addEventListener('click', openCustAdmin);
   document.getElementById('spProjAdminBtn').addEventListener('click', openProjAdmin);
+  document.getElementById('spTimekostBtn').addEventListener('click', openTimekostAdmin);
   document.getElementById('custAdminCloseBtn').addEventListener('click', function() { closeMov('custAdminMov'); });
   document.getElementById('custAdminCancelBtn').addEventListener('click', function() { closeMov('custAdminMov'); });
   document.getElementById('projAdminCloseBtn').addEventListener('click', function() { closeMov('projAdminMov'); });
   document.getElementById('projAdminCancelBtn').addEventListener('click', function() { closeMov('projAdminMov'); });
+  document.getElementById('timekostAdminCloseBtn').addEventListener('click', function() { closeMov('timekostAdminMov'); });
+  document.getElementById('timekostAdminCancelBtn').addEventListener('click', function() { closeMov('timekostAdminMov'); });
+  document.getElementById('timekostSrch').addEventListener('input', renderTimekostList);
+  document.getElementById('timekostNyBtn').addEventListener('click', openNyAnsatt);
+  document.getElementById('ansattEditCloseBtn').addEventListener('click', function() { closeMov('ansattEditMov'); });
+  document.getElementById('ansattEditCancelBtn').addEventListener('click', function() { closeMov('ansattEditMov'); });
+  document.getElementById('ansattEditSaveBtn').addEventListener('click', lagreAnsattTimekost);
   document.getElementById('custAdminSrch').addEventListener('input', renderCustAdminList);
   document.getElementById('projAdminSrch').addEventListener('input', renderProjAdminList);
   document.querySelectorAll('#filterTabs .ftab').forEach(function(btn) {
@@ -3956,7 +4024,188 @@ function cDelPFromAdmin(id, navn) {
   openMov('confMov');
 }
 
-var timerPdfProjId = null;
+// ===================== Timekost-innstillinger (ansatte + beregnet timekost) =====================
+
+function beregnTimekost(a, innst) {
+  innst = innst || timekostInnstillinger;
+  var grunnlag = a.Lonnstype === 'Fastlonn'
+    ? (parseFloat(a.FastlonnMnd) || 0) / (parseFloat(a.NormalTimerMnd) || 162.5)
+    : (parseFloat(a.GrunnrateTime) || 0);
+  var medTillegg = grunnlag + (parseFloat(a.TilleggTime) || 0);
+  var paslagPct = (parseFloat(innst.FeriepengeSats) || 0) + (parseFloat(innst.AGASats) || 0) + (parseFloat(innst.OTPSats) || 0);
+  return Math.round(medTillegg * (1 + paslagPct / 100));
+}
+
+function loadTimekostData() {
+  return Promise.all([
+    spGet(SP + '/_api/web/lists(guid\'' + ATL + '\')/items?$top=200&$orderby=Title'),
+    spGet(SP + '/_api/web/lists(guid\'' + TIL + '\')/items?$top=1')
+  ]).then(function(res) {
+    ansattTimekost = (res[0].value || []).map(function(x) {
+      return {
+        ID: x.Id, Navn: x.Title, Rolle: x.Rolle || 'Fagarbeider', Lonnstype: x.Lonnstype || 'Timelonn',
+        GrunnrateTime: x.GrunnrateTime, FastlonnMnd: x.FastlonnMnd,
+        TilleggTime: x.TilleggTime || 0, NormalTimerMnd: x.NormalTimerMnd || 162.5,
+        BeregnetTimekost: x.BeregnetTimekost, Aktiv: x.Aktiv !== false
+      };
+    });
+    var innstRow = (res[1].value || [])[0];
+    if (innstRow) {
+      timekostInnstillinger = { ID: innstRow.Id, FeriepengeSats: innstRow.FeriepengeSats, AGASats: innstRow.AGASats, OTPSats: innstRow.OTPSats };
+    }
+  });
+}
+
+function openTimekostAdmin() {
+  document.getElementById('timekostSrch').value = '';
+  document.getElementById('timekostList').innerHTML = '<div class="sdk-load"><div class="sdk-spin"></div>Henter ansatte...</div>';
+  document.getElementById('timekostInnstBoks').innerHTML = '';
+  openMov('timekostAdminMov');
+  loadTimekostData().then(function() {
+    renderTimekostInnstBoks();
+    renderTimekostList();
+  }).catch(function(e) {
+    document.getElementById('timekostList').innerHTML = '<div style="padding:16px;color:var(--red);font-size:13px;">Feil: ' + e.message + '</div>';
+  });
+}
+
+function renderTimekostInnstBoks(redigerModus) {
+  var el = document.getElementById('timekostInnstBoks');
+  var innst = timekostInnstillinger;
+  if (!redigerModus) {
+    el.innerHTML =
+      '<div style="background:rgba(232,184,75,.08);border:1px dashed var(--acc);border-radius:8px;padding:12px 14px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">' +
+      '<div style="display:flex;gap:18px;flex-wrap:wrap;">' +
+      '<div><div style="font-size:10px;color:var(--tx3);">Feriepenger</div><div style="font-size:15px;font-weight:700;color:var(--tx);">' + (innst.FeriepengeSats != null ? innst.FeriepengeSats : '-') + ' %</div></div>' +
+      '<div><div style="font-size:10px;color:var(--tx3);">AGA</div><div style="font-size:15px;font-weight:700;color:var(--tx);">' + (innst.AGASats != null ? innst.AGASats : '-') + ' %</div></div>' +
+      '<div><div style="font-size:10px;color:var(--tx3);">OTP</div><div style="font-size:15px;font-weight:700;color:var(--tx);">' + (innst.OTPSats != null ? innst.OTPSats : '-') + ' %</div></div>' +
+      '</div>' +
+      '<button class="btn sm" onclick="renderTimekostInnstBoks(true)">Rediger satser</button>' +
+      '</div>';
+  } else {
+    el.innerHTML =
+      '<div style="background:rgba(232,184,75,.08);border:1px dashed var(--acc);border-radius:8px;padding:12px 14px;">' +
+      '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px;">' +
+      '<div><label class="fl">Feriepenger %</label><input class="fi2" id="tiFerie" type="number" step="0.1" value="' + (innst.FeriepengeSats != null ? innst.FeriepengeSats : '') + '"></div>' +
+      '<div><label class="fl">AGA %</label><input class="fi2" id="tiAga" type="number" step="0.1" value="' + (innst.AGASats != null ? innst.AGASats : '') + '"></div>' +
+      '<div><label class="fl">OTP %</label><input class="fi2" id="tiOtp" type="number" step="0.1" value="' + (innst.OTPSats != null ? innst.OTPSats : '') + '"></div>' +
+      '</div>' +
+      '<div style="display:flex;gap:8px;justify-content:flex-end;">' +
+      '<button class="btn sm" onclick="renderTimekostInnstBoks(false)">Avbryt</button>' +
+      '<button class="btn sm pri" onclick="lagreTimekostInnstillinger()">Lagre</button>' +
+      '</div></div>';
+  }
+}
+
+function lagreTimekostInnstillinger() {
+  var body = {
+    FeriepengeSats: parseFloat(document.getElementById('tiFerie').value) || 0,
+    AGASats: parseFloat(document.getElementById('tiAga').value) || 0,
+    OTPSats: parseFloat(document.getElementById('tiOtp').value) || 0
+  };
+  var url = timekostInnstillinger.ID
+    ? SP + '/_api/web/lists(guid\'' + TIL + '\')/items(' + timekostInnstillinger.ID + ')'
+    : SP + '/_api/web/lists(guid\'' + TIL + '\')/items';
+  var req = timekostInnstillinger.ID ? spPatch(url, body) : spPost(url, body);
+  req.then(function() {
+    toast('Firmasatser oppdatert', 's');
+    return loadTimekostData();
+  }).then(function() {
+    renderTimekostInnstBoks();
+    renderTimekostList();
+  }).catch(function(e) { toast('Feil: ' + e.message, 'e'); });
+}
+
+function renderTimekostList() {
+  var q = (document.getElementById('timekostSrch').value || '').toLowerCase();
+  var list = ansattTimekost.slice().sort(function(a, b) { return (a.Navn || '').localeCompare(b.Navn || '', 'nb'); });
+  if (q) list = list.filter(function(a) { return (a.Navn || '').toLowerCase().indexOf(q) > -1; });
+  var el = document.getElementById('timekostList');
+  if (!list.length) { el.innerHTML = '<div style="padding:20px;text-align:center;color:var(--tx3);font-size:13px">Ingen ansatte funnet</div>'; return; }
+  el.innerHTML = list.map(function(a) {
+    var sub = (a.Rolle || '-') + ' · ' + (a.BeregnetTimekost != null ? a.BeregnetTimekost + ' kr/t' : 'ikke beregnet') + (a.Aktiv ? '' : ' · inaktiv');
+    return '<div class="adrow">' +
+      '<div class="adrow-info"><div class="adrow-name">' + (a.Navn || '-') + '</div><div class="adrow-sub">' + sub + '</div></div>' +
+      '<div class="adrow-acts">' +
+      '<button class="btn sm" onclick="openRedigerAnsatt(' + a.ID + ')">Rediger</button>' +
+      '</div></div>';
+  }).join('');
+}
+
+function aeOppdaterFelt() {
+  var erFast = document.getElementById('aeLonnstype').value === 'Fastlonn';
+  document.getElementById('aeGrunnrateWrap').style.display = erFast ? 'none' : '';
+  document.getElementById('aeFastlonnWrap').style.display = erFast ? '' : 'none';
+  document.getElementById('aeNormaltidWrap').style.display = erFast ? '' : 'none';
+  aeOppdaterPreview();
+}
+
+function aeOppdaterPreview() {
+  var a = {
+    Lonnstype: document.getElementById('aeLonnstype').value,
+    GrunnrateTime: document.getElementById('aeGrunnrateTime').value,
+    FastlonnMnd: document.getElementById('aeFastlonnMnd').value,
+    NormalTimerMnd: document.getElementById('aeNormalTimerMnd').value,
+    TilleggTime: document.getElementById('aeTilleggTime').value
+  };
+  document.getElementById('aePreview').textContent = beregnTimekost(a) + ' kr/t';
+}
+
+var ansattEditId = null;
+
+function openRedigerAnsatt(id) {
+  var a = ansattTimekost.filter(function(x) { return x.ID === id; })[0];
+  ansattEditId = id || null;
+  document.getElementById('ansattEditTittel').textContent = a ? 'Rediger ansatt' : 'Ny ansatt';
+  document.getElementById('aeNavn').value = a ? a.Navn : '';
+  document.getElementById('aeRolle').value = a ? a.Rolle : 'Fagarbeider';
+  document.getElementById('aeLonnstype').value = a ? a.Lonnstype : 'Timelonn';
+  document.getElementById('aeGrunnrateTime').value = a && a.GrunnrateTime != null ? a.GrunnrateTime : '';
+  document.getElementById('aeFastlonnMnd').value = a && a.FastlonnMnd != null ? a.FastlonnMnd : '';
+  document.getElementById('aeNormalTimerMnd').value = a && a.NormalTimerMnd != null ? a.NormalTimerMnd : 162.5;
+  document.getElementById('aeTilleggTime').value = a && a.TilleggTime != null ? a.TilleggTime : 0;
+  document.getElementById('aeAktiv').checked = a ? !!a.Aktiv : true;
+  aeOppdaterFelt();
+  openMov('ansattEditMov');
+}
+
+function openNyAnsatt() {
+  openRedigerAnsatt(null);
+}
+
+function lagreAnsattTimekost() {
+  var navn = document.getElementById('aeNavn').value.trim();
+  if (!navn) { toast('Navn ma fylles ut', 'i'); return; }
+  var a = {
+    Lonnstype: document.getElementById('aeLonnstype').value,
+    GrunnrateTime: parseFloat(document.getElementById('aeGrunnrateTime').value) || null,
+    FastlonnMnd: parseFloat(document.getElementById('aeFastlonnMnd').value) || null,
+    NormalTimerMnd: parseFloat(document.getElementById('aeNormalTimerMnd').value) || 162.5,
+    TilleggTime: parseFloat(document.getElementById('aeTilleggTime').value) || 0
+  };
+  var body = {
+    Title: navn,
+    Rolle: document.getElementById('aeRolle').value,
+    Lonnstype: a.Lonnstype,
+    GrunnrateTime: a.GrunnrateTime,
+    FastlonnMnd: a.FastlonnMnd,
+    NormalTimerMnd: a.NormalTimerMnd,
+    TilleggTime: a.TilleggTime,
+    Aktiv: document.getElementById('aeAktiv').checked,
+    BeregnetTimekost: beregnTimekost(a)
+  };
+  var url = ansattEditId
+    ? SP + '/_api/web/lists(guid\'' + ATL + '\')/items(' + ansattEditId + ')'
+    : SP + '/_api/web/lists(guid\'' + ATL + '\')/items';
+  var req = ansattEditId ? spPatch(url, body) : spPost(url, body);
+  req.then(function() {
+    toast(ansattEditId ? 'Ansatt oppdatert' : 'Ansatt lagt til', 's');
+    closeMov('ansattEditMov');
+    return loadTimekostData();
+  }).then(function() {
+    renderTimekostList();
+  }).catch(function(e) { toast('Feil: ' + e.message, 'e'); });
+}
 
 function openTimerPdfMov(pid) {
   timerPdfProjId = pid;
