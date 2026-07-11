@@ -1113,6 +1113,10 @@ tr.erow td{padding:0;background:var(--bg2);border-bottom:1px solid var(--br2);}
     <div class="mbody" style="padding-bottom:0">
       <div class="splbl" style="margin-bottom:8px;">Firmasatser &ndash; gjelder alle ansatte</div>
       <div id="timekostInnstBoks" style="margin-bottom:20px;"></div>
+      <div id="timekostForslagWrap" style="display:none;margin-bottom:20px;">
+        <div class="splbl" style="margin-bottom:8px;">Ansatte i SmartDok som ikke er registrert</div>
+        <div id="timekostForslagList" style="margin:0 -20px;"></div>
+      </div>
       <div class="splbl" style="margin-bottom:8px;">Ansatte og beregnet timekost</div>
       <div style="display:flex;gap:8px;margin-bottom:4px;">
         <div class="srch" style="flex:1;max-width:100%">
@@ -4060,13 +4064,53 @@ function openTimekostAdmin() {
   document.getElementById('timekostSrch').value = '';
   document.getElementById('timekostList').innerHTML = '<div class="sdk-load"><div class="sdk-spin"></div>Henter ansatte...</div>';
   document.getElementById('timekostInnstBoks').innerHTML = '';
+  document.getElementById('timekostForslagWrap').style.display = 'none';
   openMov('timekostAdminMov');
-  loadTimekostData().then(function() {
+  Promise.all([loadTimekostData(), loadSmartDokAnsattNavn()]).then(function() {
     renderTimekostInnstBoks();
     renderTimekostList();
+    renderTimekostForslag();
   }).catch(function(e) {
     document.getElementById('timekostList').innerHTML = '<div style="padding:16px;color:var(--red);font-size:13px;">Feil: ' + e.message + '</div>';
   });
+}
+
+function normNavnGlobal(s) {
+  return String(s || '').replace(/\u00a0/g, ' ').replace(/\s+/g, ' ').trim().toLowerCase();
+}
+
+var smartDokAnsattNavn = [];
+
+function loadSmartDokAnsattNavn() {
+  return sdkGet('/ResourcePlanning/Resources?active=true&count=100').then(function(d) {
+    var list = d.Data || d.data || d.Items || d.items || d || [];
+    if (!Array.isArray(list)) list = [];
+    smartDokAnsattNavn = list.map(function(r) { return r.Name || r.name || ''; }).filter(Boolean);
+  }).catch(function() { smartDokAnsattNavn = []; });
+}
+
+function renderTimekostForslag() {
+  var registrert = {};
+  ansattTimekost.forEach(function(a) { registrert[normNavnGlobal(a.Navn)] = true; });
+  var forslag = smartDokAnsattNavn.filter(function(n) { return !registrert[normNavnGlobal(n)]; });
+  var wrap = document.getElementById('timekostForslagWrap');
+  var el = document.getElementById('timekostForslagList');
+  if (!forslag.length) { wrap.style.display = 'none'; return; }
+  wrap.style.display = '';
+  el.innerHTML = forslag.map(function(n) {
+    return '<div class="adrow"><div class="adrow-info"><div class="adrow-name">' + n + '</div><div class="adrow-sub">Ikke registrert</div></div>' +
+      '<div class="adrow-acts"><button class="btn sm" onclick="openNyAnsattForslag(\'' + n.replace(/'/g, "\\'") + '\')">+ Legg til</button></div></div>';
+  }).join('');
+}
+
+function openNyAnsattForslag(navn) {
+  openRedigerAnsatt(null);
+  document.getElementById('aeNavn').value = navn;
+  document.getElementById('aeRolle').value = 'Fagarbeider';
+  document.getElementById('aeLonnstype').value = 'Timelonn';
+  document.getElementById('aeGrunnrateTime').value = 284;
+  document.getElementById('aeTilleggTime').value = 0;
+  aeOppdaterFelt();
 }
 
 function renderTimekostInnstBoks(redigerModus) {
@@ -4204,6 +4248,7 @@ function lagreAnsattTimekost() {
     return loadTimekostData();
   }).then(function() {
     renderTimekostList();
+    renderTimekostForslag();
   }).catch(function(e) { toast('Feil: ' + e.message, 'e'); });
 }
 
