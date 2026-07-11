@@ -2341,7 +2341,7 @@ function openPD(pid) {
   setTimeout(function() { fpLastKort(p.ID, p.PlanStart, p.PlanSlutt); }, 200);
   // Last Tripletex økonomi-kort
   if (p.Prosjektnummer) {
-    setTimeout(function() { renderTTXKort(p.ID, p.Prosjektnummer, p.Pris); }, 300);
+    setTimeout(function() { renderTTXKort(p.ID, p.Prosjektnummer, p.Pris, p.Underprosjekt, p.Hovedprosjektnummer); }, 300);
   }
 
   if (s === 'Aktiv' && p.Prosjektnummer) {
@@ -8609,10 +8609,16 @@ function fmtDatoKort(iso) {
 // Henter estimert (ikke bokfort) lonnskostnad for et prosjekt siden siste kuttdato.
 // Rent tillegg til de bokforte Tripletex-tallene - feiler denne, vises kortet fortsatt
 // med bokforte tall alene (se .catch i renderTTXKort).
-function hentEstimertLonn(prosjektnr) {
+function hentEstimertLonn(prosjektnr, erUnder, hovedNr) {
+  // Underprosjekt finnes ikke som eget "prosjekt" i SmartDok - timer ligger som en
+  // filtrert delmengde av HOVEDprosjektets timer (samme mønster som resten av appen
+  // allerede bruker, se Underprosjekt-håndtering i visProsjekt/loadSDK).
+  var sdkOppslagNr = (erUnder && hovedNr) ? hovedNr : prosjektnr;
+  var underNr = erUnder ? String(prosjektnr).split('-').pop() : null;
+
   return fetch(TTX_WORKER + '/timekost/kuttdato').then(function(r) { return r.json(); })
     .then(function(kutt) {
-      return sdkGet('/Projects?projectNumber=' + encodeURIComponent(prosjektnr) + '&active=true').then(function(d) {
+      return sdkGet('/Projects?projectNumber=' + encodeURIComponent(sdkOppslagNr) + '&active=true').then(function(d) {
         var list = d.Data || d.data || d.Items || d.items || d || [];
         if (!Array.isArray(list)) list = [];
         if (!list.length) return null;
@@ -8626,6 +8632,13 @@ function hentEstimertLonn(prosjektnr) {
         ]).then(function(r2) {
           var hours = r2[0].Data || r2[0].data || r2[0].Items || r2[0] || [];
           if (!Array.isArray(hours)) hours = [];
+          if (underNr) {
+            // Filtrer til kun timer ført på DETTE underprosjektet - nummer-match først
+            // (mest pålitelig), samme prioritering som ellers i appen.
+            hours = hours.filter(function(h) {
+              return String(h.SubProjectNumber || h.SubProjectNo || '') === underNr;
+            });
+          }
           var resources = r2[1].Data || r2[1].data || r2[1].Items || r2[1] || [];
           if (!Array.isArray(resources)) resources = [];
 
@@ -8666,11 +8679,11 @@ function hentEstimertLonn(prosjektnr) {
     });
 }
 
-function renderTTXKort(projId, prosjektnr, kontraktsum) {
+function renderTTXKort(projId, prosjektnr, kontraktsum, erUnder, hovedNr) {
   var body = document.getElementById('ttxKortBody_' + projId);
   if (!body) return;
   var okonomiP = fetch(TTX_WORKER + '/tripletex/okonomi/' + prosjektnr).then(function(r) { return r.json(); });
-  var estimatP = hentEstimertLonn(prosjektnr).catch(function() { return null; });
+  var estimatP = hentEstimertLonn(prosjektnr, erUnder, hovedNr).catch(function() { return null; });
   Promise.all([okonomiP, estimatP])
     .then(function(res) {
       var d = res[0], est = res[1];
