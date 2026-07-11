@@ -4031,6 +4031,9 @@ function cDelPFromAdmin(id, navn) {
 // ===================== Timekost-innstillinger (ansatte + beregnet timekost) =====================
 
 function beregnTimekost(a, innst) {
+  // NB: SharePoint-feltet "Lonnstype" har internnavn "L_x00f8_nnstype" fordi kolonnen
+  // opprinnelig ble opprettet/endret med "ø" i navnefeltet (SharePoint koder spesialtegn
+  // i internnavnet permanent ved opprettelse). Se L_x00f8_nnstype-referanser i denne filen.
   innst = innst || timekostInnstillinger;
   var grunnlag = a.Lonnstype === 'Fastlonn'
     ? (parseFloat(a.FastlonnMnd) || 0) / (parseFloat(a.NormalTimerMnd) || 162.5)
@@ -4047,7 +4050,7 @@ function loadTimekostData() {
   ]).then(function(res) {
     ansattTimekost = (res[0].value || []).map(function(x) {
       return {
-        ID: x.Id, Navn: x.Title, Rolle: x.Rolle || 'Fagarbeider', Lonnstype: x.Lonnstype || 'Timelonn',
+        ID: x.Id, Navn: x.Title, Rolle: x.Rolle || 'Fagarbeider', Lonnstype: x.L_x00f8_nnstype || 'Timelonn',
         GrunnrateTime: x.GrunnrateTime, FastlonnMnd: x.FastlonnMnd,
         TilleggTime: x.TilleggTime || 0, NormalTimerMnd: x.NormalTimerMnd || 162.5,
         BeregnetTimekost: x.BeregnetTimekost, Aktiv: x.Aktiv !== false
@@ -4230,7 +4233,7 @@ function lagreAnsattTimekost() {
   var body = {
     Title: navn,
     Rolle: document.getElementById('aeRolle').value,
-    Lonnstype: a.Lonnstype,
+    L_x00f8_nnstype: a.Lonnstype,
     GrunnrateTime: a.GrunnrateTime,
     FastlonnMnd: a.FastlonnMnd,
     NormalTimerMnd: a.NormalTimerMnd,
