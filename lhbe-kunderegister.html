@@ -8600,18 +8600,86 @@ var _ttxCurrProsjektnr = '';
 var _ttxCurrKontraktsum = 0;
 var TTX_WORKER = 'https://lhbe-smartdok.tom-andre.workers.dev';
 
+function fmtDatoKort(iso) {
+  if (!iso) return '';
+  var d = String(iso).substring(0, 10).split('-');
+  return d.length === 3 ? (d[2] + '.' + d[1] + '.' + d[0]) : iso;
+}
+
+// Henter estimert (ikke bokfort) lonnskostnad for et prosjekt siden siste kuttdato.
+// Rent tillegg til de bokforte Tripletex-tallene - feiler denne, vises kortet fortsatt
+// med bokforte tall alene (se .catch i renderTTXKort).
+function hentEstimertLonn(prosjektnr) {
+  return fetch(TTX_WORKER + '/timekost/kuttdato').then(function(r) { return r.json(); })
+    .then(function(kutt) {
+      return sdkGet('/Projects?projectNumber=' + encodeURIComponent(prosjektnr) + '&active=true').then(function(d) {
+        var list = d.Data || d.data || d.Items || d.items || d || [];
+        if (!Array.isArray(list)) list = [];
+        if (!list.length) return null;
+        var sdkProjId = list[0].Id || list[0].id || list[0].ID;
+        var fraDato = kutt.kuttdato + 'T00:00:00';
+        var tilDato = kutt.idag + 'T23:59:59';
+        return Promise.all([
+          sdkGet('/WorkHours?projectId=' + sdkProjId + '&fromDate=' + fraDato + '&toDate=' + tilDato + '&onlyAttested=false').catch(function() { return {}; }),
+          sdkGet('/ResourcePlanning/Resources?active=true&count=100').catch(function() { return {}; }),
+          loadTimekostData().catch(function() {})
+        ]).then(function(r2) {
+          var hours = r2[0].Data || r2[0].data || r2[0].Items || r2[0] || [];
+          if (!Array.isArray(hours)) hours = [];
+          var resources = r2[1].Data || r2[1].data || r2[1].Items || r2[1] || [];
+          if (!Array.isArray(resources)) resources = [];
+
+          // Samme gyldige-lonnsarter-filter som resten av appen (ekskl. reise/bom/gangtid).
+          var validWages = ['Fastlonn', 'Timelonn', 'Overtid 50 %', 'Overtid 100 %', 'Fastlønn', 'Timelønn'];
+          function erArbeidsrad(h) {
+            var w = h.WageName || '';
+            return validWages.indexOf(w) > -1 || w.indexOf('Overtid') > -1;
+          }
+
+          var timerPerNavn = {};
+          hours.forEach(function(h) {
+            if (!erArbeidsrad(h)) return;
+            var uid = h.UserID || h.UserId || 'ukjent';
+            var res = resources.filter(function(r) { return r.UserId === uid || r.userId === uid; })[0];
+            var navn = res ? res.Name : '';
+            if (!navn) return;
+            var key = normNavnGlobal(navn);
+            if (!timerPerNavn[key]) timerPerNavn[key] = { navn: navn, timer: 0 };
+            timerPerNavn[key].timer += parseFloat(h.NetHours || 0);
+          });
+
+          var totalEstimat = 0, totalTimer = 0, uregistrert = 0;
+          Object.keys(timerPerNavn).forEach(function(key) {
+            var t = timerPerNavn[key];
+            var ansatt = ansattTimekost.filter(function(a) { return normNavnGlobal(a.Navn) === key; })[0];
+            totalTimer += t.timer;
+            if (ansatt && ansatt.BeregnetTimekost != null) {
+              totalEstimat += t.timer * ansatt.BeregnetTimekost;
+            } else {
+              uregistrert++;
+            }
+          });
+
+          return { estimat: Math.round(totalEstimat), timer: Math.round(totalTimer * 10) / 10, kuttdato: kutt.kuttdato, uregistrert: uregistrert };
+        });
+      });
+    });
+}
+
 function renderTTXKort(projId, prosjektnr, kontraktsum) {
   var body = document.getElementById('ttxKortBody_' + projId);
   if (!body) return;
-  fetch(TTX_WORKER + '/tripletex/okonomi/' + prosjektnr)
-    .then(function(r) { return r.json(); })
-    .then(function(d) {
+  var okonomiP = fetch(TTX_WORKER + '/tripletex/okonomi/' + prosjektnr).then(function(r) { return r.json(); });
+  var estimatP = hentEstimertLonn(prosjektnr).catch(function() { return null; });
+  Promise.all([okonomiP, estimatP])
+    .then(function(res) {
+      var d = res[0], est = res[1];
       if (d.error) throw new Error(d.error);
       var ks = parseFloat(kontraktsum) || 0;
       var fakturert = d.inntekter || 0;
-      var kostnader = d.kostnader || 0;
+      var kostnaderBokfort = d.kostnader || 0;
       var refSum = Math.max(ks, fakturert);
-      var fortjeneste = refSum - kostnader;
+      var fortjeneste = refSum - kostnaderBokfort;
       var dk = refSum > 0 ? Math.round((fortjeneste / refSum) * 100) : 0;
       var dkColor = dk >= 25 ? 'var(--grn)' : dk >= 15 ? '#f59e0b' : 'var(--red)';
       var html = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:4px 0 8px;">';
@@ -8624,17 +8692,33 @@ function renderTTXKort(projId, prosjektnr, kontraktsum) {
       html += '<div style="font-size:15px;font-weight:700;color:var(--blu);">' + fmtCur(fakturert) + '</div>';
       html += '</div>';
       html += '<div style="background:rgba(239,68,68,.08);border-radius:8px;padding:10px 12px;">';
-      html += '<div style="font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px;">Kostnader</div>';
-      html += '<div style="font-size:15px;font-weight:700;color:#ef4444;">' + fmtCur(kostnader) + '</div>';
+      html += '<div style="font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px;">Kostnader (bokf&oslash;rt)</div>';
+      html += '<div style="font-size:15px;font-weight:700;color:#ef4444;">' + fmtCur(kostnaderBokfort) + '</div>';
       html += '</div>';
       html += '<div style="background:rgba(34,197,94,.08);border-radius:8px;padding:10px 12px;">';
       html += '<div style="font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px;">Fortjeneste</div>';
       html += '<div style="font-size:15px;font-weight:700;color:var(--grn);">' + fmtCur(fortjeneste) + '</div>';
       html += '</div>';
-      html += '<div style="grid-column:1/-1;background:rgba(168,85,247,.08);border-radius:8px;padding:10px 12px;">';
-      html += '<div style="font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px;">Dekningsgrad' + (fakturert > ks ? ' <span style="text-transform:none;">(basert på fakturert)</span>' : '') + '</div>';
-      html += '<div style="font-size:22px;font-weight:800;color:' + dkColor + ';">' + dk + '%</div>';
       html += '</div>';
+      if (est && est.estimat > 0) {
+        html += '<div style="background:rgba(232,184,75,.08);border:1px dashed var(--acc);border-radius:8px;padding:10px 12px;margin-bottom:8px;">';
+        html += '<div style="font-size:10px;color:var(--acc);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px;font-weight:700;">+ Estimert l&oslash;nn (ikke bokf&oslash;rt enn&aring;)</div>';
+        html += '<div style="font-size:15px;font-weight:700;color:var(--acc);">+ ' + fmtCur(est.estimat) + '</div>';
+        html += '<div style="font-size:11px;color:var(--tx3);margin-top:4px;">' + String(est.timer).replace('.', ',') + ' SmartDok-timer siden ' + fmtDatoKort(est.kuttdato) + ' &middot; ekskl. reise/bom</div>';
+        if (est.uregistrert > 0) {
+          html += '<div style="font-size:10px;color:var(--tx3);margin-top:3px;">' + est.uregistrert + ' ansatt(e) uten registrert timekost er ikke inkludert</div>';
+        }
+        html += '</div>';
+      }
+      html += '<div style="grid-column:1/-1;background:rgba(168,85,247,.08);border-radius:8px;padding:10px 12px;">';
+      html += '<div style="font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px;">Dekningsgrad (bokf&oslash;rt)' + (fakturert > ks ? ' <span style="text-transform:none;">(basert p&aring; fakturert)</span>' : '') + '</div>';
+      html += '<div style="font-size:22px;font-weight:800;color:' + dkColor + ';">' + dk + '%</div>';
+      if (est && est.estimat > 0) {
+        var kostnaderInkl = kostnaderBokfort + est.estimat;
+        var fortjenesteInkl = refSum - kostnaderInkl;
+        var dkInkl = refSum > 0 ? Math.round((fortjenesteInkl / refSum) * 100) : 0;
+        html += '<div style="font-size:12px;color:var(--tx3);margin-top:6px;padding-top:6px;border-top:1px solid rgba(255,255,255,.08);">Inkl. estimat: <strong style="color:var(--acc);">' + dkInkl + '%</strong></div>';
+      }
       html += '</div>';
       html += '<button class="btn sm" style="width:100%;margin-top:4px;" onclick="openTTXModal(\'' + prosjektnr + '\', ' + ks + ')">📊 Se resultatrapport →</button>';
       body.innerHTML = html;
