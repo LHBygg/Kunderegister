@@ -1143,12 +1143,14 @@ tr.erow td{padding:0;background:var(--bg2);border-bottom:1px solid var(--br2);}
           <option value="Bas">Bas</option>
           <option value="Formann">Formann</option>
           <option value="Kontor">Kontor</option>
+          <option value="Innleid">Innleid</option>
         </select>
       </div>
       <div class="fg"><label class="fl">Lonnstype</label>
         <select class="fi2" id="aeLonnstype" onchange="aeOppdaterFelt()">
           <option value="Timelonn">Timelonn</option>
           <option value="Fastlonn">Fastlonn</option>
+          <option value="Innleid">Innleid (fast timepris, eks. mva)</option>
         </select>
       </div>
       <div class="fg" id="aeGrunnrateWrap"><label class="fl">Grunnrate (kr/t)</label><input class="fi2" id="aeGrunnrateTime" type="number" step="0.5" oninput="aeOppdaterPreview()"></div>
@@ -4035,6 +4037,12 @@ function beregnTimekost(a, innst) {
   // opprinnelig ble opprettet/endret med "ø" i navnefeltet (SharePoint koder spesialtegn
   // i internnavnet permanent ved opprettelse). Se L_x00f8_nnstype-referanser i denne filen.
   innst = innst || timekostInnstillinger;
+  if (a.Lonnstype === 'Innleid') {
+    // Innleid arbeidskraft faktureres til fast avtalt timepris (eks. mva) fra
+    // bemanningsselskap/UE. Dette er kjop av tjeneste, ikke lonn - derfor INGEN
+    // paaslag for feriepenger/AGA/OTP. Grunnraten ER den fulle kostnaden.
+    return Math.round(parseFloat(a.GrunnrateTime) || 0);
+  }
   var grunnlag = a.Lonnstype === 'Fastlonn'
     ? (parseFloat(a.FastlonnMnd) || 0) / (parseFloat(a.NormalTimerMnd) || 162.5)
     : (parseFloat(a.GrunnrateTime) || 0);
