@@ -8617,7 +8617,7 @@ function hentEstimertLonn(prosjektnr) {
         if (!Array.isArray(list)) list = [];
         if (!list.length) return null;
         var sdkProjId = list[0].Id || list[0].id || list[0].ID;
-        var fraDato = kutt.kuttdato + 'T00:00:00';
+        var fraDato = kutt.estimatFraDato + 'T00:00:00';
         var tilDato = kutt.idag + 'T23:59:59';
         return Promise.all([
           sdkGet('/WorkHours?projectId=' + sdkProjId + '&fromDate=' + fraDato + '&toDate=' + tilDato + '&onlyAttested=false').catch(function() { return {}; }),
@@ -8660,7 +8660,7 @@ function hentEstimertLonn(prosjektnr) {
             }
           });
 
-          return { estimat: Math.round(totalEstimat), timer: Math.round(totalTimer * 10) / 10, kuttdato: kutt.kuttdato, uregistrert: uregistrert };
+          return { estimat: Math.round(totalEstimat), timer: Math.round(totalTimer * 10) / 10, fraDato: kutt.estimatFraDato, uregistrert: uregistrert };
         });
       });
     });
@@ -8704,7 +8704,7 @@ function renderTTXKort(projId, prosjektnr, kontraktsum) {
         html += '<div style="background:rgba(232,184,75,.08);border:1px dashed var(--acc);border-radius:8px;padding:10px 12px;margin-bottom:8px;">';
         html += '<div style="font-size:10px;color:var(--acc);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px;font-weight:700;">+ Estimert l&oslash;nn (ikke bokf&oslash;rt enn&aring;)</div>';
         html += '<div style="font-size:15px;font-weight:700;color:var(--acc);">+ ' + fmtCur(est.estimat) + '</div>';
-        html += '<div style="font-size:11px;color:var(--tx3);margin-top:4px;">' + String(est.timer).replace('.', ',') + ' SmartDok-timer siden ' + fmtDatoKort(est.kuttdato) + ' &middot; ekskl. reise/bom</div>';
+        html += '<div style="font-size:11px;color:var(--tx3);margin-top:4px;">' + String(est.timer).replace('.', ',') + ' SmartDok-timer siden ' + fmtDatoKort(est.fraDato) + ' &middot; ekskl. reise/bom</div>';
         if (est.uregistrert > 0) {
           html += '<div style="font-size:10px;color:var(--tx3);margin-top:3px;">' + est.uregistrert + ' ansatt(e) uten registrert timekost er ikke inkludert</div>';
         }
