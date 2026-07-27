@@ -4795,7 +4795,13 @@ function loadSDKData(projId, timerId, prosjektnr) {
   // Bred plan-henting for avvikssjekk: alle prosjekter, siste 35 dager (uatt. henger aldri lenger)
   var avvikFra = new Date(nowD); avvikFra.setDate(nowD.getDate()-35);
   var avvikFraStr = toLocalDate(avvikFra);
-  var avvikTilStr = toLocalDate(nowD);
+  // Rettet 27.07.2026: SmartDok /ResourcePlanning/Plans tolker "to"-dato uten klokkeslett som
+  // eksklusiv (til kl 00:00 den dagen), som ga stille "ikke registrert på noe prosjekt"-avvik for
+  // DAGENS dato hver eneste dag i Regel 1 - uavhengig av prosjekt og uavhengig av om planen nylig
+  // ble redigert (bekreftet både på nylig endret plan og på en plan urørt i en måned, 27.07.2026).
+  // Utvider "to" med én ekstra dag her for å garantere at dagens dato er dekket.
+  var avvikTilDato = new Date(nowD); avvikTilDato.setDate(nowD.getDate()+1);
+  var avvikTilStr = toLocalDate(avvikTilDato);
   Promise.all([
     sdkGet('/ResourcePlanning/Resources?active=true&count=100'),
     sdkGet('/ResourcePlanning/Plans?projectId=' + projId + '&from=' + fromStr + '&to=' + toStr + '&count=100'),
