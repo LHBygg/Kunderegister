@@ -4802,7 +4802,8 @@ function loadSDKData(projId, timerId, prosjektnr) {
     sdkGet('/WorkHours?projectId=' + timerId + '&fromDate=' + fraDato1 + '&toDate=' + tilDato1 + '&onlyAttested=false').catch(function() { return {}; }),
     sdkGet('/WorkHours?projectId=' + timerId + '&fromDate=' + fraDato2 + '&toDate=' + tilDato2 + '&onlyAttested=false').catch(function() { return {}; }),
     sdkHentAllePlaner(avvikFraStr, avvikTilStr).catch(function() { return []; }),
-    sdkGet('/Projects?count=100').catch(function() { return {}; })
+    sdkGet('/Projects?count=100').catch(function() { return {}; }),
+    sdkHentAlleTimer(avvikFraStr, avvikTilStr).catch(function() { return []; })
   ]).then(function(results) {
     var resources = results[0].Data || results[0].data || results[0].Items || results[0] || [];
     var plans = results[1].Data || results[1].data || results[1].Items || results[1] || [];
@@ -4810,6 +4811,7 @@ function loadSDKData(projId, timerId, prosjektnr) {
     var h2 = results[3].Data || results[3].data || results[3].Items || results[3] || [];
     var allePlaner = Array.isArray(results[4]) ? results[4] : [];
     var alleProsjekter = results[5].Data || results[5].data || results[5].Items || results[5] || [];
+    var alleTimerAlleProsjekter = Array.isArray(results[6]) ? results[6] : [];
     if (!Array.isArray(resources)) resources = [];
     if (!Array.isArray(plans)) plans = [];
     if (!Array.isArray(h1)) h1 = [];
@@ -4825,7 +4827,7 @@ function loadSDKData(projId, timerId, prosjektnr) {
       var nr = p.ProjectNumber || p.projectNumber || p.Number || '';
       projNavnById[pid] = navn + (nr ? ' (' + nr + ')' : '');
     });
-    renderSDK(resources, plans, hours, fromStr, toStr, allePlaner, projNavnById);
+    renderSDK(resources, plans, hours, fromStr, toStr, allePlaner, projNavnById, alleTimerAlleProsjekter);
   }).catch(function(e) { sdkError(e.message); });
 }
 
@@ -4855,16 +4857,47 @@ function sdkHentAllePlaner(fromStr, toStr) {
   return hentSide(0);
 }
 
+// Henter ALLE timer (alle prosjekter, ikke bare aktivt) i perioden, paginert - brukes KUN til å
+// beregne korrekt pause-total for dagen på tvers av prosjekter (Regel 2+3 i sdkFinnAvvik).
+// USIKKERT 27.07.2026: ikke bekreftet at SmartDok /WorkHours faktisk godtar spørring uten
+// projectId (kun /ResourcePlanning/Plans er verifisert å støtte dette i appen i dag). Hvis
+// kallet feiler eller gir tomt resultat, faller sdkFinnAvvik automatisk tilbake til gammel
+// (prosjekt-scopet) pausesum - se fallback i pauseTotal-beregningen.
+function sdkHentAlleTimer(fromStr, toStr) {
+  var alle = [];
+  var MAKS_SIDER = 20;
+  function hentSide(offset) {
+    return sdkGet('/WorkHours?fromDate=' + fromStr + 'T00:00:00&toDate=' + toStr + 'T23:59:59&onlyAttested=false&count=100&offset=' + offset)
+      .then(function(d) {
+        var items = d.Data || d.data || d.Items || d || [];
+        if (!Array.isArray(items)) items = [];
+        alle = alle.concat(items);
+        var sideNr = (offset / 100) + 1;
+        if (items.length === 100 && sideNr >= MAKS_SIDER) {
+          console.warn('sdkHentAlleTimer: nådde maks ' + MAKS_SIDER + ' sider (' + alle.length + ' rader) - flere timerader kan finnes men ble ikke hentet.');
+          return alle;
+        }
+        if (items.length === 100) return hentSide(offset + 100);
+        return alle;
+      });
+  }
+  return hentSide(0);
+}
+
 // sdkFinnAvvik: Regel 1 kjører kun på uattesterte timer (uattTimer).
 // Regel 2+3 sammenligner MOT hele laget (alleTimer, attestert+uattestert), men varsler kun om
 // personer/rader som selv er uattestert - attesterte rader trenger ikke nytt varsel.
 // allePlaner = planer for alle prosjekter (for å sjekke om noen var planlagt på annet prosjekt).
+// alleTimerAlleProsjekter = timer for ALLE prosjekter (ikke bare aktivt), brukt kun til å regne
+// ut ekte tverrprosjekt pauseTotal per person per dag (Regel 2+3). Valgfri - faller tilbake til
+// prosjekt-scopet pausesum per dato/person hvis ikke oppgitt eller tom (se lenger ned).
 // Returnerer array av {sev:'hi'|'md', txt:string}
-function sdkFinnAvvik(uattTimer, plans, resources, allePlaner, alleTimer, projNavnById) {
+function sdkFinnAvvik(uattTimer, plans, resources, allePlaner, alleTimer, projNavnById, alleTimerAlleProsjekter) {
   var avvik = [];
   if (!uattTimer || !uattTimer.length) return avvik;
   allePlaner = allePlaner || [];
   alleTimer = alleTimer || uattTimer;
+  alleTimerAlleProsjekter = alleTimerAlleProsjekter || [];
   projNavnById = projNavnById || {};
 
   // Unntatte personer: prosjektledere/daglig leder fører kun fakturerbare/anbudstimer,
@@ -4892,6 +4925,7 @@ function sdkFinnAvvik(uattTimer, plans, resources, allePlaner, alleTimer, projNa
   }
   uattTimer = uattTimer.filter(function(h){ return !erUnntattRad(h); });
   alleTimer = alleTimer.filter(function(h){ return !erUnntattRad(h); });
+  alleTimerAlleProsjekter = alleTimerAlleProsjekter.filter(function(h){ return !erUnntattRad(h); });
   if (!uattTimer.length) return avvik;
 
   function navnForUid(uid) {
@@ -4968,6 +5002,21 @@ function sdkFinnAvvik(uattTimer, plans, resources, allePlaner, alleTimer, projNa
     }
   });
 
+  // Ekte tverrprosjekt pause-total per person per dato (fra alleTimerAlleProsjekter, hvis hentet).
+  // Brukes i pauseTotal-beregningen under i stedet for kun det aktive prosjektets rader.
+  // Tom byggverk hvis alleTimerAlleProsjekter er tom (f.eks. hvis SmartDok-kallet uten
+  // projectId feilet) - da faller pauseTotal-beregningen tilbake til gammel prosjekt-scopet sum.
+  var pauseGlobalByUidDato = {};
+  alleTimerAlleProsjekter.forEach(function(h){
+    if (!erArbeidsrad(h)) return;
+    var uid = h.UserID || h.UserId; if (!uid) return;
+    var dd = datoStr(h); if (!dd) return;
+    var bt = parseFloat(h.BreakTime);
+    if (isNaN(bt)) return;
+    if (!pauseGlobalByUidDato[uid]) pauseGlobalByUidDato[uid] = {};
+    pauseGlobalByUidDato[uid][dd] = (pauseGlobalByUidDato[uid][dd] || 0) + bt;
+  });
+
   // REGEL 2 + 3: pause/tillegg/timesum – sammenlignes mot HELE laget (attestert+uattestert),
   // men avvik varsles kun for personer som selv har minst én uattestert rad denne dagen.
   var byDato = {};
@@ -4997,9 +5046,17 @@ function sdkFinnAvvik(uattTimer, plans, resources, allePlaner, alleTimer, projNa
     // Total pause for dagen = summen av pause ført på ALLE prosjekter personen har jobbet på denne dagen
     // (en person kan ha ført f.eks. 0,0 t pause på prosjekt A og 1,0 t pause på prosjekt B samme dag -
     // da er totalen 1,0 t og skal IKKE gi avvik, selv om enkeltraden på prosjekt A viser 0,0 t).
+    // Rettet 27.07.2026: bruker nå ekte tverrprosjekt-sum fra pauseGlobalByUidDato der den finnes
+    // (se over). Faller tilbake til kun prosjekt-scopet sum (personer[uid].pauser) hvis global
+    // data mangler for uid+dato - dvs. samme oppførsel som før denne rettingen.
     uids.forEach(function(uid){
-      var arr = personer[uid].pauser;
-      personer[uid].pauseTotal = arr.length ? Math.round(arr.reduce(function(a,b){ return a+b; }, 0) * 100) / 100 : null;
+      var global = pauseGlobalByUidDato[uid] && pauseGlobalByUidDato[uid][dd];
+      if (global != null) {
+        personer[uid].pauseTotal = Math.round(global * 100) / 100;
+      } else {
+        var arr = personer[uid].pauser;
+        personer[uid].pauseTotal = arr.length ? Math.round(arr.reduce(function(a,b){ return a+b; }, 0) * 100) / 100 : null;
+      }
     });
 
     // ABSOLUTT REGEL: minimum 0,5 t pause totalt for dagen, uansett lagstørrelse (også når personen er alene på prosjektet)
@@ -5110,7 +5167,7 @@ function sdkApneGodkjenning(visning) {
   window.open(url, '_blank', 'noopener');
 }
 
-function renderSDK(resources, plans, hours, fromStr, toStr, allePlaner, projNavnById) {
+function renderSDK(resources, plans, hours, fromStr, toStr, allePlaner, projNavnById, alleTimerAlleProsjekter) {
   var el = document.getElementById('sdkBody');
   var timeEl = document.getElementById('sdkTime');
   if (!el) return;
@@ -5292,7 +5349,7 @@ function renderSDK(resources, plans, hours, fromStr, toStr, allePlaner, projNavn
     // Avvik per uattestert person (brukes i Godkjenn timer-kortene under).
     // Logikken i sdkFinnAvvik er uendret (pause summeres på tvers av ALLE prosjekter personen
     // har ført timer på samme dag, ikke bare dette prosjektet) - se Absolutte regler/Kjente fallgruver.
-    var avvik = sdkFinnAvvik(uattFøringer, plans, resources, allePlaner, filtrerteTimer, projNavnById);
+    var avvik = sdkFinnAvvik(uattFøringer, plans, resources, allePlaner, filtrerteTimer, projNavnById, alleTimerAlleProsjekter);
     var sevRank = { hi: 0, md: 1 };
     var godkjAvvikByUid = {};
     avvik.forEach(function(a){
